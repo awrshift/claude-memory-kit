@@ -1,0 +1,140 @@
+{
+  "$meta": {
+    "name": "{{meta.name}}",
+    "version": "1.0.0",
+    "theme": "{{meta.theme}}",
+    "aesthetic": "{{meta.aesthetic}}",
+    "density": "{{meta.density}}",
+    "description": "{{meta.description}}",
+    "generator": "/design init v2 (compute_palette.py + universal-scaffold)",
+    "primary_hex": "{{meta.primary_hex}}"
+  },
+  "color": {
+    "$type": "color",
+    "core": {
+      "$description": "Brand palette: 11-step primary scale + 11-step neutral scale. Generated via OKLCH math from primary hex.",
+      "primary-50":  { "value": "{{primary.50}}",  "description": "Lightest tint — subtle backgrounds, badges" },
+      "primary-100": { "value": "{{primary.100}}", "description": "Light tint — hover backgrounds, selected rows" },
+      "primary-200": { "value": "{{primary.200}}", "description": "Light accent — progress bars, highlights" },
+      "primary-300": { "value": "{{primary.300}}", "description": "Medium-light — active borders, tags" },
+      "primary-400": { "value": "{{primary.400}}", "description": "Medium — secondary buttons, links" },
+      "primary-500": { "value": "{{primary.500}}", "description": "Base brand color — primary buttons, CTAs" },
+      "primary-600": { "value": "{{primary.600}}", "description": "Dark accent — hover state on primary buttons" },
+      "primary-700": { "value": "{{primary.700}}", "description": "Dark — pressed state, strong emphasis" },
+      "primary-800": { "value": "{{primary.800}}", "description": "Very dark — badges on light, text accent" },
+      "primary-900": { "value": "{{primary.900}}", "description": "Near-black tint — dark theme card accents" },
+      "primary-950": { "value": "{{primary.950}}", "description": "Deepest tint — dark theme subtle accents" },
+      "neutral-50":  { "value": "{{neutral.50}}",  "description": "Near-white — light theme background" },
+      "neutral-100": { "value": "{{neutral.100}}", "description": "Light gray — light theme surface-hover" },
+      "neutral-200": { "value": "{{neutral.200}}", "description": "Light — light theme tooltip, skeleton" },
+      "neutral-300": { "value": "{{neutral.300}}", "description": "Medium-light — light theme borders, secondary text" },
+      "neutral-400": { "value": "{{neutral.400}}", "description": "Medium — muted text (dark theme), placeholders" },
+      "neutral-500": { "value": "{{neutral.500}}", "description": "Mid-gray — muted text (light theme), disabled" },
+      "neutral-600": { "value": "{{neutral.600}}", "description": "Dark gray — dark theme borders-strong" },
+      "neutral-700": { "value": "{{neutral.700}}", "description": "Dark — dark theme borders-default, tooltip-bg" },
+      "neutral-800": { "value": "{{neutral.800}}", "description": "Very dark — dark theme surface-hover, skeleton" },
+      "neutral-900": { "value": "{{neutral.900}}", "description": "Near-black — dark theme surface (cards)" },
+      "neutral-950": { "value": "{{neutral.950}}", "description": "Deepest — dark theme background" }
+    },
+    "semantic": {
+      "$description": "Semantic color assignments. Reference core tokens via {color.core.*} aliases. Theme-aware.",
+      "background":      { "value": "{{surfaces.background}}",    "description": "Page background" },
+      "surface":         { "value": "{{surfaces.surface}}",       "description": "Cards, panels, sidebar" },
+      "surface-hover":   { "value": "{{surfaces.surface-hover}}", "description": "Elevated surfaces, hover states, modals" },
+      "tooltip-bg":      { "value": "{{surfaces.tooltip-bg}}",    "description": "Tooltip/popover background — highest elevation" },
+      "border-subtle":   { "value": "{{borders.subtle}}",   "description": "Subtle borders — dividers within cards, table rows. Semi-transparent." },
+      "border-default":  { "value": "{{borders.default}}",  "description": "Default borders — card edges, input borders, grid lines" },
+      "border-strong":   { "value": "{{borders.strong}}",   "description": "Strong borders — active/selected states, high-contrast separation" },
+      "text-primary":    { "value": "{{text.primary}}",   "description": "Headlines, body text, primary labels" },
+      "text-secondary":  { "value": "{{text.secondary}}", "description": "Secondary labels, descriptions" },
+      "text-muted":      { "value": "{{text.muted}}",     "description": "Placeholders, disabled text, chart axes" },
+      "primary":         { "value": "{{primary.500}}",     "description": "Primary accent — CTA buttons, brand emphasis" },
+      "primary-hover":   { "value": "{{primary.600}}",     "description": "Primary hover state" },
+      "primary-pressed": { "value": "{{primary.700}}",     "description": "Primary pressed/active state" },
+      "success":         { "value": "{{semantic.success}}", "description": "Positive trends, success states, confirmations" },
+      "warning":         { "value": "{{semantic.warning}}", "description": "Warning states — always pair with icon (D-5)" },
+      "error":           { "value": "{{semantic.error}}",   "description": "Critical alerts, error states, destructive actions" },
+      "info":            { "value": "{{semantic.info}}",    "description": "Informational, tertiary data, help text" },
+      "overlay":         { "value": "{{overlay}}",          "description": "Modal/dialog backdrop scrim" },
+      "focus-ring":      { "value": "{{semantic.info}}",    "description": "Keyboard focus indicator — 2px solid, 2px offset" },
+      "skeleton-base":   { "value": "{{skeleton.base}}",    "description": "Skeleton loader base — one surface level above container (D-23)" },
+      "skeleton-shimmer": { "value": "{{skeleton.shimmer}}", "description": "Skeleton shimmer peak color" },
+      "state-hover":     { "value": "{{state_layers.hover}}",   "description": "Hover state overlay (M3: 8%). Use via color-mix(). (D-20)" },
+      "state-focus":     { "value": "{{state_layers.focus}}",   "description": "Focus state overlay (M3: 10%). Supplements focus-ring. (D-20)" },
+      "state-pressed":   { "value": "{{state_layers.pressed}}", "description": "Pressed/active state overlay (M3: 16%). (D-20)" },
+      "disabled-text":   { "value": "{{text.muted}}",     "description": "Disabled text — subdued but meets 3:1 minimum" },
+      "disabled-bg":     { "value": "{{surfaces.background}}", "description": "Disabled input/button background" }
+    }
+  },
+  "typography": {
+    "$description": "Font families, type scale with role assignments, and line-height system. Customize font-ui and font-data for your project.",
+    "font-ui":   { "value": "{{typography.font-ui}}",   "description": "UI font: headers, body, labels, buttons, navigation" },
+    "font-data": { "value": "{{typography.font-data}}", "description": "Data font: KPI numbers, table data, timestamps, code" },
+    "scale": {
+      "$type": "dimension",
+      "$description": "Type scale with role assignments. All mono/data elements use tabular-nums.",
+      "ui": {
+        "page-header":   { "value": "24px", "weight": "700", "tracking": "-0.02em", "line-height": "1.2", "font": "ui", "description": "Page title" },
+        "section-title": { "value": "18px", "weight": "600", "tracking": "normal",  "line-height": "1.4", "font": "ui", "description": "Card/panel headers" },
+        "nav-item":      { "value": "15px", "weight": "500", "tracking": "normal",  "line-height": "1.5", "font": "ui", "description": "Navigation items" },
+        "body":          { "value": "14px", "weight": "400", "tracking": "normal",  "line-height": "1.5", "font": "ui", "description": "Body text, descriptions" },
+        "card-label":    { "value": "13px", "weight": "500", "tracking": "0.05em",  "line-height": "1.4", "font": "ui", "transform": "uppercase", "description": "Metric card labels" },
+        "button":        { "value": "14px", "weight": "500", "tracking": "normal",  "line-height": "1.2", "font": "ui", "description": "Button labels" },
+        "caption":       { "value": "12px", "weight": "400", "tracking": "normal",  "line-height": "1.4", "font": "ui", "description": "Captions, helper text, hints" },
+        "tooltip":       { "value": "12px", "weight": "400", "tracking": "normal",  "line-height": "1.4", "font": "ui", "description": "Tooltip content" }
+      },
+      "data": {
+        "kpi-number":   { "value": "40px", "weight": "700", "tracking": "normal",  "line-height": "1.0", "font": "data", "variant-numeric": "tabular-nums", "description": "Large KPI metric values" },
+        "table-header": { "value": "11px", "weight": "600", "tracking": "0.05em",  "line-height": "1.4", "font": "data", "transform": "uppercase", "variant-numeric": "tabular-nums", "description": "Table column headers" },
+        "table-data":   { "value": "14px", "weight": "400", "tracking": "normal",  "line-height": "1.5", "font": "data", "variant-numeric": "tabular-nums", "description": "Table cell numeric values" },
+        "timestamp":    { "value": "12px", "weight": "400", "tracking": "normal",  "line-height": "1.4", "font": "data", "description": "Timestamps, small metadata" },
+        "badge":        { "value": "11px", "weight": "500", "tracking": "0.02em",  "line-height": "1.2", "font": "data", "description": "Status badges, count labels" },
+        "chart-axis":   { "value": "12px", "weight": "400", "tracking": "normal",  "line-height": "1.0", "font": "data", "variant-numeric": "tabular-nums", "description": "Chart axis labels" }
+      }
+    },
+    "line-height-system": {
+      "$description": "Standardized line-height ratios: 1.0 display, 1.2 compact, 1.4 labels, 1.5 body",
+      "display": { "value": "1.0" },
+      "compact": { "value": "1.2" },
+      "label":   { "value": "1.4" },
+      "body":    { "value": "1.5" }
+    }
+  },
+  "spacing": {
+    "$type": "dimension",
+    "$description": "Spacing scale based on density setting. Multiply unit for custom spacing.",
+    "unit":         { "value": "{{spacing.unit}}",         "description": "Base spacing unit" },
+    "grid-gap":     { "value": "{{spacing.grid-gap}}",     "description": "Default grid gap between cards/panels" },
+    "section-y":    { "value": "{{spacing.section-y}}",    "description": "Vertical spacing between sections" },
+    "card-padding": { "value": "{{spacing.card-padding}}", "description": "Internal card padding" },
+    "max-width":    { "value": "1440px",                   "description": "Content max-width" },
+    "sidebar-width": { "value": "256px",                   "description": "Sidebar fixed width (dashboard layouts)" }
+  },
+  "radius": {
+    "$type": "dimension",
+    "sm":   { "value": "4px",    "description": "Inputs, badges, small elements" },
+    "md":   { "value": "8px",    "description": "Buttons, chart containers" },
+    "lg":   { "value": "12px",   "description": "Cards, panels, main containers" },
+    "xl":   { "value": "16px",   "description": "Modals, large containers" },
+    "full": { "value": "9999px", "description": "Circular elements, avatars, pills" }
+  },
+  "effects": {
+    "$description": "Border styles, transitions, focus ring. Dark mode uses elevation via borders + surface lightness, not drop shadows.",
+    "border-style-default": { "value": "1px solid", "description": "Default card/panel border style" },
+    "border-active":        { "value": "1px solid", "description": "Active state border on selected elements" },
+    "focus-ring":           { "value": "2px solid", "description": "Keyboard focus — 2px solid, 2px offset" },
+    "transition-fast":      { "value": "150ms ease",     "description": "Hover states, color changes, subtle interactions" },
+    "transition-normal":    { "value": "200ms ease-out", "description": "Modal appear, expand/collapse, skeleton fade" },
+    "transition-focus":     { "value": "0ms",            "description": "Focus ring outline — instant" }
+  },
+  "rules": {
+    "$description": "Universal design rules enforced at generation time. Project-specific rules added by Claude during init.",
+    "D-5":  "Never use color alone for status — always pair with icon + text label.",
+    "D-20": "State layers: never hardcode hover/focus background colors. Use state-hover (8%), state-focus (10%), state-pressed (16%) overlays via color-mix(in srgb, var(--surface), white|black N%).",
+    "D-21": "Semantic borders: use border-subtle (transparent dividers), border-default (card edges), border-strong (active states). Never use arbitrary hex for borders.",
+    "D-22": "Data resilience: assume all dynamic text can be 50+ chars. Apply text-overflow:ellipsis by default on table cells and narrow containers.",
+    "D-23": "Skeleton +1: skeleton loader color = one elevation level higher than container surface. At max elevation, use outline pulse instead of surface+1.",
+    "D-24": "Typography hierarchy: skip-a-weight — never pair Regular (400) with Medium (500). Use Regular + Semibold (600) for clear contrast.",
+    "D-25": "Reduced motion: respect prefers-reduced-motion — disable all transitions and animations. Skeleton shimmer becomes static."
+  }
+}

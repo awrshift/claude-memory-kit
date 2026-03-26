@@ -1,0 +1,13 @@
+#!/bin/bash
+# PreCompact hook — remind agent to save context before compression
+
+echo "=== PRE-COMPACT REMINDER ==="
+echo ""
+echo "Context is about to be compressed. Before continuing, you MUST:"
+echo "1. Update .claude/memory/MEMORY.md — save any new patterns or insights"
+echo "2. Update context/next-session-prompt.md — your project section only"
+echo "3. Update .claude/memory/CONTEXT.md — active project, paused tracks"
+echo "4. Update project JOURNAL.md — task statuses if any active tasks"
+echo ""
+echo "Do NOT proceed until all 4 steps are complete."
+echo "=== END REMINDER ==="
