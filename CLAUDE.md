@@ -1,5 +1,3 @@
-# CLAUDE.md
-
 <!-- SETUP:START — Agent deletes this entire section (from SETUP:START to SETUP:END) after completing first run setup -->
 ## First Run Setup
 
@@ -53,6 +51,7 @@ The hooks are already configured in `.claude/settings.json`:
 Delete these files/directories (they are only needed for first run):
 - `global/` directory (entire folder)
 - `README.md`
+- `.github/` directory (contains images for the GitHub repo README — not needed locally)
 
 Commit the cleanup: `git commit -am "setup: clean scaffolding after first run"`
 
@@ -65,7 +64,8 @@ Delete everything between `<!-- SETUP:START -->` and `<!-- SETUP:END -->` marker
 Tell the user in their language: "Setup complete. Project is ready. Here's what was configured..." and briefly explain:
 - File structure (CLAUDE.md, memory, context, rules, hooks)
 - Installed skills and their prerequisites
-- How sessions work (start → work → end cycle)
+- Example projects and experiments (in `projects/` and `experiments/`) — explain these are demos they can explore or delete
+- How sessions work (start -> work -> end cycle)
 <!-- SETUP:END -->
 
 ## Project Overview
@@ -82,7 +82,7 @@ Tell the user in their language: "Setup complete. Project is ready. Here's what 
 1. Read `context/next-session-prompt.md` — find your `<!-- PROJECT:name -->` section
 2. Read `.claude/memory/CONTEXT.md` — quick orientation (active project, pointers)
 3. Read `.claude/memory/MEMORY.md` — recall patterns from past sessions
-4. If user asks about a specific project → read that project's `JOURNAL.md`
+4. If user asks about a specific project -> read that project's `JOURNAL.md`
 
 **During:** Work on tasks. Update project JOURNAL.md after completing work.
 
@@ -116,8 +116,8 @@ This file is the **cross-project hub**. It uses `<!-- PROJECT:name -->` / `<!-- 
 1. **Only edit your project's section.** Use Edit tool scoped within your project tags.
 2. **Never touch other projects' sections.** Another session may be updating them.
 3. **New project?** Append a new `<!-- PROJECT:name -->` block before `<!-- SHARED -->`.
-4. **Cross-project data** → update in `<!-- SHARED -->` section only.
-5. **Header** (date, session number) → last writer wins, acceptable.
+4. **Cross-project data** -> update in `<!-- SHARED -->` section only.
+5. **Header** (date, session number) -> last writer wins, acceptable.
 
 **What goes in each project section (max 5-7 lines):**
 - Pointer to project JOURNAL.md (source of truth)
@@ -137,7 +137,7 @@ This file is the **cross-project hub**. It uses `<!-- PROJECT:name -->` / `<!-- 
 | **L1: Auto** | This file + `.claude/rules/` + `.claude/memory/MEMORY.md` | Every session |
 | **L2: Start** | `context/next-session-prompt.md` + `.claude/memory/CONTEXT.md` | Session start |
 | **L3: Project** | `projects/X/JOURNAL.md` | When working on project X |
-| **L4: Reference** | Any other docs, snapshots | On-demand |
+| **L4: Reference** | Experiments, snapshots, any other docs | On-demand |
 
 ### Key principles
 
@@ -147,6 +147,54 @@ This file is the **cross-project hub**. It uses `<!-- PROJECT:name -->` / `<!-- 
 - **Rules = stable behavior**, not volatile data (counts, statuses go in journals)
 - **Memory = verified cross-session patterns** managed in `.claude/memory/MEMORY.md`
 
+## Experiments
+
+The `experiments/` folder holds structured research for decisions that need investigation before implementation. Unlike tasks in JOURNAL.md (clear path, just build it), experiments are for questions with multiple possible answers.
+
+**Lifecycle:**
+```
+IDENTIFY -> RESEARCH -> HYPOTHESIZE -> PLAN -> IMPLEMENT -> EVALUATE -> DECIDE (GO/NO-GO)
+```
+
+**Rules:**
+1. One experiment = one focused question
+2. Starts with IDENTIFY (problem, current state, target, gap)
+3. Ends with DECIDE — GO/NO-GO with clear reasoning
+4. After DECIDE(GO), create implementation tasks in the relevant project's JOURNAL.md
+5. Index: `experiments/README.md` — keep the Active Experiments table updated
+
+**Naming:** `NNN-short-description.md` (sequential number + kebab-case)
+
+**When to use experiments vs tasks:**
+- Unknown path, multiple options -> experiment
+- Clear path, just build it -> task in JOURNAL.md
+
+### Example files (delete when ready)
+
+The kit includes two demo experiments to show the system in action:
+- `experiments/001-landing-page-redesign.md` — completed experiment (full cycle through DECIDE)
+- `experiments/002-payment-provider-selection.md` — in-progress experiment (RESEARCH phase)
+
+These are **not real projects**. They demonstrate how experiments, journals, and the session prompt work together. Delete them when you create your first real experiment.
+
+## Projects
+
+Projects live in `projects/`. Each project has a `JOURNAL.md` — the single source of truth for tasks, decisions, and status.
+
+### Example projects (delete when ready)
+
+Two demo projects are included:
+- `projects/example-webapp/` — Recipe Sharing App (Next.js, shows active tasks and decisions)
+- `projects/example-saas/` — Invoice Automation API (FastAPI, shows blocked tasks and completed work)
+
+These are **not real projects**. Delete both folders when you create your first real project.
+
+## Adding a New Project
+
+1. Create `projects/new-project/JOURNAL.md` (copy the template from any example project)
+2. Add a `<!-- PROJECT:new-project -->` section in `context/next-session-prompt.md` before `<!-- SHARED -->`
+3. Optionally add `.claude/rules/new-project.md` with domain-specific rules (use `paths:` frontmatter to scope)
+
 ## Skills
 
 After setup, three skills are installed at `~/.claude/skills/`. They are available in every project.
@@ -154,8 +202,8 @@ After setup, three skills are installed at `~/.claude/skills/`. They are availab
 | Skill | Path | What it does | When to use |
 |-------|------|-------------|-------------|
 | **Gemini** | `~/.claude/skills/gemini/` | Second opinions from Google Gemini (different model family = different blind spots) | Fact-check, prompt stress-test, hypothesis falsification, architecture review |
-| **Brainstorm** | `~/.claude/skills/brainstorm/` | 3-round Claude x Gemini adversarial dialogue. Diverge → Deepen → Converge. | Multiple viable paths, strategic decisions, need to converge on one action |
-| **Design** | `~/.claude/skills/design/` | Design system lifecycle: extract → palette → tokens → CSS → audit → VQA | Creating/auditing design systems, visual QA, token management |
+| **Brainstorm** | `~/.claude/skills/brainstorm/` | 3-round Claude x Gemini adversarial dialogue. Diverge -> Deepen -> Converge. | Multiple viable paths, strategic decisions, need to converge on one action |
+| **Design** | `~/.claude/skills/design/` | Design system lifecycle: extract -> palette -> tokens -> CSS -> audit -> VQA | Creating/auditing design systems, visual QA, token management |
 
 ### How to invoke
 
@@ -174,7 +222,7 @@ python3 ~/.claude/skills/gemini/gemini.py second-opinion "question" --context "c
 - `GOOGLE_API_KEY` in `.env` — required for Gemini and Brainstorm
 - Before calling: `set -a && source .env && set +a`
 
-**Decision rule:** One clear path + need validation → Gemini `second-opinion`. Multiple viable paths + need to converge → Brainstorm.
+**Decision rule:** One clear path + need validation -> Gemini `second-opinion`. Multiple viable paths + need to converge -> Brainstorm.
 
 See `.claude/rules/gemini.md` for detailed usage rules (auto-loaded every session).
 
@@ -215,24 +263,19 @@ At session end, write a snapshot to `.claude/memory/snapshots/YYYY-MM-DD-project
 ## System Evolution
 
 After significant work — update relevant files:
-- **Behavioral rule** → `.claude/rules/*.md`
-- **Task/decision** → `projects/X/JOURNAL.md` (inline with the task)
-- **What to do next** → `context/next-session-prompt.md` (your project section only)
-- **Learned pattern** → `.claude/memory/MEMORY.md`
-- **Active project changed** → `.claude/memory/CONTEXT.md`
-
-## Adding a New Project
-
-1. Create `projects/new-project/JOURNAL.md` (copy the template from `my-first-project`)
-2. Add a `<!-- PROJECT:new-project -->` section in `context/next-session-prompt.md` before `<!-- SHARED -->`
-3. Optionally add `.claude/rules/new-project.md` with domain-specific rules (use `paths:` frontmatter to scope)
+- **Behavioral rule** -> `.claude/rules/*.md`
+- **Task/decision** -> `projects/X/JOURNAL.md` (inline with the task)
+- **What to do next** -> `context/next-session-prompt.md` (your project section only)
+- **Learned pattern** -> `.claude/memory/MEMORY.md`
+- **Active project changed** -> `.claude/memory/CONTEXT.md`
+- **New experiment** -> `experiments/NNN-description.md` + update `experiments/README.md`
 
 ## Rules
 
 `.claude/rules/` contains domain-specific rules that auto-load. Rules without `paths:` frontmatter load globally (every session). Rules with `paths:` load only when working on matching files.
 
 - `gemini.md` — loaded globally, controls when/how to use Gemini skill
-- `example-domain.md` — scoped to `projects/my-first-project/`, delete and replace with your own
+- `example-domain.md` — scoped to `projects/example-*/` and `experiments/`, delete and replace with your own
 
 ## Communication
 

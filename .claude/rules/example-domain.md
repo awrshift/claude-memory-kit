@@ -1,14 +1,25 @@
 ---
 paths:
-  - "projects/my-first-project/**/*"
+  - "projects/example-*/**/*"
+  - "experiments/*"
 ---
 
 # Example Domain Rules
 
-> This file auto-loads when working on files matching the `paths` pattern above.
-> Delete this file and create your own rules for your project's domains.
+> This file auto-loads when working on example projects or experiments.
+> These are DEMO rules. Delete this file and create rules for your real projects.
 
-## How to write rules
+## Important
+
+All files in `projects/example-webapp/`, `projects/example-saas/`, and `experiments/001-*`, `experiments/002-*` are **examples included with the starter kit**. They demonstrate the system's capabilities:
+
+- **JOURNAL.md** — how to track tasks, decisions, and status
+- **Experiments** — how to run structured research before building
+- **next-session-prompt.md** — how to hand off context between sessions
+
+**Do not treat these as real projects.** When the user creates their first real project, help them delete the examples and set up their own structure.
+
+## How to write your own rules
 
 Rules are behavioral instructions that change how the agent works. Good rules:
 
@@ -16,11 +27,10 @@ Rules are behavioral instructions that change how the agent works. Good rules:
 2. **Are scoped** — the `paths:` frontmatter controls when they load
 3. **Are actionable** — each rule changes agent behavior
 
-## Examples of good rules
+### Examples
 
 ```markdown
 # Database Rules
-
 - Always use parameterized queries, never string interpolation
 - Connection string: postgres://localhost:5432/mydb
 - After schema changes, run migrations: `npm run db:migrate`
@@ -28,14 +38,7 @@ Rules are behavioral instructions that change how the agent works. Good rules:
 
 ```markdown
 # API Rules
-
 - Base URL: https://api.example.com/v2
 - Auth: Bearer token from `$API_TOKEN` env var
 - Rate limit: 100 req/min — add 600ms delay between batch calls
 ```
-
-## Examples of bad rules (put these elsewhere)
-
-- "We have 1,234 users" → volatile data, goes in JOURNAL
-- "Yesterday we fixed bug X" → session context, goes in next-session-prompt
-- "The codebase has 50 files" → changes constantly, not a rule

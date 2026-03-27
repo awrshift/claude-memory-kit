@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/hero-banner.png" alt="Claude Code Starter Kit" width="100%">
+  <img src=".github/assets/hero-banner.png" alt="Claude Code Starter Kit" width="100%">
 </p>
 
 <p align="center">
@@ -60,13 +60,19 @@ your-project/
 │   ├── rules/                       # Domain rules (auto-loaded by file path)
 │   ├── hooks/
 │   │   ├── session-start.sh         # Shows memory + context at session start
-│   │   └── pre-compact.sh           # Saves context before /compact
+│   │   └── pre-compact.sh          # Saves context before /compact
 │   └── settings.json                # Permissions + hooks config
 ├── context/
 │   └── next-session-prompt.md       # Cross-project hub ("what to do next")
+├── experiments/                     # Research & decisions (IDENTIFY → DECIDE cycle)
+│   ├── README.md                    # How experiments work
+│   ├── 001-landing-page-redesign.md # Example: completed experiment
+│   └── 002-payment-provider.md      # Example: in-progress experiment
 └── projects/
-    └── my-first-project/
-        └── JOURNAL.md               # Tasks, decisions, status (source of truth)
+    ├── example-webapp/              # Example project (delete when ready)
+    │   └── JOURNAL.md               # Tasks, decisions, status
+    └── example-saas/                # Example project (delete when ready)
+        └── JOURNAL.md               # Tasks, decisions, status
 ```
 
 ## How It Works
@@ -76,7 +82,7 @@ your-project/
 Every Claude Code agent built with this kit has 6 core components:
 
 <p align="center">
-  <img src="docs/01-agent-anatomy-mindmap.png" alt="Agent Anatomy Mind Map" width="100%">
+  <img src=".github/assets/01-agent-anatomy-mindmap.png" alt="Agent Anatomy Mind Map" width="100%">
 </p>
 
 | Component | File | Who maintains it |
@@ -93,7 +99,7 @@ Every Claude Code agent built with this kit has 6 core components:
 Not everything loads every time. The kit uses a 4-layer system — always-on at the bottom, on-demand at the top:
 
 <p align="center">
-  <img src="docs/02-context-layers-pyramid.png" alt="Context Layers Pyramid" width="100%">
+  <img src=".github/assets/02-context-layers-pyramid.png" alt="Context Layers Pyramid" width="100%">
 </p>
 
 | Layer | What loads | When |
@@ -108,7 +114,7 @@ Not everything loads every time. The kit uses a 4-layer system — always-on at 
 Every session follows the same cycle — start, work, end. Context is saved automatically:
 
 <p align="center">
-  <img src="docs/03-session-lifecycle-flow.png" alt="Session Lifecycle Flow" width="100%">
+  <img src=".github/assets/03-session-lifecycle-flow.png" alt="Session Lifecycle Flow" width="100%">
 </p>
 
 The `pre-compact.sh` hook ensures context is saved even when Claude's conversation gets compressed mid-session.
@@ -145,6 +151,16 @@ Full design token pipeline: extract from reference → OKLCH palette → tokens 
 
 **Requires:** Python stdlib only (no external deps). Optional: Chrome MCP for visual QA.
 
+## Experiments
+
+For decisions that need research before building, use experiments. Each experiment follows a structured cycle:
+
+```
+IDENTIFY → RESEARCH → HYPOTHESIZE → PLAN → IMPLEMENT → EVALUATE → DECIDE
+```
+
+See `experiments/README.md` for details. Two example experiments are included — one completed (landing page A/B test) and one in-progress (payment provider comparison).
+
 ## Multiple Projects
 
 The kit supports multiple projects in one workspace. Each project gets:
@@ -155,9 +171,9 @@ Multiple Claude Code windows can work on different projects in parallel — they
 
 ```bash
 # Adding a new project
-mkdir projects/my-second-project
-cp projects/my-first-project/JOURNAL.md projects/my-second-project/
-# Then add <!-- PROJECT:my-second-project --> section in next-session-prompt.md
+mkdir projects/my-new-project
+cp projects/example-webapp/JOURNAL.md projects/my-new-project/
+# Then add <!-- PROJECT:my-new-project --> section in next-session-prompt.md
 ```
 
 ## Key Principles
