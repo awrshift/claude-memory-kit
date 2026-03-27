@@ -1,71 +1,232 @@
 <!-- SETUP:START — Agent deletes this entire section (from SETUP:START to SETUP:END) after completing first run setup -->
 ## First Run Setup
 
-**You are reading this for the first time. Complete these setup steps, then delete this section.**
+**You are reading this for the first time. Complete ALL steps in order, then delete this section.**
 
-### Step 1: Initialize git
+The setup has two phases: **Onboarding** (learn about the user) and **Configuration** (adapt the system).
+
+---
+
+### Phase 1: Onboarding
+
+**Use `AskUserQuestion` to gather project context.** Do NOT skip this — the answers personalize the entire system.
+
+**Question batch 1 (4 questions):**
+
+1. **"What is your project name?"** (header: "Project")
+   - Options: "My App", "My SaaS", "My Website" + Other (user types their own)
+   - Description for each: just the label, user will likely type their own
+
+2. **"What is your name?"** (header: "Owner")
+   - Options: use 2 placeholder options + Other
+   - User will type their own name
+
+3. **"What language should I use for all communication?"** (header: "Language")
+   - Options: "English", "Russian", "Ukrainian", "Spanish" + Other
+   - Description: "I'll use this language for all responses, comments, and documentation"
+
+4. **"Describe your project in 1-2 sentences"** (header: "Description")
+   - Options: "Web application", "API / Backend service", "CLI tool", "Mobile app" + Other
+   - Description: "Brief description helps me understand context for decisions"
+
+**Question batch 2 (2 questions):**
+
+5. **"Do you want to install Gemini skill for second opinions from Google AI?"** (header: "Gemini")
+   - Options:
+     - "Yes, install (Recommended)" — "Gives you second opinions from a different AI model. Requires: pip install google-genai + GOOGLE_API_KEY"
+     - "No, skip for now" — "You can install it later anytime"
+
+6. **"Do you have an existing project to import, or starting fresh?"** (header: "Start mode")
+   - Options:
+     - "Starting fresh" — "I'll create your first project structure"
+     - "I have existing code" — "Point me to your codebase and I'll set up the project around it"
+
+---
+
+### Phase 2: Configuration
+
+Execute these steps using the answers from Phase 1.
+
+#### Step 1: Initialize git
 
 If this directory is not a git repo yet, run `git init` and create initial commit with all files (so scaffolding is preserved in history).
 
-### Step 2: Global settings
+#### Step 2: Global settings
 
 Check if `~/.claude/CLAUDE.md` exists:
 - **If it does NOT exist** — copy `global/CLAUDE.md` to `~/.claude/CLAUDE.md`
 - **If it exists** — skip (don't overwrite the user's existing settings)
 
-### Step 3: Install global skills and rules
+#### Step 3: Install global skills and rules
 
 **Skills** — copy from `global/skills/` to `~/.claude/skills/`:
 - For each skill directory in `global/skills/`:
   - **If `~/.claude/skills/<name>/` does NOT exist** — copy the entire skill directory
   - **If it exists** — skip (don't overwrite existing skills)
+- If user answered "No" to Gemini in Q5 — still copy the skill files (no harm), but note it's not configured yet
 
 **Rules** — copy from `global/rules/` to `.claude/rules/` (project-level):
 - For each rule file in `global/rules/`:
   - Copy to `.claude/rules/` (these are project-specific, not global)
 
-After copying, tell the user which skills were installed and any prerequisites:
-- **Gemini skill** requires: `pip install google-genai` and `GOOGLE_API_KEY` in `.env`
-- **Brainstorm skill** requires: Gemini skill (uses it for multi-round dialogue)
-- **Design skill** requires: no external deps (Python stdlib only). Uses `frontend-design` plugin for screen generation and optionally Stitch MCP for prototyping
+#### Step 4: Personalize CLAUDE.md
 
-### Step 4: Verify memory directory
+Using answers from Phase 1, replace ALL placeholders in this file (below the SETUP:END marker):
 
-Check that `.claude/memory/MEMORY.md` and `.claude/memory/CONTEXT.md` exist (they should — included in the starter kit). These are your persistent files. You will update them as you work.
+- `[PROJECT NAME — replace this]` -> user's project name (Q1)
+- `[YOUR NAME]` -> user's name (Q2)
+- `[DATE]` -> today's date
+- `[Brief description of what this project is about. 2-3 sentences max.]` -> user's description (Q4)
+- `[Your preferred language]` -> user's language choice (Q3)
 
-If they exist, tell the user: "Memory is set up. I'll save patterns and context here across sessions."
+#### Step 5: Create first real project
 
-### Step 5: Verify hooks
+Using the project name from Q1 (kebab-case):
+
+1. Create `projects/{project-name}/JOURNAL.md` with a clean template:
+   ```markdown
+   # {Project Name} — Journal
+
+   **Last updated:** {today}
+   **Source of truth:** This file for all tasks, decisions, and status
+
+   ---
+
+   ## Statuses
+   - `TODO` — in queue, not started
+   - `IN PROGRESS` — active work
+   - `DONE` — completed
+   - `BLOCKED` — waiting for external input
+
+   ---
+
+   ## Active Tasks
+
+   > Add your first task here. Example:
+   > ### T-001: [Task name]
+   > **Status:** TODO
+   > **Priority:** P0
+   > [What needs to be done]
+
+   ---
+
+   ## Completed
+
+   - **T-000** ({today}): [Project setup] — starter kit configured
+
+   ---
+
+   **Maintained by:** Claude Code agent
+   ```
+
+2. Update `context/next-session-prompt.md` — replace ALL example content with:
+   ```markdown
+   # Next Session Prompt
+
+   **Updated:** {today}
+   **Session:** 1
+
+   > **Rule:** Each project section is wrapped in `<!-- PROJECT:name -->` / `<!-- /PROJECT:name -->` tags.
+
+   ---
+
+   <!-- PROJECT:{project-name} -->
+   ## {Project Name}
+
+   **Journal:** `projects/{project-name}/JOURNAL.md`
+
+   **Last session:** Initial setup complete.
+
+   ### IMMEDIATE NEXT
+   1. Define first tasks in JOURNAL.md
+   2. Start working on the project
+   <!-- /PROJECT:{project-name} -->
+
+   ---
+
+   <!-- SHARED -->
+   ## Shared Context
+
+   [Cross-project information goes here]
+   <!-- /SHARED -->
+   ```
+
+3. Update `.claude/memory/CONTEXT.md`:
+   ```markdown
+   # Project Context
+
+   > Pointer layer. Quick orientation for session start.
+
+   ## Source of Truth
+   - **Tasks & decisions:** `projects/{project-name}/JOURNAL.md`
+   - **Experiments:** `experiments/README.md`
+   - **Next actions:** `context/next-session-prompt.md`
+   - **Long-term memory:** `.claude/memory/MEMORY.md`
+
+   ## Active Project
+   {project-name}
+
+   ## Paused Tracks
+   [Nothing paused yet]
+   ```
+
+#### Step 6: Set up .env (if Gemini selected)
+
+If user answered "Yes" to Q5:
+1. Check if `.env` exists — if not, create it
+2. Ask user: "Paste your Google API key (GOOGLE_API_KEY) or type 'skip' to set it up later"
+3. If provided, add `GOOGLE_API_KEY={key}` to `.env`
+4. Add `.env` to `.gitignore` if not already there
+5. Run `pip install google-genai` (or note it as a prerequisite)
+
+#### Step 7: Verify hooks
 
 Make hooks executable:
 ```bash
 chmod +x .claude/hooks/session-start.sh .claude/hooks/pre-compact.sh
 ```
 
-The hooks are already configured in `.claude/settings.json`:
-- `session-start.sh` — runs at session start, shows memory summary + context
-- `pre-compact.sh` — runs before /compact, reminds to save context
+#### Step 8: Clean up ALL scaffolding
 
-### Step 6: Clean up scaffolding
+Delete these files/directories (they were only needed for setup and GitHub repo):
+- `global/` directory (entire folder — skills already copied)
+- `README.md` (GitHub repo readme, not needed locally)
+- `.github/` directory (repo images, not needed locally)
+- `projects/example-webapp/` (demo project)
+- `projects/example-saas/` (demo project)
+- `experiments/001-landing-page-redesign.md` (demo experiment)
+- `experiments/002-payment-provider-selection.md` (demo experiment)
+- `.claude/rules/example-domain.md` (demo rule)
 
-Delete these files/directories (they are only needed for first run):
-- `global/` directory (entire folder)
-- `README.md`
-- `.github/` directory (contains images for the GitHub repo README — not needed locally)
+Keep:
+- `experiments/README.md` (explains how experiments work — still useful)
+- `.claude/memory/` (already personalized in Step 5)
+- `.claude/hooks/` (configured)
+- `.claude/settings.json` (configured)
 
-Commit the cleanup: `git commit -am "setup: clean scaffolding after first run"`
+Commit: `git commit -am "setup: personalized project, removed scaffolding"`
 
-### Step 7: Remove this section
+#### Step 9: Remove this section
 
-Delete everything between `<!-- SETUP:START -->` and `<!-- SETUP:END -->` markers (inclusive) from this file. Commit.
+Delete everything between `<!-- SETUP:START -->` and `<!-- SETUP:END -->` markers (inclusive) from this file.
 
-### Step 8: Greet the user
+Commit: `git commit -am "setup: remove first-run instructions"`
 
-Tell the user in their language: "Setup complete. Project is ready. Here's what was configured..." and briefly explain:
-- File structure (CLAUDE.md, memory, context, rules, hooks)
-- Installed skills and their prerequisites
-- Example projects and experiments (in `projects/` and `experiments/`) — explain these are demos they can explore or delete
-- How sessions work (start -> work -> end cycle)
+#### Step 10: Greet the user
+
+Tell the user in their chosen language:
+
+"Setup complete. Here's your project:"
+- Project: {name} — `projects/{project-name}/JOURNAL.md`
+- Memory: `.claude/memory/` — I'll save patterns across sessions
+- Experiments: `experiments/` — for research before building
+- Skills installed: {list with prerequisites status}
+- Hooks: session-start (auto-loads context) + pre-compact (saves before compression)
+
+"To start working, just tell me what you want to build. I'll create tasks in your journal and track progress."
+
+If user selected "I have existing code" in Q6, add:
+"Point me to your codebase and I'll analyze the structure, then set up appropriate rules and initial tasks."
 <!-- SETUP:END -->
 
 ## Project Overview
