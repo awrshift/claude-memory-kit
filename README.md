@@ -39,7 +39,7 @@ claude
 ```
 
 On first launch, Claude will:
-- Install global skills (Gemini, Brainstorm, Design)
+- Install global skills (Gemini, Brainstorm, AWRSHIFT, Design, Skill Creator)
 - Set up memory and context files
 - Initialize git repository
 - Clean up scaffolding
@@ -130,57 +130,216 @@ The `pre-compact.sh` hook ensures context is saved even when Claude's conversati
 
 ## Skills
 
-Five skills are included and installed globally (`~/.claude/skills/`) on first run:
+Five skills are included and installed globally (`~/.claude/skills/`) on first run. Each one gives Claude a new capability. You don't need all of them — start with what you need.
 
-### Gemini — Second Opinions
+---
 
-Get analysis from a different AI model family (Google Gemini). Different model = different blind spots caught.
+### 1. Gemini — Get a Second Opinion
 
-```bash
-# Quick question
-python3 ~/.claude/skills/gemini/gemini.py ask "your question"
+> *"Two heads are better than one — especially when they think differently."*
 
-# Deep analysis
-python3 ~/.claude/skills/gemini/gemini.py second-opinion "question" --context "context"
-```
-
-**Requires:** `pip install google-genai` + `GOOGLE_API_KEY` in `.env`
-
-### Brainstorm — Claude x Gemini Dialogue
-
-3-round adversarial dialogue between Claude and Gemini. Diverge ideas → Deepen analysis → Converge to one action.
-
-**When to use:** Multiple viable paths and you need to pick one. Strategic decisions. Architecture choices.
-
-**Requires:** Gemini skill (above)
-
-### Design — Design System Lifecycle
-
-Full design token pipeline: extract from reference → OKLCH palette → tokens → CSS → audit → Visual QA.
-
-**Requires:** Python stdlib only (no external deps). Optional: Chrome MCP for visual QA.
-
-### AWRSHIFT — Adaptive Decision Framework
-
-One dynamic flow for non-trivial decisions: research before building, metrics before planning, factcheck before testing. User controls depth at every step via structured choices.
+Claude is great, but every AI has blind spots. Gemini is a completely different AI (Google's), so it catches things Claude misses. It's like having a colleague review your work.
 
 ```
-IDENTIFY → RESEARCH → EVALUATE-DESIGN → HYPOTHESIZE → PLAN → FACTCHECK → TEST → DECIDE → [IMPLEMENT]
+   You ask Claude           Claude asks Gemini          You get both views
+  ┌─────────────┐         ┌──────────────────┐        ┌─────────────────┐
+  │ "Is this     │───────▶│ Gemini analyzes   │──────▶│ Claude: "Here's  │
+  │  plan solid?" │        │ independently     │       │  what Gemini     │
+  └─────────────┘         └──────────────────┘        │  found + my take"│
+                                                       └─────────────────┘
 ```
 
-**When to use:** Non-trivial decisions, experiments, feature planning, architecture choices — anything with unknowns.
+**Real example:**
+```
+You: "Review my success metrics for this feature"
 
-**Includes:** Built-in Gemini checks at 3 phases (rubric, falsification, factcheck). Falls back to self-check if Gemini skill not installed.
+Claude sends to Gemini → Gemini flags:
+  - "Metric #3 can be gamed by adding empty buttons"
+  - "You're missing accessibility checks"
+  - "Target of 100% is unrealistic, try 90%"
 
-**Requires:** No external deps. Enhanced with Gemini skill (optional).
+Claude shows you: "Gemini caught 3 issues. Here's what I agree with..."
+```
 
-### Skill Creator — Build Your Own Skills
+**How to trigger:** Say "ask Gemini", "second opinion", "check with Gemini", or "fact-check this"
 
-The official Anthropic skill for creating, testing, and iterating on custom skills. Draft a skill, run test cases with automated eval framework, review results in a browser viewer, and improve until satisfied.
+**Setup:** `pip install google-genai` + add `GOOGLE_API_KEY` to your `.env` file ([get key here](https://aistudio.google.com/apikey))
 
-**When to use:** You have a repeatable workflow you want to turn into a reusable skill. Or you want to improve an existing skill's quality and triggering accuracy.
+---
 
-**Requires:** Python stdlib only. Uses `claude -p` CLI for running evals.
+### 2. Brainstorm — Two AIs Debate Your Idea
+
+> *"When Claude and Gemini disagree, that's where the best insights hide."*
+
+A structured 3-round dialogue where Claude and Gemini challenge each other's ideas. Think of it as a debate that ends with a clear winner.
+
+```
+  Round 1: DIVERGE          Round 2: DEEPEN           Round 3: CONVERGE
+  ┌─────────────────┐      ┌─────────────────┐       ┌─────────────────┐
+  │ Claude: Option A │      │ Gemini: "A fails │       │ Both agree:      │
+  │ Gemini: Option B │─────▶│  when X happens" │──────▶│ "Option A with   │
+  │ Gemini: Option C │      │ Claude: "B costs │       │  B's safeguard"  │
+  └─────────────────┘      │  too much"       │       └─────────────────┘
+                            └─────────────────┘
+```
+
+**Real example:**
+```
+You: "brainstorm — should we use PostgreSQL or MongoDB for this project?"
+
+Round 1: Claude argues PostgreSQL, Gemini argues MongoDB
+Round 2: Gemini finds PostgreSQL JSONB covers 90% of MongoDB use cases
+Round 3: Both converge on PostgreSQL + JSONB columns for flexible data
+
+Result: One clear recommendation with reasoning from both sides
+```
+
+**How to trigger:** Say "brainstorm", "let's think through options", or "explore this idea with Gemini"
+
+**Setup:** Needs Gemini skill (above) to be configured first
+
+---
+
+### 3. AWRSHIFT — Think Before You Build
+
+> *"The framework that stops you from coding the wrong thing."*
+
+When you face a decision with unknowns, AWRSHIFT guides you step by step: define the problem, research options, set success metrics, verify your plan, test in a sandbox — then decide. You choose how deep to go at every step.
+
+```
+  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+  │ IDENTIFY │───▶│ RESEARCH │───▶│ METRICS  │───▶│   PLAN   │
+  │          │    │          │    │          │    │          │
+  │ "What's  │    │ Gather   │    │ How will │    │ Concrete │
+  │ the      │    │ evidence │    │ we know  │    │ tasks    │
+  │ problem?"│    │ first    │    │ it works?│    │          │
+  └──────────┘    └──────────┘    └──────────┘    └──────────┘
+       │                │               │               │
+       ▼                ▼               ▼               ▼
+    You answer     Claude researches  Gemini checks   You approve
+    questions      (+ agents)        for bias         the plan
+                                                          │
+  ┌──────────┐    ┌──────────┐    ┌──────────┐           │
+  │FACTCHECK │◀───│          │    │   TEST   │◀──────────┘
+  │          │    │  Gemini  │    │          │
+  │ "Did we  │───▶│  cross-  │    │ Try in   │
+  │  miss    │    │  check"  │    │ sandbox  │
+  │ anything?"    └──────────┘    │ (safe!)  │
+  └──────────┘                    └──────────┘
+       │                               │
+       ▼                               ▼
+  ┌──────────┐                    ┌──────────┐
+  │  DECIDE  │                    │IMPLEMENT │
+  │          │                    │          │
+  │ GO /     │───────────────────▶│ Apply to │
+  │ NO-GO /  │   only after GO    │ main     │
+  │ PIVOT    │                    │ project  │
+  └──────────┘                    └──────────┘
+```
+
+**Key feature:** At every step, you get structured choices (not walls of text):
+```
+Claude asks:
+  A) "Proceed with research on all 3 unknowns"
+  B) "I have context to share first"
+  C) "Skip research — I already know the answer"
+  D) [type your own response]
+```
+
+**Real example:**
+```
+You: "awrshift — should we migrate from REST to GraphQL?"
+
+IDENTIFY:  Claude asks 4 questions, maps the problem
+RESEARCH:  3 parallel agents investigate performance, DX, migration cost
+METRICS:   Proposes success criteria → Gemini checks for bias
+PLAN:      Sequenced tasks with risks
+FACTCHECK: Gemini cross-checks → finds missing rollback plan
+TEST:      Prototype in sandbox folder (main project untouched)
+DECIDE:    GO with conditions — migrate read endpoints first
+```
+
+**How to trigger:** Say "awrshift", "let's think this through", "research first", or "experiment"
+
+**Setup:** No dependencies. Works standalone. Even better with Gemini skill installed.
+
+---
+
+### 4. Design — From Reference to Design System
+
+> *"Extract design tokens from any website, generate a full design system."*
+
+Point Claude at a reference website, and it extracts colors, fonts, spacing into a structured token system. Then generates CSS, audits your code for consistency, and runs visual QA.
+
+```
+  Reference URL          Extract             Generate            Audit
+  ┌─────────────┐      ┌────────────┐      ┌────────────┐     ┌──────────┐
+  │ stripe.com  │─────▶│ Colors     │─────▶│ design-    │────▶│ Check    │
+  │ or any site │      │ Fonts      │      │ tokens.json│     │ your CSS │
+  └─────────────┘      │ Spacing    │      │ + CSS vars │     │ matches  │
+                        │ Radius     │      │ + rules    │     │ tokens   │
+                        └────────────┘      └────────────┘     └──────────┘
+```
+
+**What you get:**
+- `design-tokens.json` — W3C standard, works with any framework
+- `design-rules.md` — behavioral rules for AI ("never use more than 3 font sizes")
+- CSS custom properties — drop into Tailwind, vanilla CSS, or any stack
+- Drift detection — warns when code diverges from tokens
+
+**How to trigger:** Say "create a design system", "extract colors from [url]", or "audit my tokens"
+
+**Setup:** Python stdlib only. Optional: Chrome MCP for visual comparison.
+
+---
+
+### 5. Skill Creator — Build Your Own Skills
+
+> *"Turn any repeatable workflow into a reusable skill."*
+
+If you find yourself giving Claude the same instructions again and again, turn them into a skill. Skill Creator helps you write it, test it with automated evals, and improve it iteratively.
+
+```
+  Your idea          Draft             Test              Ship
+  ┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
+  │ "I want  │────▶│ SKILL.md │────▶│ Run 5    │────▶│ Install  │
+  │  Claude  │     │ generated│     │ test     │     │ globally │
+  │  to..."  │     │          │     │ cases    │     │          │
+  └──────────┘     └──────────┘     │ Score:   │     └──────────┘
+                                     │ 4/5 PASS │
+                                     └──────────┘
+                                          │
+                                     Fix failing ──▶ Re-test ──▶ 5/5 PASS
+```
+
+**Real example:**
+```
+You: "create a skill that generates changelog entries from git commits"
+
+Skill Creator:
+  1. Drafts SKILL.md with instructions
+  2. Generates 5 test cases (edge cases included)
+  3. Runs evals using `claude -p` CLI
+  4. Shows results: 4/5 pass, 1 fails on merge commits
+  5. Fixes the prompt, re-runs: 5/5 pass
+  6. Installs to ~/.claude/skills/changelog/
+```
+
+**How to trigger:** Say "create a skill", "improve this skill", or "run skill evals"
+
+**Setup:** Python stdlib only. Uses `claude -p` CLI for running evals.
+
+---
+
+### Skills at a Glance
+
+| Skill | One-liner | Needs Gemini? | Needs setup? |
+|-------|-----------|:---:|:---:|
+| **Gemini** | Second opinion from a different AI | - | API key |
+| **Brainstorm** | Two AIs debate, one answer emerges | Yes | - |
+| **AWRSHIFT** | Step-by-step decision framework | Better with | - |
+| **Design** | Reference site to design system | No | - |
+| **Skill Creator** | Turn workflows into reusable skills | No | - |
 
 ## Experiments
 
@@ -232,7 +391,7 @@ Yes. This is a project structure — it works with any Claude Code plan.
 <details>
 <summary><strong>Can I use this without the Gemini skill?</strong></summary>
 
-Absolutely. Gemini, Brainstorm, and Design are optional. The core system (memory, context, journals, rules, hooks) works without any skills.
+Absolutely. All 5 skills are optional. The core system (memory, context, journals, rules, hooks) works without any skills. AWRSHIFT works standalone too — it just gets enhanced when Gemini is available.
 </details>
 
 <details>
