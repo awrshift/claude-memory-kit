@@ -13,6 +13,7 @@ Usage:
   python3 gemini.py ask "prompt" --grounded          # web-grounded answer
   python3 gemini.py ask "prompt" --save output.md
   python3 gemini.py ask "prompt" -m gemini-3.1-flash-lite-preview --grounded  # research mode
+  python3 gemini.py second-opinion @prompt.txt --image site.png --image ref.png  # visual review
 
 Env: GOOGLE_API_KEY (from .env or export)
 """
@@ -61,8 +62,9 @@ def call_gemini(
   max_output_tokens: int | None = None,
   json_mode: bool = False,
   seed: int | None = None,
+  images: list[str] | None = None,
 ) -> dict:
-  """Call Gemini SDK and return response + usage."""
+  """Call Gemini SDK and return response + usage. Supports multimodal (text + images)."""
   api_key = os.environ.get("GOOGLE_API_KEY")
   if not api_key:
     return {"error": "GOOGLE_API_KEY not set"}
@@ -114,8 +116,23 @@ def call_gemini(
 
     config = types.GenerateContentConfig(**config_kwargs) if config_kwargs else None
 
+    # Build multimodal contents if images provided
+    contents = prompt
+    if images:
+      parts = [types.Part.from_text(text=prompt)]
+      for img_path in images:
+        if not os.path.isfile(img_path):
+          return {"error": f"Image file not found: {img_path}"}
+        with open(img_path, "rb") as f:
+          img_data = f.read()
+        ext = os.path.splitext(img_path)[1].lower()
+        mime_map = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif"}
+        mime = mime_map.get(ext, "image/png")
+        parts.append(types.Part.from_bytes(data=img_data, mime_type=mime))
+      contents = parts
+
     response = client.models.generate_content(
-      model=model, contents=prompt, config=config,
+      model=model, contents=contents, config=config,
     )
 
     elapsed_ms = int((time.time() - start) * 1000)
@@ -208,6 +225,7 @@ def main():
   parser.add_argument("--json-mode", action="store_true", help="Force JSON output (sets response_mime_type=application/json)")
   parser.add_argument("--seed", type=int, help="Seed for reproducible output")
   parser.add_argument("--focus", help="Focus area for review command")
+  parser.add_argument("--image", "-i", action="append", dest="images", help="Image file path (repeatable, for multimodal input)")
 
   args = parser.parse_args()
   cmd = COMMANDS[args.command]
@@ -245,6 +263,7 @@ def main():
     max_output_tokens=args.max_tokens,
     json_mode=args.json_mode,
     seed=args.seed,
+    images=args.images,
   )
 
   # Output

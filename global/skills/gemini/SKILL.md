@@ -45,7 +45,33 @@ python3 $SCRIPT second-opinion "question" --save output.md
 
 # Read prompt from file (avoids shell escaping for long prompts)
 python3 $SCRIPT second-opinion @prompt.txt --save output.md
+
+# Multimodal — send images with any command (Gemini is natively multimodal)
+python3 $SCRIPT ask "Describe this UI" --image screenshot.png
+python3 $SCRIPT second-opinion "Compare these designs" --image our-site.png --image reference.png
+python3 $SCRIPT ask "What accessibility issues?" --image page.png --save a11y-review.md
 ```
+
+## Image Support (Multimodal)
+
+Gemini 3.x models are natively multimodal. Use `--image` (repeatable) to send images:
+
+```bash
+# Single image — design review, describe, analyze
+python3 $SCRIPT ask "Rate this UI design 1-10" --image hero.png
+
+# Multiple images — visual diff, before/after comparison
+python3 $SCRIPT second-opinion @review-prompt.txt \
+  --image current-site.png \
+  --image reference-site.png \
+  --save design-review.md
+
+# JSON scoring with images
+python3 $SCRIPT ask "Score typography alignment" --image site.png --json-mode
+```
+
+Supported formats: PNG, JPEG, WebP, GIF. Max ~20MB per request total.
+Use cases: design review, visual QA, screenshot diff, accessibility audit, UI critique.
 
 ## Commands
 
