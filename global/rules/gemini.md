@@ -15,6 +15,9 @@ python3 $SCRIPT second-opinion "question" --context "context" --save output.md
 
 # Read prompt from file (avoids shell escaping for long prompts)
 python3 $SCRIPT second-opinion @prompt.txt --save output.md
+
+# Visual review — send screenshots (multimodal)
+python3 $SCRIPT second-opinion @prompt.txt --image site.png --image ref.png --save review.md
 ```
 
 **Env required:** `set -a && source .env && set +a`
@@ -37,6 +40,7 @@ Full CLI reference: `~/.claude/skills/gemini/SKILL.md`
 - **Independent second opinion** — different model family = different biases
 - **Quick stateless questions** — `ask` (<3s, cheap)
 - **Fact-check verification** — cross-validate Claude's analysis
+- **Visual design review** — `--image` for screenshot comparison (multimodal)
 - **Parallel batch calls** — 4+ background processes via `&` + `wait`
 - **Web-grounded research** — `--grounded` flag for real-time facts
 
@@ -73,3 +77,9 @@ After every `second-opinion` call:
 **Trigger:** Designing evaluation criteria.
 **Action:** Ask Gemini to critique for bias and edge case vulnerability.
 **Why:** Claude designs metrics -> Claude evaluates = circular validation. Different model family breaks the loop.
+
+### 5. Visual Design Review
+**Trigger:** Any UI/visual change — colors, spacing, typography, layout.
+**Action:** Screenshot our page + reference → `gemini.py second-opinion --image our.png --image ref.png`
+**Score targets:** Typography ≥7, Spacing ≥7, Hierarchy ≥7, Polish ≥7. Loop if < 7 (max 2 iterations).
+**Why:** Gemini natively multimodal — catches visual issues Claude can't see from code alone.

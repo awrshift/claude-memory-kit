@@ -73,6 +73,37 @@ python3 $SCRIPT ask "Score typography alignment" --image site.png --json-mode
 Supported formats: PNG, JPEG, WebP, GIF. Max ~20MB per request total.
 Use cases: design review, visual QA, screenshot diff, accessibility audit, UI critique.
 
+### Visual Design Review Pipeline
+
+Proven workflow for comparing your site against a design reference:
+
+```bash
+# 1. Capture screenshots
+# Our site (localhost) — via playwright:
+python3 -c "
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    b = p.chromium.launch()
+    page = b.new_page(viewport={'width': 1440, 'height': 900})
+    page.goto('http://localhost:3000/')
+    page.wait_for_timeout(3000)
+    page.screenshot(path='/tmp/our-site.png')
+    b.close()
+"
+
+# Reference site — via Firecrawl MCP:
+# firecrawl_scrape(url, formats:["screenshot"]) → download PNG
+
+# 2. Send both to Gemini
+python3 $SCRIPT second-opinion @review-prompt.txt \
+  --image /tmp/our-site.png \
+  --image /tmp/reference.png \
+  --save /tmp/design-review.md
+
+# 3. Score targets: Typography ≥7, Spacing ≥7, Hierarchy ≥7, Polish ≥7
+# If any < 7 → apply fixes → re-screenshot → re-verify (max 2 iterations)
+```
+
 ## Commands
 
 | Command | Default Model | System Instruction | Use When |
