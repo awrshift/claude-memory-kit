@@ -151,25 +151,6 @@ Using the project name from Q1 (kebab-case):
    <!-- /SHARED -->
    ```
 
-3. Update `.claude/memory/CONTEXT.md`:
-   ```markdown
-   # Project Context
-
-   > Pointer layer. Quick orientation for session start.
-
-   ## Source of Truth
-   - **Tasks & decisions:** `projects/{project-name}/JOURNAL.md`
-   - **Experiments:** `experiments/README.md`
-   - **Next actions:** `context/next-session-prompt.md`
-   - **Long-term memory:** `.claude/memory/MEMORY.md`
-
-   ## Active Project
-   {project-name}
-
-   ## Paused Tracks
-   [Nothing paused yet]
-   ```
-
 #### Step 6: Set up .env (if Gemini selected)
 
 If user answered "Yes" to Q5:
@@ -241,21 +222,19 @@ If user selected "I have existing code" in Q6, add:
 
 **Start:**
 1. Read `context/next-session-prompt.md` — find your `<!-- PROJECT:name -->` section
-2. Read `.claude/memory/CONTEXT.md` — quick orientation (active project, pointers)
-3. Read `.claude/memory/MEMORY.md` — recall patterns from past sessions
-4. If user asks about a specific project -> read that project's `JOURNAL.md`
+2. `.claude/memory/MEMORY.md` is auto-loaded (patterns from past sessions)
+3. If user asks about a specific project -> read that project's `JOURNAL.md`
+4. If working on specific area -> read relevant `.claude/memory/topics/*.md`
 
 **During:** Work on tasks. Update project JOURNAL.md after completing work.
 
 **End (all steps, in order):**
-1. **MEMORY.md** — add new verified patterns, update existing. Shared across all projects.
+1. **MEMORY.md** — add new verified patterns to index (keep < 200 lines). If detailed — create/update topic file in `.claude/memory/topics/`.
 2. **next-session-prompt.md** — update ONLY your `<!-- PROJECT:name -->` section. Include: what was done, files changed, decisions made, `### IMMEDIATE NEXT` (exact first steps for next session).
-3. **CONTEXT.md** — update active project name, paused tracks
-4. **JOURNAL.md** — update task statuses if any active tasks
-5. **Snapshot** — write to `.claude/memory/snapshots/YYYY-MM-DD-projectname-NNN.md` (max 50 lines)
+3. **JOURNAL.md** — update task statuses if any active tasks
 
 **Before /compact (MANDATORY):**
-Context is about to compress. Execute End steps 1-4 BEFORE allowing compact to proceed. The `pre-compact.sh` hook will remind you, but you must actually do the work.
+Context is about to compress. Execute End steps 1-3 BEFORE allowing compact to proceed. The `pre-compact.sh` hook will remind you, but you must actually do the work.
 
 **Context Save triggers:** User says "save context", "update context", or session is ending.
 
@@ -266,7 +245,6 @@ When the user has multiple projects, each project gets its own `<!-- PROJECT:nam
 **Critical rules:**
 - **next-session-prompt.md** — ONLY edit within your project's `<!-- PROJECT:name -->` / `<!-- /PROJECT:name -->` tags. Another window may be editing a different project section at the same time.
 - **MEMORY.md** — shared across all projects. Write patterns that apply broadly. Tag project-specific patterns: `[Project: name]`.
-- **CONTEXT.md** — update the "Active Project" field to YOUR current project. If another session set a different project, don't overwrite — add yours as a second line.
 - **JOURNAL.md** — each project has its own. No conflicts possible (one file per project).
 
 ### next-session-prompt.md — How It Works
@@ -295,10 +273,11 @@ This file is the **cross-project hub**. It uses `<!-- PROJECT:name -->` / `<!-- 
 
 | Layer | Files | When loaded |
 |-------|-------|-------------|
-| **L1: Auto** | This file + `.claude/rules/` + `.claude/memory/MEMORY.md` | Every session |
-| **L2: Start** | `context/next-session-prompt.md` + `.claude/memory/CONTEXT.md` | Session start |
+| **L1: Auto** | This file + `.claude/rules/` + `.claude/memory/MEMORY.md` (index, < 200 lines) | Every session |
+| **L2: Start** | `context/next-session-prompt.md` | Session start |
 | **L3: Project** | `projects/X/JOURNAL.md` | When working on project X |
-| **L4: Reference** | Experiments, snapshots, any other docs | On-demand |
+| **L4: Topics** | `.claude/memory/topics/*.md` | On-demand (when working on specific area) |
+| **L5: Reference** | Experiments, any other docs | On-demand |
 
 ### Key principles
 
@@ -358,14 +337,13 @@ These are **not real projects**. Delete both folders when you create your first 
 
 ## Skills
 
-After setup, five skills are installed at `~/.claude/skills/`. They are available in every project.
+After setup, four skills are installed at `~/.claude/skills/`. They are available in every project.
 
 | Skill | Path | What it does | When to use |
 |-------|------|-------------|-------------|
 | **Gemini** | `~/.claude/skills/gemini/` | Second opinions from Google Gemini (different model family = different blind spots) | Fact-check, prompt stress-test, hypothesis falsification, architecture review |
 | **Brainstorm** | `~/.claude/skills/brainstorm/` | 3-round Claude x Gemini adversarial dialogue. Diverge -> Deepen -> Converge. | Multiple viable paths, strategic decisions, need to converge on one action |
 | **AWRSHIFT** | `~/.claude/skills/awrshift/` | Adaptive decision framework — one dynamic flow with user checkpoints and Gemini gates | Non-trivial decisions, experiments, feature planning, architecture choices |
-| **Design** | `~/.claude/skills/design/` | Design system lifecycle: extract -> palette -> tokens -> CSS -> audit -> VQA | Creating/auditing design systems, visual QA, token management |
 | **Skill Creator** | `~/.claude/skills/skill-creator/` | Create, test, and iterate on custom skills with eval framework | Building new skills, improving existing ones, running evals, optimizing skill descriptions |
 
 ### How to invoke
@@ -377,7 +355,7 @@ python3 ~/.claude/skills/gemini/gemini.py ask "your question"
 # Gemini — second opinion (deeper analysis)
 python3 ~/.claude/skills/gemini/gemini.py second-opinion "question" --context "context"
 
-# Brainstorm and Design — see their SKILL.md for full CLI reference
+# Brainstorm — see SKILL.md for full CLI reference
 ```
 
 **Prerequisites (must be installed for skills to work):**
@@ -390,39 +368,41 @@ python3 ~/.claude/skills/gemini/gemini.py second-opinion "question" --context "c
 
 See `.claude/rules/gemini.md` for detailed usage rules (auto-loaded every session).
 
-## Memory System
+## Memory System (Tier-based)
 
-Three files in `.claude/memory/` work together to preserve context across sessions:
+Two tiers preserve context across sessions:
 
-| File | Purpose | When to update |
-|------|---------|----------------|
-| **MEMORY.md** | Long-term patterns, decisions, lessons learned | After significant insight or user correction |
-| **CONTEXT.md** | Quick orientation — active project, source of truth pointers | Start/end of session |
-| **snapshots/** | Session summaries (backup if context compresses) | End of session |
+| Tier | File | Loaded | Size limit |
+|------|------|--------|-----------|
+| **Index** | `.claude/memory/MEMORY.md` | Every session (auto) | **< 200 lines** (Anthropic limit — content beyond 200 lines is truncated) |
+| **Topics** | `.claude/memory/topics/*.md` | On-demand (when needed) | No limit |
 
-### MEMORY.md — What to save
+### MEMORY.md (Index) — What goes here
 
-- Patterns confirmed across multiple sessions (bug traps, conventions)
-- Key architectural decisions and file paths
+- One-line patterns confirmed across multiple sessions
 - User preferences for workflow and communication
-- Solutions to recurring problems
+- Key architectural decisions (one line each)
+- Failed approaches table (so you don't repeat mistakes)
+- **Topic Files table** — index of what's in `topics/` and when to read each file
 
-### MEMORY.md — What NOT to save
+### MEMORY.md — What does NOT go here
 
 - Session-specific details (current task, temporary state)
-- Unverified assumptions from reading a single file
+- Detailed knowledge on a single topic (move to `topics/`)
 - Anything already in CLAUDE.md or rules/
 
-### CONTEXT.md — Quick orientation
+### Topic Files — Detailed knowledge
 
-Update at session start and end. Contains:
-- Pointers to source-of-truth files
-- Currently active project name
-- Paused tracks (so you don't forget them)
+When a theme in MEMORY.md grows beyond 5-10 entries, move details to `.claude/memory/topics/{name}.md`. Keep a one-line summary + table entry in MEMORY.md. Claude reads topic files on-demand — they don't consume context every session.
 
-### Snapshots — Session backup
-
-At session end, write a snapshot to `.claude/memory/snapshots/YYYY-MM-DD-projectname-NNN.md` (max 50 lines). Include: summary, key files changed, decisions made, next steps. This protects against context loss if conversation history compresses.
+```
+.claude/memory/
+├── MEMORY.md              ← Index (< 200 lines, loaded every session)
+└── topics/
+    ├── api.md             ← Example: API conventions, endpoints, auth
+    ├── database.md        ← Example: Schema decisions, migration patterns
+    └── deployment.md      ← Example: CI/CD, hosting, env variables
+```
 
 ## System Evolution
 
@@ -430,8 +410,8 @@ After significant work — update relevant files:
 - **Behavioral rule** -> `.claude/rules/*.md`
 - **Task/decision** -> `projects/X/JOURNAL.md` (inline with the task)
 - **What to do next** -> `context/next-session-prompt.md` (your project section only)
-- **Learned pattern** -> `.claude/memory/MEMORY.md`
-- **Active project changed** -> `.claude/memory/CONTEXT.md`
+- **Learned pattern** -> `.claude/memory/MEMORY.md` (index, < 200 lines)
+- **Detailed knowledge** -> `.claude/memory/topics/*.md` (on-demand, no size limit)
 - **New experiment** -> `experiments/NNN-description.md` + update `experiments/README.md`
 
 ## Rules

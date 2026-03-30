@@ -39,7 +39,8 @@ claude
 ```
 
 On first launch, Claude will:
-- Install global skills (Gemini, Brainstorm, AWRSHIFT, Design, Skill Creator)
+- Ask you about your project (name, description, language)
+- Install global skills (Gemini, Brainstorm, AWRSHIFT, Skill Creator)
 - Set up memory and context files
 - Initialize git repository
 - Clean up scaffolding
@@ -54,13 +55,12 @@ your-project/
 ├── CLAUDE.md                        # Agent brain — reads this every session
 ├── .claude/
 │   ├── memory/
-│   │   ├── MEMORY.md                # Long-term patterns (agent updates this)
-│   │   ├── CONTEXT.md               # Quick orientation (active project, pointers)
-│   │   └── snapshots/               # Session backups (protection against context loss)
+│   │   ├── MEMORY.md                # Index: patterns & lessons (< 200 lines, auto-loaded)
+│   │   └── topics/                  # Detailed knowledge by theme (loaded on-demand)
 │   ├── rules/                       # Domain rules (auto-loaded by file path)
 │   ├── hooks/
-│   │   ├── session-start.sh         # Shows memory + context at session start
-│   │   └── pre-compact.sh          # Saves context before /compact
+│   │   ├── session-start.sh         # Shows memory + projects at session start
+│   │   └── pre-compact.sh           # Saves context before /compact
 │   └── settings.json                # Permissions + hooks config
 ├── context/
 │   └── next-session-prompt.md       # Cross-project hub ("what to do next")
@@ -78,7 +78,6 @@ your-project/
     │   ├── gemini/                   # Second opinions from Google Gemini
     │   ├── brainstorm/              # 3-round Claude x Gemini dialogue
     │   ├── awrshift/                # Adaptive decision framework
-    │   ├── design/                  # Design system lifecycle
     │   └── skill-creator/           # Build and test custom skills
     └── rules/
         └── gemini.md                # Gemini usage rules (auto-loaded)
@@ -97,15 +96,30 @@ Every Claude Code agent built with this kit has 6 core components:
 | Component | File | Who maintains it |
 |-----------|------|-----------------|
 | **Brain** | `CLAUDE.md` | You write it, agent follows |
-| **Memory** | `.claude/memory/MEMORY.md` | Agent updates across sessions |
+| **Memory** | `.claude/memory/MEMORY.md` + `topics/` | Agent updates across sessions |
 | **Rules** | `.claude/rules/*.md` | You write domain rules |
 | **Skills** | `~/.claude/skills/` | Installed once, available everywhere |
 | **Journal** | `projects/X/JOURNAL.md` | Agent tracks tasks and decisions |
 | **Context Hub** | `context/next-session-prompt.md` | Agent updates at session end |
 
+### Memory Architecture
+
+Memory uses a **two-tier system** (following [Anthropic's official recommendations](https://code.claude.com/docs/en/memory)):
+
+```
+.claude/memory/
+├── MEMORY.md          ← Index (< 200 lines, loaded EVERY session)
+└── topics/            ← Detailed knowledge (loaded ON-DEMAND)
+    ├── api.md         ← Only when working on API
+    ├── database.md    ← Only when working on DB
+    └── ...            ← Grows with your project
+```
+
+**Why 200 lines?** Anthropic truncates MEMORY.md at 200 lines / 25KB. Content beyond that is silently lost. The index stays compact; details live in topic files that Claude reads when needed.
+
 ### Context Layers
 
-Not everything loads every time. The kit uses a 4-layer system — always-on at the bottom, on-demand at the top:
+Not everything loads every time. The kit uses a layered system — always-on at the bottom, on-demand at the top:
 
 <p align="center">
   <img src=".github/assets/02-context-layers-pyramid.png" alt="Context Layers Pyramid" width="100%">
@@ -113,10 +127,11 @@ Not everything loads every time. The kit uses a 4-layer system — always-on at 
 
 | Layer | What loads | When |
 |-------|-----------|------|
-| **L1: Auto** | CLAUDE.md + rules + MEMORY.md | Every session |
-| **L2: Start** | next-session-prompt + CONTEXT.md | Session start |
+| **L1: Auto** | CLAUDE.md + rules + MEMORY.md (index) | Every session |
+| **L2: Start** | next-session-prompt.md | Session start |
 | **L3: Project** | JOURNAL.md | When working on a project |
-| **L4: Reference** | Docs, snapshots | Only when needed |
+| **L4: Topics** | .claude/memory/topics/*.md | When working on specific area |
+| **L5: Reference** | Experiments, docs | Only when needed |
 
 ### Session Lifecycle
 
@@ -130,7 +145,7 @@ The `pre-compact.sh` hook ensures context is saved even when Claude's conversati
 
 ## Skills
 
-Five skills are included and installed globally (`~/.claude/skills/`) on first run. Each one gives Claude a new capability. You don't need all of them — start with what you need.
+Four skills are included and installed globally (`~/.claude/skills/`) on first run. Each one gives Claude a new capability. You don't need all of them — start with what you need.
 
 ---
 
@@ -149,18 +164,6 @@ Claude is great, but every AI has blind spots. Gemini is a completely different 
                                                        └─────────────────┘
 ```
 
-**Real example:**
-```
-You: "Review my success metrics for this feature"
-
-Claude sends to Gemini → Gemini flags:
-  - "Metric #3 can be gamed by adding empty buttons"
-  - "You're missing accessibility checks"
-  - "Target of 100% is unrealistic, try 90%"
-
-Claude shows you: "Gemini caught 3 issues. Here's what I agree with..."
-```
-
 **How to trigger:** Say "ask Gemini", "second opinion", "check with Gemini", or "fact-check this"
 
 **Setup:** `pip install google-genai` + add `GOOGLE_API_KEY` to your `.env` file ([get key here](https://aistudio.google.com/apikey))
@@ -173,30 +176,9 @@ Claude shows you: "Gemini caught 3 issues. Here's what I agree with..."
 
 A structured 3-round dialogue where Claude and Gemini challenge each other's ideas. Think of it as a debate that ends with a clear winner.
 
-```
-  Round 1: DIVERGE          Round 2: DEEPEN           Round 3: CONVERGE
-  ┌─────────────────┐      ┌─────────────────┐       ┌─────────────────┐
-  │ Claude: Option A │      │ Gemini: "A fails │       │ Both agree:      │
-  │ Gemini: Option B │─────▶│  when X happens" │──────▶│ "Option A with   │
-  │ Gemini: Option C │      │ Claude: "B costs │       │  B's safeguard"  │
-  └─────────────────┘      │  too much"       │       └─────────────────┘
-                            └─────────────────┘
-```
-
-**Real example:**
-```
-You: "brainstorm — should we use PostgreSQL or MongoDB for this project?"
-
-Round 1: Claude argues PostgreSQL, Gemini argues MongoDB
-Round 2: Gemini finds PostgreSQL JSONB covers 90% of MongoDB use cases
-Round 3: Both converge on PostgreSQL + JSONB columns for flexible data
-
-Result: One clear recommendation with reasoning from both sides
-```
-
 **How to trigger:** Say "brainstorm", "let's think through options", or "explore this idea with Gemini"
 
-**Setup:** Needs Gemini skill (above) to be configured first
+**Setup:** Needs Gemini skill configured first
 
 ---
 
@@ -204,126 +186,19 @@ Result: One clear recommendation with reasoning from both sides
 
 > *"The framework that stops you from coding the wrong thing."*
 
-When you face a decision with unknowns, AWRSHIFT guides you step by step: define the problem, research options, set success metrics, verify your plan, test in a sandbox — then decide. You choose how deep to go at every step.
-
-```
-  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-  │ IDENTIFY │───▶│ RESEARCH │───▶│ METRICS  │───▶│   PLAN   │
-  │          │    │          │    │          │    │          │
-  │ "What's  │    │ Gather   │    │ How will │    │ Concrete │
-  │ the      │    │ evidence │    │ we know  │    │ tasks    │
-  │ problem?"│    │ first    │    │ it works?│    │          │
-  └──────────┘    └──────────┘    └──────────┘    └──────────┘
-       │                │               │               │
-       ▼                ▼               ▼               ▼
-    You answer     Claude researches  Gemini checks   You approve
-    questions      (+ agents)        for bias         the plan
-                                                          │
-  ┌──────────┐    ┌──────────┐    ┌──────────┐           │
-  │FACTCHECK │◀───│          │    │   TEST   │◀──────────┘
-  │          │    │  Gemini  │    │          │
-  │ "Did we  │───▶│  cross-  │    │ Try in   │
-  │  miss    │    │  check"  │    │ sandbox  │
-  │ anything?"    └──────────┘    │ (safe!)  │
-  └──────────┘                    └──────────┘
-       │                               │
-       ▼                               ▼
-  ┌──────────┐                    ┌──────────┐
-  │  DECIDE  │                    │IMPLEMENT │
-  │          │                    │          │
-  │ GO /     │───────────────────▶│ Apply to │
-  │ NO-GO /  │   only after GO    │ main     │
-  │ PIVOT    │                    │ project  │
-  └──────────┘                    └──────────┘
-```
-
-**Key feature:** At every step, you get structured choices (not walls of text):
-```
-Claude asks:
-  A) "Proceed with research on all 3 unknowns"
-  B) "I have context to share first"
-  C) "Skip research — I already know the answer"
-  D) [type your own response]
-```
-
-**Real example:**
-```
-You: "awrshift — should we migrate from REST to GraphQL?"
-
-IDENTIFY:  Claude asks 4 questions, maps the problem
-RESEARCH:  3 parallel agents investigate performance, DX, migration cost
-METRICS:   Proposes success criteria → Gemini checks for bias
-PLAN:      Sequenced tasks with risks
-FACTCHECK: Gemini cross-checks → finds missing rollback plan
-TEST:      Prototype in sandbox folder (main project untouched)
-DECIDE:    GO with conditions — migrate read endpoints first
-```
+When you face a decision with unknowns, AWRSHIFT guides you step by step: define the problem, research options, set success metrics, verify your plan, test in a sandbox — then decide.
 
 **How to trigger:** Say "awrshift", "let's think this through", "research first", or "experiment"
 
-**Setup:** No dependencies. Works standalone. Even better with Gemini skill installed.
+**Setup:** No dependencies. Works standalone. Even better with Gemini.
 
 ---
 
-### 4. Design — From Reference to Design System
-
-> *"Extract design tokens from any website, generate a full design system."*
-
-Point Claude at a reference website, and it extracts colors, fonts, spacing into a structured token system. Then generates CSS, audits your code for consistency, and runs visual QA.
-
-```
-  Reference URL          Extract             Generate            Audit
-  ┌─────────────┐      ┌────────────┐      ┌────────────┐     ┌──────────┐
-  │ stripe.com  │─────▶│ Colors     │─────▶│ design-    │────▶│ Check    │
-  │ or any site │      │ Fonts      │      │ tokens.json│     │ your CSS │
-  └─────────────┘      │ Spacing    │      │ + CSS vars │     │ matches  │
-                        │ Radius     │      │ + rules    │     │ tokens   │
-                        └────────────┘      └────────────┘     └──────────┘
-```
-
-**What you get:**
-- `design-tokens.json` — W3C standard, works with any framework
-- `design-rules.md` — behavioral rules for AI ("never use more than 3 font sizes")
-- CSS custom properties — drop into Tailwind, vanilla CSS, or any stack
-- Drift detection — warns when code diverges from tokens
-
-**How to trigger:** Say "create a design system", "extract colors from [url]", or "audit my tokens"
-
-**Setup:** Python stdlib only. Optional: Chrome MCP for visual comparison.
-
----
-
-### 5. Skill Creator — Build Your Own Skills
+### 4. Skill Creator — Build Your Own Skills
 
 > *"Turn any repeatable workflow into a reusable skill."*
 
-If you find yourself giving Claude the same instructions again and again, turn them into a skill. Skill Creator helps you write it, test it with automated evals, and improve it iteratively.
-
-```
-  Your idea          Draft             Test              Ship
-  ┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
-  │ "I want  │────▶│ SKILL.md │────▶│ Run 5    │────▶│ Install  │
-  │  Claude  │     │ generated│     │ test     │     │ globally │
-  │  to..."  │     │          │     │ cases    │     │          │
-  └──────────┘     └──────────┘     │ Score:   │     └──────────┘
-                                     │ 4/5 PASS │
-                                     └──────────┘
-                                          │
-                                     Fix failing ──▶ Re-test ──▶ 5/5 PASS
-```
-
-**Real example:**
-```
-You: "create a skill that generates changelog entries from git commits"
-
-Skill Creator:
-  1. Drafts SKILL.md with instructions
-  2. Generates 5 test cases (edge cases included)
-  3. Runs evals using `claude -p` CLI
-  4. Shows results: 4/5 pass, 1 fails on merge commits
-  5. Fixes the prompt, re-runs: 5/5 pass
-  6. Installs to ~/.claude/skills/changelog/
-```
+If you find yourself giving Claude the same instructions again and again, turn them into a skill.
 
 **How to trigger:** Say "create a skill", "improve this skill", or "run skill evals"
 
@@ -338,18 +213,7 @@ Skill Creator:
 | **Gemini** | Second opinion from a different AI | - | API key |
 | **Brainstorm** | Two AIs debate, one answer emerges | Yes | - |
 | **AWRSHIFT** | Step-by-step decision framework | Better with | - |
-| **Design** | Reference site to design system | No | - |
 | **Skill Creator** | Turn workflows into reusable skills | No | - |
-
-## Experiments
-
-For decisions that need research before building, use the AWRSHIFT skill or experiments directly. Each experiment follows a structured cycle:
-
-```
-IDENTIFY → RESEARCH → EVALUATE-DESIGN → PLAN → FACTCHECK → TEST → DECIDE
-```
-
-See `experiments/README.md` for details. Two example experiments are included — one completed (landing page A/B test) and one in-progress (payment provider comparison).
 
 ## Multiple Projects
 
@@ -372,7 +236,8 @@ cp projects/example-webapp/JOURNAL.md projects/my-new-project/
 2. **Decisions live with tasks** — not in separate decision log files
 3. **next-session-prompt = pointers** — brief "what's next", not full history
 4. **Rules = stable behavior** — things that don't change session to session
-5. **Memory grows organically** — agent learns patterns and saves them automatically
+5. **Memory = index + topics** — compact index auto-loaded, details on-demand
+6. **MEMORY.md < 200 lines** — Anthropic truncates beyond this, so keep it lean
 
 ## FAQ
 
@@ -391,7 +256,7 @@ Yes. This is a project structure — it works with any Claude Code plan.
 <details>
 <summary><strong>Can I use this without the Gemini skill?</strong></summary>
 
-Absolutely. All 5 skills are optional. The core system (memory, context, journals, rules, hooks) works without any skills. AWRSHIFT works standalone too — it just gets enhanced when Gemini is available.
+Absolutely. All 4 skills are optional. The core system (memory, context, journals, rules, hooks) works without any skills. AWRSHIFT works standalone too — it just gets enhanced when Gemini is available.
 </details>
 
 <details>
