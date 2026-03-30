@@ -19,5 +19,8 @@ __pycache__/
 .venv/
 venv/
 
+# Design tokens (internal, not for public repo)
+design-tokens.json
+
 # Node
 node_modules/
