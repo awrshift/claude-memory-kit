@@ -273,7 +273,7 @@ Close Terminal. Delete the project folder. Download the kit again and start fres
 
 ## Credits
 
-Built by **Serhii Kravchenko** ([@pmserhii](https://github.com/pmserhii)) — based on 1000+ sessions of iterative refinement with Claude Code, building AI content pipelines, multi-agent systems, and GEO optimization tools.
+Built by **Serhii Kravchenko** ([@pmserhii](https://github.com/awrshift)) — based on 1000+ sessions of iterative refinement with Claude Code, building AI content pipelines, multi-agent systems, and GEO optimization tools.
 
 ## License
 
