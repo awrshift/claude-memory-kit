@@ -2,7 +2,7 @@
   <img src=".github/assets/hero-banner.png" alt="Claude Memory Kit" width="100%">
 </p>
 
-<h2 align="center">Give Claude Code a memory that grows with your projects.</h2>
+<h2 align="center">An operating system for Claude Code. Install once — it remembers everything.</h2>
 
 <p align="center">
   <a href="#the-problem">Problem</a> ·
@@ -22,7 +22,7 @@ Your project structure. The decisions you made last week. That bug you fixed yes
 
 You spend the first 10 minutes of every session catching the AI up on context it already had — and lost.
 
-**Claude Memory Kit solves this in a 5-minute setup.**
+**Claude Memory Kit is an OS layer for Claude Code that solves this in a 5-minute setup.**
 
 Your agent remembers what it learned. It tracks your projects. It picks up exactly where it left off — even after the conversation compresses or you close the terminal.
 
@@ -60,6 +60,8 @@ claude
 
 Claude handles the rest. It will ask your name, project name, and preferred language — then set everything up.
 
+After setup, type **`/tour`** — Claude will walk you through the memory system step by step, using your actual project files.
+
 **Requirements:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) + a Claude subscription or API key.
 
 ---
@@ -70,6 +72,7 @@ Once set up, you interact with Claude naturally. Here are the key commands:
 
 | What you say | What happens |
 |-------------|-------------|
+| **`/tour`** | Interactive guided tour — Claude teaches you the system from inside |
 | "Let's work on [project name]" | Agent reads that project's Journal and picks up where you left off |
 | "Create a new project [name]" | Agent creates a Journal, adds a section to the session prompt |
 | "Save context" or "Update context" | Agent saves patterns to memory, updates session prompt and journal |
@@ -190,6 +193,12 @@ Everything is plain text in git. Roll back with `git checkout .claude/memory/` o
 <summary><strong>Can I run multiple projects at once?</strong></summary>
 
 Yes. Each project gets its own Journal and context section. Multiple Claude Code windows can work on different projects simultaneously without conflicts.
+</details>
+
+<details>
+<summary><strong>What is /tour?</strong></summary>
+
+An interactive walkthrough built into the kit. Claude reads your actual project files and explains each component — memory, journals, hooks, rules, experiments — step by step. Type `/tour` anytime to start or revisit it.
 </details>
 
 ---
