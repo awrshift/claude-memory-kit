@@ -64,6 +64,28 @@ Claude handles the rest. It will ask your name, project name, and preferred lang
 
 ---
 
+## How to Use (after setup)
+
+Once set up, you interact with Claude naturally. Here are the key commands:
+
+| What you say | What happens |
+|-------------|-------------|
+| "Let's work on [project name]" | Agent reads that project's Journal and picks up where you left off |
+| "Create a new project [name]" | Agent creates a Journal, adds a section to the session prompt |
+| "Save context" or "Update context" | Agent saves patterns to memory, updates session prompt and journal |
+| "Create an experiment about [question]" | Agent creates a sandbox folder for structured research |
+| "What do you remember about [topic]?" | Agent checks memory index and topic files |
+| "Add a task: [description]" | Agent adds it to the active project's Journal |
+
+**You don't need to manage files manually.** The agent handles memory, journals, and context. You just work on your project — the system learns and remembers.
+
+**Safety nets work automatically:**
+- Before context compression → agent is blocked until it saves (you'll see a brief pause)
+- Every ~15 exchanges → agent checkpoints progress (you'll see a brief pause)
+- Session start → agent shows you memory status, active projects, and what's next
+
+---
+
 ## How It Works
 
 ### Five components, one system

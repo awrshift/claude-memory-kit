@@ -193,15 +193,27 @@ If user selected "I have existing code" in Q5, add:
 
 **During:** Work on tasks. Update project JOURNAL.md after completing work.
 
-**End (all steps, in order):**
-1. **MEMORY.md** — add new verified patterns to index (keep < 200 lines). If detailed — create/update topic file in `.claude/memory/topics/`.
-2. **next-session-prompt.md** — update ONLY your `<!-- PROJECT:name -->` section. Include: what was done, files changed, decisions made, `### IMMEDIATE NEXT` (exact first steps for next session).
-3. **JOURNAL.md** — update task statuses if any active tasks
+**End — Context Save Protocol:**
+
+Triggers: user says "save context" / "update context", session is ending, or hook blocks you.
+
+Execute ALL 3 steps in order:
+
+1. **MEMORY.md** — add new verified patterns (with `[YYYY-MM]` date). Keep < 200 lines. If a theme grows > 5 entries → create topic file.
+2. **next-session-prompt.md** — update ONLY your `<!-- PROJECT:name -->` section: what was done, key decisions, `### IMMEDIATE NEXT` (exact first steps for next session).
+3. **JOURNAL.md** — update task statuses if any active tasks.
+
+**Definition of Done (all must be true):**
+- [ ] MEMORY.md has new patterns from this session (or explicitly "no new patterns")
+- [ ] Each new MEMORY.md entry has `[YYYY-MM]` date tag
+- [ ] Your project section in next-session-prompt.md has `### IMMEDIATE NEXT` with 3+ concrete steps
+- [ ] JOURNAL.md task statuses reflect current reality (not stale from session start)
+- [ ] No unsaved decisions — if you made a choice during the session, it's recorded somewhere
 
 **Before /compact (MANDATORY):**
-Context is about to compress. The `pre-compact.sh` hook will BLOCK compaction until you save. Execute End steps 1-3 — compaction proceeds only after MEMORY.md is updated (mtime check).
+The `pre-compact.sh` hook BLOCKS compaction until MEMORY.md is updated (mtime check). Execute steps 1-3 above — compaction proceeds only after files are saved.
 
-**Context Save triggers:** User says "save context", "update context", or session is ending.
+**Periodic save:** The `periodic-save.sh` hook blocks every 15 exchanges to checkpoint progress. Same 3 steps, same Definition of Done.
 
 ### Multi-Project Safety
 
