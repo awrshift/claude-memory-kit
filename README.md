@@ -42,11 +42,11 @@ Each project gets its own Journal — a single file where Claude tracks tasks, d
 
 ### Context that survives compression
 
-Long conversations get compressed by Claude Code. Without this kit, your progress disappears. With it, a built-in safety net saves everything before compression kicks in. Next session starts exactly where you left off.
+Long conversations get compressed by Claude Code. Without this kit, your progress disappears. With it, a **blocking hook** physically prevents compression until your agent saves. A second hook auto-checkpoints every 15 exchanges during long sessions. Nothing is lost — even if you forget to save.
 
-### Structured research
+### Experiment sandbox
 
-Not sure which approach to take? The experiments system gives Claude a framework for structured investigation: define a question, explore options, compare results, make a GO/NO-GO decision. Then create tasks from the result.
+Not sure which approach to take? The experiments folder is an isolated sandbox — each experiment gets its own folder with context, data, and prototypes. Define a question, explore options, validate, make a GO/NO-GO decision. Results get ported to your project as tasks and memory patterns.
 
 ---
 
@@ -92,7 +92,8 @@ Not everything loads every time. The system uses layers — heavy context only l
 |-------|------|------|
 | **Always on** | Brain + Rules + Memory index | Every session |
 | **Session start** | "What to do next" prompt | First thing |
-| **On demand** | Project journal, topic files, experiments | When you work on them |
+| **On demand** | Project journal, deep topic files | When you select a project |
+| **Sandbox** | Experiment folders | When you research before building |
 
 ### The session cycle
 

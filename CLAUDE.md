@@ -132,7 +132,7 @@ Using the project name from Q1 (kebab-case):
 
 Make hooks executable:
 ```bash
-chmod +x .claude/hooks/session-start.sh .claude/hooks/pre-compact.sh
+chmod +x .claude/hooks/session-start.sh .claude/hooks/pre-compact.sh .claude/hooks/periodic-save.sh
 ```
 
 #### Step 5: Clean up ALL scaffolding
@@ -142,8 +142,8 @@ Delete these files/directories (they were only needed for setup and GitHub repo)
 - `.github/` directory (repo images, not needed locally)
 - `projects/example-webapp/` (demo project)
 - `projects/example-saas/` (demo project)
-- `experiments/001-landing-page-redesign.md` (demo experiment)
-- `experiments/002-payment-provider-selection.md` (demo experiment)
+- `experiments/001-landing-page-redesign/` (demo experiment)
+- `experiments/002-payment-provider-selection/` (demo experiment)
 
 Keep:
 - `experiments/README.md` (explains how experiments work — still useful)
@@ -167,7 +167,7 @@ Tell the user in their chosen language:
 - Project: {name} — `projects/{project-name}/JOURNAL.md`
 - Memory: `.claude/memory/` — I'll save patterns across sessions
 - Experiments: `experiments/` — for research before building
-- Hooks: session-start (auto-loads context) + pre-compact (saves before compression)
+- Hooks: session-start (context overview) + pre-compact (blocks until saved) + periodic-save (checkpoint every 15 exchanges)
 
 "To start working, just tell me what you want to build. I'll create tasks in your journal and track progress."
 
@@ -199,7 +199,7 @@ If user selected "I have existing code" in Q5, add:
 3. **JOURNAL.md** — update task statuses if any active tasks
 
 **Before /compact (MANDATORY):**
-Context is about to compress. Execute End steps 1-3 BEFORE allowing compact to proceed. The `pre-compact.sh` hook will remind you, but you must actually do the work.
+Context is about to compress. The `pre-compact.sh` hook will BLOCK compaction until you save. Execute End steps 1-3 — compaction proceeds only after MEMORY.md is updated (mtime check).
 
 **Context Save triggers:** User says "save context", "update context", or session is ending.
 
@@ -242,7 +242,7 @@ This file is the **cross-project hub**. It uses `<!-- PROJECT:name -->` / `<!-- 
 | **L2: Start** | `context/next-session-prompt.md` | Session start |
 | **L3: Project** | `projects/X/JOURNAL.md` | When working on project X |
 | **L4: Topics** | `.claude/memory/topics/*.md` | On-demand (when working on specific area) |
-| **L5: Reference** | Experiments, any other docs | On-demand |
+| **Sandbox** | `experiments/NNN-*/` | On-demand (isolated research) |
 
 ### Key principles
 
@@ -252,35 +252,80 @@ This file is the **cross-project hub**. It uses `<!-- PROJECT:name -->` / `<!-- 
 - **Rules = stable behavior**, not volatile data (counts, statuses go in journals)
 - **Memory = verified cross-session patterns** managed in `.claude/memory/MEMORY.md`
 
-## Experiments
+## Experiments (Sandbox)
 
-The `experiments/` folder holds structured research for decisions that need investigation before implementation. Unlike tasks in JOURNAL.md (clear path, just build it), experiments are for questions with multiple possible answers.
+The `experiments/` folder is an isolated sandbox for research, prototyping, and validation — outside the main project flow. Unlike tasks in JOURNAL.md (clear path, just build it), experiments are for questions that need investigation before committing.
 
-**Lifecycle:**
+An experiment can serve one project, multiple projects, or the system itself.
+
+### Structure
+
+Every experiment = a folder (never a single file):
+
 ```
-IDENTIFY -> RESEARCH -> HYPOTHESIZE -> PLAN -> IMPLEMENT -> EVALUATE -> DECIDE (GO/NO-GO)
+experiments/
+├── README.md                    ← Index of all experiments + rules
+└── NNN-short-description/       ← Each experiment = own folder
+    ├── EXPERIMENT.md            ← Required: context, status, findings
+    └── (anything else needed)   ← phases/, prototypes/, data/, code/
 ```
 
-**Rules:**
-1. One experiment = one focused question
-2. Starts with IDENTIFY (problem, current state, target, gap)
-3. Ends with DECIDE — GO/NO-GO with clear reasoning
-4. After DECIDE(GO), create implementation tasks in the relevant project's JOURNAL.md
-5. Index: `experiments/README.md` — keep the Active Experiments table updated
+**EXPERIMENT.md** is the only required file. Everything else grows as the experiment demands — phase files, prototypes, test data, research notes, code.
 
-**Naming:** `NNN-short-description.md` (sequential number + kebab-case)
+### EXPERIMENT.md Template
+
+```markdown
+# Experiment NNN: [Title]
+
+**Status:** IDENTIFY | RESEARCH | HYPOTHESIZE | PLAN | IMPLEMENT | EVALUATE | DECIDE
+**Created:** [date]
+**Project:** [project name] or "system" if not project-specific
+
+## Problem
+What question are we answering? What gap exists?
+
+## Current State
+What do we know now?
+
+## Target
+What does success look like?
+
+## Findings
+(Updated as experiment progresses)
+
+## Decision
+GO / NO-GO / ITERATE — with reasoning.
+If GO: what tasks to create in which JOURNAL, what patterns to save to MEMORY.md.
+```
+
+### Lifecycle
+
+```
+IDENTIFY → RESEARCH → HYPOTHESIZE → PLAN → IMPLEMENT → EVALUATE → DECIDE
+```
+
+Not every experiment needs all phases. A quick PoC can go IDENTIFY → IMPLEMENT → DECIDE.
+
+### Rules
+
+1. **Always a folder** — `experiments/NNN-description/` with EXPERIMENT.md inside
+2. **Sandbox isolation** — experiment code/data stays in the experiment folder, not in project dirs
+3. **One experiment = one focused question** — don't mix unrelated investigations
+4. **Port results, not files** — after DECIDE(GO), create tasks in JOURNAL.md and patterns in MEMORY.md. Don't move experiment files into the project.
+5. **Index** — keep `experiments/README.md` Active Experiments table updated
+
+**Naming:** `NNN-short-description/` (sequential number + kebab-case)
 
 **When to use experiments vs tasks:**
-- Unknown path, multiple options -> experiment
-- Clear path, just build it -> task in JOURNAL.md
+- Unknown path, multiple options, need to research → experiment
+- Clear path, just build it → task in JOURNAL.md
 
-### Example files (delete when ready)
+### Example experiments (delete when ready)
 
-The kit includes two demo experiments to show the system in action:
-- `experiments/001-landing-page-redesign.md` — completed experiment (full cycle through DECIDE)
-- `experiments/002-payment-provider-selection.md` — in-progress experiment (RESEARCH phase)
+- `experiments/001-landing-page-redesign/` — completed experiment (full cycle through DECIDE)
+- `experiments/002-payment-provider-selection/` — in-progress experiment (RESEARCH phase)
 
-These are **not real projects**. They demonstrate how experiments, journals, and the session prompt work together. Delete them when you create your first real experiment.
+These are demos. Delete them when you create your first real experiment.
 
 ## Projects
 
@@ -317,6 +362,28 @@ Two tiers preserve context across sessions:
 - Failed approaches table (so you don't repeat mistakes)
 - **Topic Files table** — index of what's in `topics/` and when to read each file
 
+### Temporal Facts
+
+Every entry in MEMORY.md MUST include a date tag:
+
+```markdown
+- **Pattern name** [2026-03] — description
+- ~~**Old pattern** [2025-11 → 2026-02]~~ — superseded by X
+```
+
+- `[YYYY-MM]` = when first confirmed
+- `[YYYY-MM → YYYY-MM]` = temporal range (superseded facts)
+- Strikethrough `~~` = invalidated entry (keep for history, prevents re-learning)
+
+### Memory Entry Quality
+
+Before writing to MEMORY.md, self-check every entry:
+1. **Dated** — has `[YYYY-MM]`? If no → add it
+2. **Specific** — "always use parameterized queries" > "be careful with SQL"
+3. **Actionable** — changes your future behavior, not just states a fact
+4. **Not duplicate** — scan existing entries, update if exists
+5. **One line** — needs more? → topic file
+
 ### MEMORY.md — What does NOT go here
 
 - Session-specific details (current task, temporary state)
@@ -344,7 +411,7 @@ After significant work — update relevant files:
 - **What to do next** -> `context/next-session-prompt.md` (your project section only)
 - **Learned pattern** -> `.claude/memory/MEMORY.md` (index, < 200 lines)
 - **Detailed knowledge** -> `.claude/memory/topics/*.md` (on-demand, no size limit)
-- **New experiment** -> `experiments/NNN-description.md` + update `experiments/README.md`
+- **New experiment** -> `experiments/NNN-description/EXPERIMENT.md` + update `experiments/README.md`
 
 ## Rules
 

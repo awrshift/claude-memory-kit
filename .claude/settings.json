@@ -36,7 +36,15 @@
     "PreCompact": [
       {
         "type": "command",
-        "command": "bash .claude/hooks/pre-compact.sh"
+        "command": "bash .claude/hooks/pre-compact.sh",
+        "timeout": 30
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "bash .claude/hooks/periodic-save.sh",
+        "timeout": 30
       }
     ]
   }

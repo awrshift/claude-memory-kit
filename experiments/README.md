@@ -1,24 +1,35 @@
-# Experiments
+# Experiments (Sandbox)
 
 <!-- EXAMPLE: This folder contains demo experiments. Replace with your own when ready. -->
 
-Each major initiative or research question gets its own experiment file. Experiments follow a structured decision cycle — from identifying the problem to a final GO/NO-GO decision.
+Isolated sandbox for research, prototyping, and validation — outside the main project flow.
 
-## How It Works
+## Structure
 
-An experiment is a focused investigation with a clear deliverable. Unlike tasks in JOURNAL.md (which track implementation work), experiments track **decisions that need research before implementation**.
+Every experiment = a folder with EXPERIMENT.md inside:
 
-**When to create an experiment:**
-- You're choosing between multiple approaches (framework, architecture, vendor)
-- A decision has unknowns that need research before committing
-- You want to validate an idea before investing implementation time
+```
+experiments/
+├── README.md                        ← This file (index + rules)
+└── NNN-short-description/           ← Each experiment = own folder
+    ├── EXPERIMENT.md                ← Required: context, status, findings
+    └── (phases/, prototypes/, data/, code/ — as needed)
+```
 
-**When NOT to create an experiment (just add a task to JOURNAL.md):**
-- The path is clear, you just need to build it
-- It's a bug fix or routine maintenance
+## When to Create an Experiment
+
+**Create experiment:**
+- Choosing between multiple approaches (framework, architecture, vendor)
+- Unknowns that need research before committing
+- Want to validate an idea before investing implementation time
+- System-level improvement (not tied to one project)
+
+**Just add a task to JOURNAL.md:**
+- Path is clear, just build it
+- Bug fix or routine maintenance
 - No real alternatives to evaluate
 
-## Experiment Lifecycle
+## Lifecycle
 
 ```
 IDENTIFY    — What's the problem? What's the gap?
@@ -30,7 +41,7 @@ EVALUATE    — Did it work? Measure against criteria
 DECIDE      — GO (continue) / NO-GO (pivot) / ITERATE (refine)
 ```
 
-Not every experiment needs all phases. Quick experiments can skip RESEARCH and go straight to PLAN.
+Not every experiment needs all phases. A quick PoC can go IDENTIFY → IMPLEMENT → DECIDE.
 
 ## Active Experiments
 
@@ -39,14 +50,14 @@ Not every experiment needs all phases. Quick experiments can skip RESEARCH and g
 | 001 | Landing page redesign | EVALUATE | example-webapp |
 | 002 | Payment provider selection | RESEARCH | example-saas |
 
-## Naming Convention
-
-`NNN-short-description.md` — sequential number + kebab-case description.
-
 ## Rules
 
-1. One experiment = one focused question. Don't mix unrelated decisions.
-2. Each experiment starts with IDENTIFY (why this matters).
-3. Experiment ends with DECIDE — a clear GO/NO-GO with reasoning.
-4. After DECIDE(GO), create implementation tasks in the relevant project's JOURNAL.md.
-5. Keep experiment files as living documents — update status as you progress.
+1. **Always a folder** — `NNN-description/` with EXPERIMENT.md inside. Never a single file.
+2. **Sandbox isolation** — code/data stays in the experiment folder, not in project dirs.
+3. **One experiment = one focused question.** Don't mix unrelated investigations.
+4. **Port results, not files** — after DECIDE(GO), create tasks in JOURNAL and patterns in MEMORY.md.
+5. **Keep this index updated** — add/remove from Active Experiments table.
+
+## Naming
+
+`NNN-short-description/` — sequential number + kebab-case.

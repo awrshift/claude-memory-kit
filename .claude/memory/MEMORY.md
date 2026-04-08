@@ -6,10 +6,9 @@ Architecture: Index (< 200 lines, auto-loaded) + topic files (on-demand)
 
 ## Verified Patterns
 
-> Add patterns here as you confirm them across multiple sessions.
-> Keep this section SHORT — one line per pattern. Details go in topic files.
->
-> Format: **Pattern name** — description. [Source: session/decision]
+> One line per pattern. Every entry MUST have a date tag [YYYY-MM].
+> Format: **Pattern name** [YYYY-MM] — description
+> Superseded: ~~**Old pattern** [YYYY-MM → YYYY-MM]~~ — reason
 
 ## User Preferences
 
