@@ -29,14 +29,9 @@ The setup has two phases: **Onboarding** (learn about the user) and **Configurat
    - Options: "Web application", "API / Backend service", "CLI tool", "Mobile app" + Other
    - Description: "Brief description helps me understand context for decisions"
 
-**Question batch 2 (2 questions):**
+**Question batch 2 (1 question):**
 
-5. **"Do you want to install Gemini skill for second opinions from Google AI?"** (header: "Gemini")
-   - Options:
-     - "Yes, install (Recommended)" — "Gives you second opinions from a different AI model. Requires: pip install google-genai + GOOGLE_API_KEY"
-     - "No, skip for now" — "You can install it later anytime"
-
-6. **"Do you have an existing project to import, or starting fresh?"** (header: "Start mode")
+5. **"Do you have an existing project to import, or starting fresh?"** (header: "Start mode")
    - Options:
      - "Starting fresh" — "I'll create your first project structure"
      - "I have existing code" — "Point me to your codebase and I'll set up the project around it"
@@ -51,17 +46,7 @@ Execute these steps using the answers from Phase 1.
 
 If this directory is not a git repo yet, run `git init` and create initial commit with all files (so scaffolding is preserved in history).
 
-#### Step 2: Verify skills are in place
-
-Skills are already included in `.claude/skills/` (project-local, no global installation needed):
-- `.claude/skills/gemini/` — Second opinions from Google Gemini
-- `.claude/skills/brainstorm/` — Claude x Gemini adversarial dialogue
-- `.claude/skills/awrshift/` — Adaptive decision framework
-- `.claude/skills/skill-creator/` — Build and test custom skills
-
-Rules are already in `.claude/rules/`. No copying needed.
-
-#### Step 4: Personalize CLAUDE.md
+#### Step 2: Personalize CLAUDE.md
 
 Using answers from Phase 1, replace ALL placeholders in this file (below the SETUP:END marker):
 
@@ -71,7 +56,7 @@ Using answers from Phase 1, replace ALL placeholders in this file (below the SET
 - `[Brief description of what this project is about. 2-3 sentences max.]` -> user's description (Q4)
 - `[Your preferred language]` -> user's language choice (Q3)
 
-#### Step 5: Create first real project
+#### Step 3: Create first real project
 
 Using the project name from Q1 (kebab-case):
 
@@ -143,23 +128,14 @@ Using the project name from Q1 (kebab-case):
    <!-- /SHARED -->
    ```
 
-#### Step 6: Set up .env (if Gemini selected)
-
-If user answered "Yes" to Q5:
-1. Check if `.env` exists — if not, create it
-2. Ask user: "Paste your Google API key (GOOGLE_API_KEY) or type 'skip' to set it up later"
-3. If provided, add `GOOGLE_API_KEY={key}` to `.env`
-4. Add `.env` to `.gitignore` if not already there
-5. Run `pip install google-genai` (or note it as a prerequisite)
-
-#### Step 7: Verify hooks
+#### Step 4: Verify hooks
 
 Make hooks executable:
 ```bash
 chmod +x .claude/hooks/session-start.sh .claude/hooks/pre-compact.sh
 ```
 
-#### Step 8: Clean up ALL scaffolding
+#### Step 5: Clean up ALL scaffolding
 
 Delete these files/directories (they were only needed for setup and GitHub repo):
 - `README.md` (GitHub repo readme, not needed locally)
@@ -168,23 +144,22 @@ Delete these files/directories (they were only needed for setup and GitHub repo)
 - `projects/example-saas/` (demo project)
 - `experiments/001-landing-page-redesign.md` (demo experiment)
 - `experiments/002-payment-provider-selection.md` (demo experiment)
-- `.claude/rules/example-domain.md` (demo rule)
 
 Keep:
 - `experiments/README.md` (explains how experiments work — still useful)
-- `.claude/memory/` (already personalized in Step 5)
+- `.claude/memory/` (already personalized)
 - `.claude/hooks/` (configured)
 - `.claude/settings.json` (configured)
 
 Commit: `git commit -am "setup: personalized project, removed scaffolding"`
 
-#### Step 9: Remove this section
+#### Step 6: Remove this section
 
 Delete everything between `<!-- SETUP:START -->` and `<!-- SETUP:END -->` markers (inclusive) from this file.
 
 Commit: `git commit -am "setup: remove first-run instructions"`
 
-#### Step 10: Greet the user
+#### Step 7: Greet the user
 
 Tell the user in their chosen language:
 
@@ -192,12 +167,11 @@ Tell the user in their chosen language:
 - Project: {name} — `projects/{project-name}/JOURNAL.md`
 - Memory: `.claude/memory/` — I'll save patterns across sessions
 - Experiments: `experiments/` — for research before building
-- Skills installed: {list with prerequisites status}
 - Hooks: session-start (auto-loads context) + pre-compact (saves before compression)
 
 "To start working, just tell me what you want to build. I'll create tasks in your journal and track progress."
 
-If user selected "I have existing code" in Q6, add:
+If user selected "I have existing code" in Q5, add:
 "Point me to your codebase and I'll analyze the structure, then set up appropriate rules and initial tasks."
 <!-- SETUP:END -->
 
@@ -326,39 +300,6 @@ These are **not real projects**. Delete both folders when you create your first 
 2. Add a `<!-- PROJECT:new-project -->` section in `context/next-session-prompt.md` before `<!-- SHARED -->`
 3. Optionally add `.claude/rules/new-project.md` with domain-specific rules (use `paths:` frontmatter to scope)
 
-## Skills
-
-After setup, four skills are installed at `.claude/skills/`. They are available in every project.
-
-| Skill | Path | What it does | When to use |
-|-------|------|-------------|-------------|
-| **Gemini** | `.claude/skills/gemini/` | Second opinions from Google Gemini (different model family = different blind spots) | Fact-check, prompt stress-test, hypothesis falsification, architecture review |
-| **Brainstorm** | `.claude/skills/brainstorm/` | 3-round Claude x Gemini adversarial dialogue. Diverge -> Deepen -> Converge. | Multiple viable paths, strategic decisions, need to converge on one action |
-| **AWRSHIFT** | `.claude/skills/awrshift/` | Adaptive decision framework — one dynamic flow with user checkpoints and Gemini gates | Non-trivial decisions, experiments, feature planning, architecture choices |
-| **Skill Creator** | `.claude/skills/skill-creator/` | Create, test, and iterate on custom skills with eval framework | Building new skills, improving existing ones, running evals, optimizing skill descriptions |
-
-### How to invoke
-
-```bash
-# Gemini — quick question
-python3 .claude/skills/gemini/gemini.py ask "your question"
-
-# Gemini — second opinion (deeper analysis)
-python3 .claude/skills/gemini/gemini.py second-opinion "question" --context "context"
-
-# Brainstorm — see SKILL.md for full CLI reference
-```
-
-**Prerequisites (must be installed for skills to work):**
-- `pip install google-genai` — required for Gemini and Brainstorm
-- `GOOGLE_API_KEY` in `.env` — required for Gemini and Brainstorm
-- Before calling: `set -a && source .env && set +a`
-- **Skill Creator** — no external deps. Uses `claude -p` CLI for running evals (included with Claude Code)
-
-**Decision rule:** One clear path + need validation -> Gemini `second-opinion`. Multiple viable paths + need to converge -> Brainstorm. Need a reusable workflow -> Skill Creator.
-
-See `.claude/rules/gemini.md` for detailed usage rules (auto-loaded every session).
-
 ## Memory System (Tier-based)
 
 Two tiers preserve context across sessions:
@@ -409,8 +350,7 @@ After significant work — update relevant files:
 
 `.claude/rules/` contains domain-specific rules that auto-load. Rules without `paths:` frontmatter load globally (every session). Rules with `paths:` load only when working on matching files.
 
-- `gemini.md` — loaded globally, controls when/how to use Gemini skill
-- `example-domain.md` — scoped to `projects/example-*/` and `experiments/`, delete and replace with your own
+Create your own rules as needed. Example: `api-conventions.md` for API patterns, `testing.md` for test requirements.
 
 ## Communication
 
