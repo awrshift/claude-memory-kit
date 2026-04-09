@@ -29,11 +29,12 @@ An interactive walkthrough where you teach the user the Memory Kit by working wi
 
 Run in order for a full tour. Each step: **Pain → Read actual files → Do something → Confirm it worked.**
 
-### Step 1: Memory — Two Tiers
+### Step 1: Memory — Two Tiers + SessionStart Injection
 **Pain:** Without this, I forget everything between sessions. Your name, decisions, preferences — gone.
 - Read `.claude/memory/MEMORY.md` — show it, explain the structure (date convention `[YYYY-MM]`, sections, 200-line cap)
-- Read `.claude/memory/knowledge/index.md` — explain this is the wiki layer (concepts, connections, meetings, qa) loaded on-demand, not every session
+- Read `.claude/memory/knowledge/index.md` — explain this is the wiki layer with 3 subdirs in v3: `concepts/` (atomic topics), `connections/` (cross-cutting synthesis), `meetings/` (structured sync notes)
 - Explain the split: MEMORY.md = hot cache (one-line patterns, auto-loaded), knowledge/ = deep articles (Markdown + `[[wikilinks]]`, Obsidian-compatible but Obsidian NOT required)
+- **v3 bonus:** explain that `session-start.py` injects `knowledge/index.md` + latest `daily/` logs + top 3 recently-modified concepts into every session via `hookSpecificOutput.additionalContext` — so the agent always "sees" the catalog without explicit reads. Budget 50K chars, tunable via `CMK_INJECT_BUDGET` env
 - Ask the user for something to remember (stack, preference, convention)
 - Write it to MEMORY.md in the format the file already uses
 - Show the result
@@ -65,17 +66,21 @@ Ask: "That's the core. Want to see Rules, Scripts pipeline, and Experiments too,
 - Show `.claude/rules/` — read any existing rules, explain what they do
 - Offer to create one if the user has a convention. If not: "Say 'make this a rule' anytime I repeat a mistake."
 
-### Step 5: Memory Kit v2 Scripts (power user)
+### Step 5: Memory Kit v3 Scripts + Slash Commands (power user)
 **Pain:** After 50 sessions, `daily/` has hundreds of entries — useful, but too raw to search efficiently.
 - Show `.claude/memory/scripts/` — list the 5 files: `compile.py`, `lint.py`, `query.py`, `flush.py`, `config.py`
 - Explain in one sentence each:
-  - `compile.py` — reads `daily/` logs and writes structured wiki articles into `knowledge/` (via `claude -p` subscription, zero API cost)
-  - `lint.py` — 7 structural health checks on `knowledge/` + `--fix` auto-repairs broken backlinks
-  - `query.py` — index-guided retrieval across `knowledge/`, with optional `--file-back` to save answers as Q&A articles (compounding loop)
-  - `flush.py` — called by `session-end.sh` hook in background; user never invokes manually
+  - `compile.py` — reads `daily/` logs and writes structured wiki articles into `knowledge/` (via `claude -p` subscription, zero API cost). v3: auto-triggered by `flush.py` after 18:00 local time if today's daily log changed since last compile
+  - `lint.py` — 6 structural health checks on `knowledge/` (broken links, orphan pages, orphan sources, missing backlinks, sparse articles, missing frontmatter) + `--fix` auto-repairs broken backlinks
+  - `query.py` — index-guided retrieval across `knowledge/` (reads `index.md`, picks 3-7 relevant articles, synthesizes with `[[wikilink]]` citations)
+  - `flush.py` — called by `session-end.sh` hook in background; user never invokes manually. v3: includes `maybe_trigger_compilation()` for end-of-day auto-compile
   - `config.py` — path constants (don't touch)
-- Demo: run `python3 .claude/memory/scripts/lint.py` against the empty wiki — show the output (likely 0 errors on a fresh clone)
-- Key message: scripts are OPT-IN. Only `flush.py` runs automatically (via hook). The rest you call when you want to compile/query/lint. Pure Python stdlib, zero `pip install`.
+- Show `.claude/commands/` — v3 slash wrappers:
+  - `/memory-compile` — manual trigger for compile.py (override the auto-trigger)
+  - `/memory-lint` — health checks, pass `--fix` to auto-repair
+  - `/memory-query "question"` — natural-language query over the wiki
+- Demo: run `python3 .claude/memory/scripts/lint.py` against the empty wiki — show the output (0 errors on a fresh clone)
+- Key message: scripts are OPT-IN. `flush.py` runs automatically via hook. `compile.py` runs automatically after 18:00 if daily changed. Otherwise you invoke via slash commands. Pure Python stdlib, zero `pip install`, zero API cost (subscription only).
 
 ### Step 6: Experiments
 **Pain:** Sometimes you need to research before building. Without a sandbox, research and production code mix.

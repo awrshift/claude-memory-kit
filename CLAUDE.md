@@ -167,10 +167,11 @@ Tell the user in their chosen language:
 - Project: {name} — `projects/{project-name}/BACKLOG.md`
 - Memory: `.claude/memory/` — I'll save patterns across sessions
 - Experiments: `experiments/` — for research before building
-- Hooks: session-start (context overview) + pre-compact (blocks until saved) + periodic-save (checkpoint every 50 exchanges) + session-end (auto-flush transcripts to daily/) + protect-tests (blocks edits to existing test files)
-- Memory Kit v2 pipeline: `.claude/memory/scripts/` — compile, lint, query, flush (opt-in, Python stdlib only)
+- Hooks: session-start.py (injects index.md + recent daily into every session via `additionalContext`) + pre-compact (blocks until saved) + periodic-save (checkpoint every 50 exchanges) + session-end (auto-flush transcripts to daily/, triggers end-of-day compile after 18:00) + protect-tests (blocks edits to existing test files)
+- Memory Kit v3 pipeline: `.claude/memory/scripts/` — compile, lint, query, flush (opt-in, Python stdlib only)
+- Slash commands: `/memory-compile`, `/memory-lint`, `/memory-query`
 
-"To start working, just tell me what you want to build. I'll create tasks in your journal and track progress."
+"To start working, just tell me what you want to build. I'll create tasks in your backlog and track progress."
 
 If user selected "I have existing code" in Q5, add:
 "Point me to your codebase and I'll analyze the structure, then set up appropriate rules and initial tasks."

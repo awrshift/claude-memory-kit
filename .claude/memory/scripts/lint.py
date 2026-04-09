@@ -1,7 +1,9 @@
 """
 Lint the knowledge base for structural health.
 
-7 structural checks — all free, no LLM calls needed.
+6 structural checks — all free, no LLM calls needed:
+broken links, orphan pages, orphan sources, missing backlinks,
+sparse articles, missing frontmatter.
 
 Usage:
     python scripts/lint.py              # run all checks
