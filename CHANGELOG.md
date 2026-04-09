@@ -1,5 +1,35 @@
 # Changelog
 
+## [3.0.1] — 2026-04-09
+
+Patch release: critical fix for `compile.py` silent failure mode discovered during rnd-hub live test of v3.0.0.
+
+### Fixed
+
+- **`compile.py` silent failure** — v3.0.0 `compile.py` considered any `claude -p` exit 0 as a successful compile, updating the state hash for the daily log even when sub-Claude returned a text description instead of actually calling Write/Edit tools. Result: daily log was marked as "compiled" but zero wiki articles were created or modified, and the log was permanently skipped on subsequent runs (hash matched, so `compile.py --all` was the only recovery path). Detected during rnd-hub live test Test 10: `compile.py` reported "1/1 succeeded" but `concepts/`, `connections/`, `knowledge/index.md`, and `knowledge/log.md` were all unchanged.
+
+  **Three-layer fix:**
+  1. **Mtime snapshot verification** — `compile_daily_log()` now captures wiki state via `snapshot_wiki_state()` before running `claude -p`, then compares against post-run state. If zero files were created and zero files were modified, `compile_daily_log()` returns `False`, dumps sub-Claude stdout to `.claude/state/compile-{daily-stem}-stdout.txt` for debugging, and does NOT update the state hash — so the daily log stays in the queue for the next compile run.
+  2. **Strengthened prompt** — `build_compile_prompt()` now opens with an explicit "CRITICAL — this is an automated pipeline, not a chat" preamble warning sub-Claude that the caller verifies success by checking wiki file mtimes. Rules 1-6 now explicitly say "use the Write tool to CREATE" / "use Edit to UPDATE" instead of just "CREATE" / "UPDATE". New Rule 11: "Every action MUST be a tool call (Write/Edit/Read/Glob/Grep). Text-only responses count as a compile failure." Added a "Final step" instructing sub-Claude to return a one-line summary only after all Write/Edit calls succeed.
+  3. **Added `--permission-mode acceptEdits`** to the `claude -p` invocation in both `compile.py` and `query.py`. Cole's original SDK code uses `permission_mode="acceptEdits"` explicitly; this was lost during the SDK → CLI subprocess port in v2. Not always strictly required (control tests show `claude -p` sometimes accepts Write by default in headless mode), but it's correct by convention and defensive against default-mode drift in future Claude Code versions.
+
+### Changed
+
+- `compile.py` output now includes `Wiki touched: +{N} new files, {M} updated` line on success, so you can see the pipeline working instead of just "Done. Output: X chars".
+
+### Why this matters
+
+The v3.0.0 silent failure was invisible from `compile.py` output alone — it reported success, `lint.py` stayed green (because it only checks existing files, not whether compile produced output), and the state hash was updated. The only way to detect it was to manually `ls knowledge/` before and after. Without the mtime snapshot guard, users would have assumed their pipeline was working while knowledge accumulated only in `daily/` and never compiled.
+
+Credit to rnd-hub's Test 10 protocol for catching this end-to-end — a straight happy-path sanity check would have passed without revealing the bug.
+
+### Notes for upgraders from v3.0.0
+
+- If you already have daily logs that v3.0.0 marked as "compiled" but produced no wiki articles: delete their entries from `.claude/state/compile-state.json` → re-run `compile.py`. The new mtime guard will correctly fail (instead of silent-success) if sub-Claude still doesn't write, giving you an actionable debug dump at `.claude/state/compile-{stem}-stdout.txt`.
+- No breaking changes to file formats, hook protocol, or CLI interface. Pure bug fix.
+
+---
+
 ## [3.0.0] — 2026-04-09
 
 Major upgrade: ports 3 zero-cost features from Cole Medin's `claude-memory-compiler` (the Karpathy-inspired original that Memory Kit v2 was derived from) that were lost in the v1 → v2 stdlib port. Also renames `JOURNAL.md` → `BACKLOG.md` (cleaner semantic separation with `daily/`), collapses `knowledge/` from 6 → 3 subdirs, and promotes the `CLAUDE_INVOKED_BY` recursion guard from hidden quirk to documented feature.

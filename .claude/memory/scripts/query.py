@@ -66,6 +66,7 @@ def run_query(question: str) -> bool:
         "claude",
         "-p", prompt,
         "--allowedTools", "Read,Glob,Grep",
+        "--permission-mode", "acceptEdits",
         "--output-format", "text",
         "--max-turns", "15",
         "--model", "sonnet",

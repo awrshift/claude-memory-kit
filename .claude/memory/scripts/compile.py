@@ -94,8 +94,19 @@ def build_compile_prompt(log_path: Path) -> str:
     existing = read_existing_articles_summary()
     timestamp = now_iso()
 
-    return f"""You are a knowledge compiler. Read the daily conversation log below and extract
-knowledge into structured wiki articles.
+    return f"""You are a knowledge compiler. Your job is to read a daily conversation log and
+WRITE structured wiki articles to disk using the Write and Edit tools.
+
+**CRITICAL — this is an automated pipeline, not a chat.** You MUST call the Write tool to
+create files and the Edit tool to update existing files. DO NOT describe what you would do.
+DO NOT return a text plan. The caller (compile.py) verifies success by checking whether wiki
+files were actually created or modified — if you only return text, the compile is marked as
+FAILED and the daily log is re-queued.
+
+Expected output for a successful compile: 1-5 Write tool calls (new concept articles) and
+2 Edit tool calls (knowledge/index.md + knowledge/log.md). If the daily log has nothing worth
+saving (pure routine, no decisions/lessons), you may return text-only with the literal phrase
+"NOTHING_TO_COMPILE" — but this should be rare.
 
 ## Current Wiki Index
 
@@ -113,7 +124,8 @@ knowledge into structured wiki articles.
 
 ## Your Task
 
-Extract knowledge from this daily log into wiki articles. Follow these rules exactly:
+Extract knowledge from this daily log and WRITE it into wiki articles on disk. Follow these
+rules exactly:
 
 ### Article Format (concepts/)
 ```yaml
@@ -145,12 +157,12 @@ updated: {timestamp[:10]}
 ```
 
 ### Rules:
-1. Extract 2-5 distinct concepts worth their own article
-2. If an existing concept article covers this topic: UPDATE it (add info, add source)
-3. If it's a new topic: CREATE a new concepts/ article
-4. If the log reveals a connection between 2+ concepts: CREATE a connections/ article
-5. UPDATE {INDEX_FILE.relative_to(ROOT_DIR)} — add new entries to the table
-6. APPEND to {LOG_FILE.relative_to(ROOT_DIR)} — add timestamped entry:
+1. Extract 2-5 distinct concepts worth their own article. Use the Write tool to create each one.
+2. If an existing concept article covers this topic: use Read to load it, then use Edit to add new info + append the daily log to sources frontmatter.
+3. If it's a new topic: use Write to CREATE a new concepts/ article with full YAML frontmatter.
+4. If the log reveals a connection between 2+ concepts: use Write to CREATE a connections/ article.
+5. Use Edit to UPDATE {INDEX_FILE.relative_to(ROOT_DIR)} — add new entries to the Concepts/Connections table.
+6. Use Edit (or Write if empty) to APPEND to {LOG_FILE.relative_to(ROOT_DIR)} a timestamped entry:
    ```
    ## [{timestamp}] compile | {log_path.name}
    - Source: daily/{log_path.name}
@@ -160,18 +172,58 @@ updated: {timestamp[:10]}
 7. Use Obsidian [[wikilinks]] without .md extension
 8. Write in encyclopedia style — factual, concise
 9. Every article MUST have YAML frontmatter
-10. Prefer updating existing articles over creating near-duplicates
+10. Prefer updating existing articles over creating near-duplicates — but still call Edit, not just describe
+11. IMPORTANT: Every action MUST be a tool call (Write/Edit/Read/Glob/Grep). Text-only responses count as a compile failure.
 
 ### File paths (absolute):
 - Concepts: {CONCEPTS_DIR}
 - Connections: {CONNECTIONS_DIR}
 - Index: {INDEX_FILE}
 - Log: {LOG_FILE}
+
+### Final step:
+After all Write/Edit calls succeed, return a single line summarizing what you did, e.g.:
+"Compiled daily/{log_path.name}: created concepts/foo.md, concepts/bar.md; updated knowledge/index.md and knowledge/log.md"
 """
 
 
+def snapshot_wiki_state() -> dict[str, float]:
+    """Capture mtime of every wiki article + index.md + log.md for post-compile verification."""
+    snap: dict[str, float] = {}
+    for subdir in [CONCEPTS_DIR, CONNECTIONS_DIR, MEETINGS_WIKI_DIR]:
+        if subdir.exists():
+            for p in subdir.glob("*.md"):
+                try:
+                    snap[str(p)] = p.stat().st_mtime
+                except OSError:
+                    pass
+    for extra in [INDEX_FILE, LOG_FILE]:
+        if extra.exists():
+            try:
+                snap[str(extra)] = extra.stat().st_mtime
+            except OSError:
+                pass
+    return snap
+
+
+def wiki_touched(before: dict[str, float]) -> tuple[int, int]:
+    """Count (new_files, updated_files) vs `before` snapshot."""
+    after = snapshot_wiki_state()
+    new = sum(1 for k in after if k not in before)
+    updated = sum(1 for k in after if k in before and after[k] > before[k])
+    return new, updated
+
+
 def compile_daily_log(log_path: Path, state: dict) -> bool:
-    """Compile a single daily log using claude -p."""
+    """Compile a single daily log using claude -p.
+
+    Returns True only if:
+    1. claude -p exited 0, AND
+    2. At least one wiki file was created or updated (mtime snapshot check).
+
+    This prevents silent failures where sub-Claude returns success but never
+    actually calls Write/Edit tools (describes instead of does).
+    """
     prompt = build_compile_prompt(log_path)
 
     # Strip ANTHROPIC_API_KEY so claude -p uses subscription
@@ -181,12 +233,16 @@ def compile_daily_log(log_path: Path, state: dict) -> bool:
         "claude",
         "-p", prompt,
         "--allowedTools", "Read,Write,Edit,Glob,Grep",
+        "--permission-mode", "acceptEdits",
         "--output-format", "text",
         "--max-turns", "20",
         "--model", "sonnet",
     ]
 
     print(f"  Running claude -p (this may take 30-60s)...")
+
+    # Snapshot wiki state BEFORE running sub-Claude
+    before_snap = snapshot_wiki_state()
 
     try:
         result = subprocess.run(
@@ -211,7 +267,25 @@ def compile_daily_log(log_path: Path, state: dict) -> bool:
         print("  Error: 'claude' command not found. Is Claude Code installed?")
         return False
 
-    # Update state
+    # Verify sub-Claude actually wrote files (silent-failure guard)
+    new_count, updated_count = wiki_touched(before_snap)
+    if new_count == 0 and updated_count == 0:
+        print(f"  WARNING: claude -p returned success but no wiki files were created or modified.")
+        print(f"  Sub-Claude likely described changes instead of calling Write/Edit tools.")
+        print(f"  Dumping sub-Claude output for debugging:")
+        dump_path = STATE_FILE.parent / f"compile-{log_path.stem}-stdout.txt"
+        try:
+            dump_path.parent.mkdir(parents=True, exist_ok=True)
+            dump_path.write_text(result.stdout, encoding="utf-8")
+            print(f"  Saved stdout to: {dump_path}")
+        except OSError:
+            pass
+        print(f"  State hash NOT updated — daily log remains in queue for next compile run.")
+        return False
+
+    print(f"  Wiki touched: +{new_count} new files, {updated_count} updated")
+
+    # Update state (only reached on genuine success)
     state.setdefault("ingested", {})[log_path.name] = {
         "hash": file_hash(log_path),
         "compiled_at": now_iso(),
