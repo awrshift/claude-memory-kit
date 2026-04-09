@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.0.1] — 2026-04-09
+
+Post-launch polish release. Fixes issues found after v2.0.0 shipped, adds brand asset, and corrects terminology leftovers.
+
+### Fixed
+
+- **README Mermaid diagram truncation** (`4a37c00`) — Long node labels in the architecture diagram were truncated on GitHub's rendered view. Fixed by wrapping labels with `<br/>` in quoted syntax so each visible line stays under ~25 chars. Verified via Chrome browser automation on live GitHub render.
+- **`/tour` skill obsolete content** (`6da1f19`) — The `/tour` skill still referenced v1 architecture (3 hooks, `topics/` layer). Updated all steps to reflect v2: 5 hooks (added `session-end.sh` + `protect-tests.sh`), `knowledge/` wiki layer with two-tier memory explanation, new Step 5 for Memory Kit v2 Scripts (compile/lint/query/flush) as power-user optional content.
+- **Terminology leftovers: `topics/` → `knowledge/`** (`ab1b0b5`) — Systematic audit caught v1 references still in the codebase:
+  - `.claude/memory/MEMORY.md` template had a "Topic Files" section pointing to `.claude/memory/topics/` (v1 path that no longer exists in v2). Rewrote to "Knowledge Wiki" section pointing to `knowledge/concepts/`.
+  - `CLAUDE.md` had two lines ("create topic file" in Context Save Protocol, "needs more? → topic file" in Memory Entry Quality) — updated to reference knowledge articles.
+- **Missing CONTRIBUTING.md** (`ab1b0b5`) — README linked to `CONTRIBUTING.md` which did not exist (broken link on first click). Created minimal CONTRIBUTING.md with zero-dependencies guidelines, PR rules, and Obsidian-optional ground rule.
+
+### Added
+
+- **GitHub Social Preview banner** (`29afd04`, `b9cd78e`) — `.github/assets/og-banner.png` (1280×640). Dark editorial design with isometric 5-layer glass stack (BRAIN/MEMORY/RULES/JOURNAL/CONTEXT). Generated via Gemini Nano Banana Pro after evaluating 3 variants (Swiss editorial, terminal, isometric). Isometric chosen for strongest visual anchor at thumbnail size. Upload via repo Settings → Social preview.
+- **Hero banner in README** (`de0990b`) — Banner now renders as the first element of the README via pure Markdown image syntax. Stays compliant with H3 Hybrid structure (no HTML wrappers in top zone). Visitors see the visual brand before reading any text.
+
+### Notes for upgraders from v2.0.0
+
+- No breaking changes. Pure additive + fixes.
+- If you already cloned v2.0.0 and want to pull v2.0.1: `git pull origin main` — no action required.
+- The `/tour` skill will show the updated v2 walkthrough automatically on next invocation.
+- The Mermaid diagram fix only affects rendered view; no behavior change.
+
+---
+
 ## [2.0.0] — 2026-04-09
 
 Major upgrade: Memory Kit v2 pipeline ported from the private reference project.
