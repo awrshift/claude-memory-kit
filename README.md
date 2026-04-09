@@ -1,3 +1,5 @@
+![Claude Memory Kit — The OS layer for Claude Code](.github/assets/og-banner.png)
+
 # Claude Memory Kit
 
 **The OS layer for Claude Code. Not just memory — the entire context management lifecycle.**
