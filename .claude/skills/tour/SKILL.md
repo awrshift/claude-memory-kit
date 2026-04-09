@@ -29,9 +29,11 @@ An interactive walkthrough where you teach the user the Memory Kit by working wi
 
 Run in order for a full tour. Each step: **Pain → Read actual files → Do something → Confirm it worked.**
 
-### Step 1: Memory
+### Step 1: Memory — Two Tiers
 **Pain:** Without this, I forget everything between sessions. Your name, decisions, preferences — gone.
-- Read `.claude/memory/MEMORY.md` — show it, explain the structure you see (date convention, sections, topic files if any)
+- Read `.claude/memory/MEMORY.md` — show it, explain the structure (date convention `[YYYY-MM]`, sections, 200-line cap)
+- Read `.claude/memory/knowledge/index.md` — explain this is the wiki layer (concepts, connections, meetings, qa) loaded on-demand, not every session
+- Explain the split: MEMORY.md = hot cache (one-line patterns, auto-loaded), knowledge/ = deep articles (Markdown + `[[wikilinks]]`, Obsidian-compatible but Obsidian NOT required)
 - Ask the user for something to remember (stack, preference, convention)
 - Write it to MEMORY.md in the format the file already uses
 - Show the result
@@ -45,19 +47,37 @@ Run in order for a full tour. Each step: **Pain → Read actual files → Do som
 
 ### Step 3: Context Protection (Hooks)
 **Pain:** Long conversations get compressed by Claude Code. Without protection, progress disappears mid-session.
-- Read the 3 hook scripts in `.claude/hooks/` — explain what each one does IN PLAIN WORDS based on what you see in the code
+- Read the 5 hook scripts in `.claude/hooks/` — explain each one IN PLAIN WORDS based on what you see in the code:
+  - `session-start.sh` — context overview at session start
+  - `pre-compact.sh` — BLOCKS `/compact` until MEMORY.md is updated (mtime check)
+  - `periodic-save.sh` — auto-checkpoint every 50 exchanges (configurable via `CLAUDE_SAVE_INTERVAL`)
+  - `session-end.sh` — auto-captures conversation transcripts to `daily/YYYY-MM-DD.md` in background (spawns `flush.py`)
+  - `protect-tests.sh` — blocks edits to existing test files (Write new tests allowed)
+- Show `daily/` directory — explain that each session gets its own file, auto-written by the session-end hook, zero user action needed
 - Reference the session-start output if it fired this session
 - Key message: all automatic, user does nothing. Say "save context" to force a manual save anytime.
 
 ### Check-in
-Ask: "That's the core. Want to see Rules and Experiments too, or start working?" Steps 4-5 are optional.
+Ask: "That's the core. Want to see Rules, Scripts pipeline, and Experiments too, or start working?" Steps 4-6 are optional.
 
 ### Step 4: Rules
 **Pain:** If I make the same mistake twice, it's because nobody wrote it down.
 - Show `.claude/rules/` — read any existing rules, explain what they do
 - Offer to create one if the user has a convention. If not: "Say 'make this a rule' anytime I repeat a mistake."
 
-### Step 5: Experiments
+### Step 5: Memory Kit v2 Scripts (power user)
+**Pain:** After 50 sessions, `daily/` has hundreds of entries — useful, but too raw to search efficiently.
+- Show `.claude/memory/scripts/` — list the 5 files: `compile.py`, `lint.py`, `query.py`, `flush.py`, `config.py`
+- Explain in one sentence each:
+  - `compile.py` — reads `daily/` logs and writes structured wiki articles into `knowledge/` (via `claude -p` subscription, zero API cost)
+  - `lint.py` — 7 structural health checks on `knowledge/` + `--fix` auto-repairs broken backlinks
+  - `query.py` — index-guided retrieval across `knowledge/`, with optional `--file-back` to save answers as Q&A articles (compounding loop)
+  - `flush.py` — called by `session-end.sh` hook in background; user never invokes manually
+  - `config.py` — path constants (don't touch)
+- Demo: run `python3 .claude/memory/scripts/lint.py` against the empty wiki — show the output (likely 0 errors on a fresh clone)
+- Key message: scripts are OPT-IN. Only `flush.py` runs automatically (via hook). The rest you call when you want to compile/query/lint. Pure Python stdlib, zero `pip install`.
+
+### Step 6: Experiments
 **Pain:** Sometimes you need to research before building. Without a sandbox, research and production code mix.
 - Show `experiments/` — read README.md, explain the lifecycle based on what the file says
 - Offer to create one if the user has an open question. If not: "Say 'create an experiment' when you hit a fork."
