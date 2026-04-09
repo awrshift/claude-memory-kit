@@ -202,7 +202,7 @@ Triggers: user says "save context" / "update context", session is ending, or hoo
 
 Execute ALL 3 steps in order:
 
-1. **MEMORY.md** — add new verified patterns (with `[YYYY-MM]` date). Keep < 200 lines. If a theme grows > 5 entries → create topic file.
+1. **MEMORY.md** — add new verified patterns (with `[YYYY-MM]` date). Keep < 200 lines. If a theme grows > 5 entries → write a knowledge article in `.claude/memory/knowledge/concepts/{slug}.md`.
 2. **next-session-prompt.md** — update ONLY your `<!-- PROJECT:name -->` section: what was done, key decisions, `### IMMEDIATE NEXT` (exact first steps for next session).
 3. **JOURNAL.md** — update task statuses if any active tasks.
 
@@ -402,7 +402,7 @@ Before writing to MEMORY.md, self-check every entry:
 2. **Specific** — "always use parameterized queries" > "be careful with SQL"
 3. **Actionable** — changes your future behavior, not just states a fact
 4. **Not duplicate** — scan existing entries, update if exists
-5. **One line** — needs more? → topic file
+5. **One line** — needs more? → knowledge article in `knowledge/concepts/{slug}.md`
 
 ### MEMORY.md — What does NOT go here
 

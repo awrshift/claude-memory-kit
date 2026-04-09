@@ -1,6 +1,6 @@
 # Project Memory
 Last updated: [DATE] (Session: #1)
-Architecture: Index (< 200 lines, auto-loaded) + topic files (on-demand)
+Architecture: Hot cache (< 200 lines, auto-loaded) + knowledge wiki (on-demand)
 
 ---
 
@@ -30,20 +30,23 @@ Architecture: Index (< 200 lines, auto-loaded) + topic files (on-demand)
 |----------|-----------|--------|
 | [Example: "Used raw SQL"] | [SQL injection in user input] | [Always use parameterized queries] |
 
-## Topic Files (read on-demand)
+## Knowledge Wiki (read on-demand)
 
-> As your project grows, move detailed knowledge into topic files.
-> MEMORY.md stays under 200 lines. Topics have no size limit.
-> Claude reads topic files when working on that area — not every session.
+> Deep knowledge lives in `.claude/memory/knowledge/`, not here.
+> MEMORY.md stays under 200 lines (Anthropic auto-load cap).
+> The wiki is read on-demand through `knowledge/index.md` — Claude reads individual articles only when relevant, not every session.
 
-| Topic | File | When to read |
-|-------|------|-------------|
-| [Example: API patterns] | `.claude/memory/topics/api.md` | Working on API endpoints |
-| [Example: Database] | `.claude/memory/topics/database.md` | Schema changes, queries |
-| [Example: Deployment] | `.claude/memory/topics/deployment.md` | CI/CD, hosting, env config |
+**Wiki entry point:** `.claude/memory/knowledge/index.md`
 
-> **How to create a topic file:**
-> 1. When a section above grows beyond 5-10 entries on the same theme
-> 2. Create `.claude/memory/topics/{topic-name}.md`
-> 3. Move detailed entries there, keep one-line summary here
-> 4. Add to the table above
+**Subdirectories:**
+- `concepts/` — single-topic deep dives
+- `connections/` — cross-concept relationships
+- `meetings/` — structured meeting index articles
+- `qa/` — filed query answers (compounding loop via `query.py --file-back`)
+- `projects/` — per-project wiki articles
+- `experiments/` — gravestone articles (stay after raw files archived)
+
+> **How to grow the wiki:**
+> 1. When a theme in MEMORY.md grows beyond 5-10 entries on the same topic, move details to `.claude/memory/knowledge/concepts/{slug}.md`
+> 2. Keep a one-line summary here with a pointer: `- **Theme name** [YYYY-MM] — see `knowledge/concepts/{slug}`
+> 3. Or let the session-end hook + `compile.py` do it automatically from `daily/` logs
