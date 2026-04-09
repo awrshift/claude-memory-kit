@@ -24,7 +24,7 @@ experiments/
 - Want to validate an idea before investing implementation time
 - System-level improvement (not tied to one project)
 
-**Just add a task to JOURNAL.md:**
+**Just add a task to BACKLOG.md:**
 - Path is clear, just build it
 - Bug fix or routine maintenance
 - No real alternatives to evaluate
@@ -55,7 +55,7 @@ Not every experiment needs all phases. A quick PoC can go IDENTIFY → IMPLEMENT
 1. **Always a folder** — `NNN-description/` with EXPERIMENT.md inside. Never a single file.
 2. **Sandbox isolation** — code/data stays in the experiment folder, not in project dirs.
 3. **One experiment = one focused question.** Don't mix unrelated investigations.
-4. **Port results, not files** — after DECIDE(GO), create tasks in JOURNAL and patterns in MEMORY.md.
+4. **Port results, not files** — after DECIDE(GO), create tasks in BACKLOG and patterns in MEMORY.md.
 5. **Keep this index updated** — add/remove from Active Experiments table.
 
 ## Naming

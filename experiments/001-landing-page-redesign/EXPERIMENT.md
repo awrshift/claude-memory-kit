@@ -88,5 +88,5 @@ Conversion improved significantly but didn't hit 4% target. LCP degraded — nee
 ## DECIDE
 
 **GO with iteration.** Ship Option A as default, then:
-1. Optimize LCP (target < 1.5s) — create task T-005 in JOURNAL
+1. Optimize LCP (target < 1.5s) — create task T-005 in BACKLOG
 2. Consider adding Option B (ingredient search) as secondary CTA — create experiment 003

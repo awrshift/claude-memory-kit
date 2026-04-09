@@ -1,4 +1,4 @@
-# My First Project — Journal
+# My First Project — Backlog
 
 **Last updated:** [DATE]
 **Source of truth:** This file for all tasks, decisions, and status of this project

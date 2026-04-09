@@ -38,17 +38,17 @@ Run in order for a full tour. Each step: **Pain → Read actual files → Do som
 - Write it to MEMORY.md in the format the file already uses
 - Show the result
 
-### Step 2: Projects & Journal
-**Pain:** Tasks said out loud disappear when the conversation gets long. The Journal survives.
+### Step 2: Projects & Backlog
+**Pain:** Tasks said out loud disappear when the conversation gets long. The Backlog survives.
 - Show `projects/` directory — what exists
-- Help create a project with a JOURNAL.md (follow the pattern from CLAUDE.md or existing examples)
+- Help create a project with a BACKLOG.md (follow the pattern from CLAUDE.md or existing examples)
 - Add the project to `context/next-session-prompt.md` with PROJECT tags
 - Show both files — explain that next session starts by reading these
 
 ### Step 3: Context Protection (Hooks)
 **Pain:** Long conversations get compressed by Claude Code. Without protection, progress disappears mid-session.
 - Read the 5 hook scripts in `.claude/hooks/` — explain each one IN PLAIN WORDS based on what you see in the code:
-  - `session-start.sh` — context overview at session start
+  - `session-start.py` — Python hook; prints JSON `hookSpecificOutput.additionalContext` with session stats + knowledge/index.md + recent daily logs + top concepts (v3 injection)
   - `pre-compact.sh` — BLOCKS `/compact` until MEMORY.md is updated (mtime check)
   - `periodic-save.sh` — auto-checkpoint every 50 exchanges (configurable via `CLAUDE_SAVE_INTERVAL`)
   - `session-end.sh` — auto-captures conversation transcripts to `daily/YYYY-MM-DD.md` in background (spawns `flush.py`)

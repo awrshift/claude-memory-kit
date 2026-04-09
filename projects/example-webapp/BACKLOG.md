@@ -1,4 +1,4 @@
-# Example: Recipe Sharing App — Journal
+# Example: Recipe Sharing App — Backlog
 
 <!-- EXAMPLE: This is a demo project. Delete this file and folder when you create your first real project. -->
 

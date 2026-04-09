@@ -1,4 +1,4 @@
-# Example: Invoice Automation API — Journal
+# Example: Invoice Automation API — Backlog
 
 <!-- EXAMPLE: This is a demo project. Delete this file and folder when you create your first real project. -->
 

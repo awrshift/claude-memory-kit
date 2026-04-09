@@ -11,7 +11,7 @@
 <!-- EXAMPLE: This section is a demo. Delete it and create your own project section. -->
 ## Example: Recipe Sharing App
 
-**Journal:** `projects/example-webapp/JOURNAL.md`
+**Backlog:** `projects/example-webapp/BACKLOG.md`
 
 **Last session:** Built hero carousel (Exp 001), started ingredient search (T-003). Carousel A/B test running.
 
@@ -27,7 +27,7 @@
 <!-- EXAMPLE: This section is a demo. Delete it and create your own project section. -->
 ## Example: Invoice Automation API
 
-**Journal:** `projects/example-saas/JOURNAL.md`
+**Backlog:** `projects/example-saas/BACKLOG.md`
 
 **Last session:** Researched payment providers (Exp 002). Stripe vs Paddle vs Lemon Squeezy. Waiting on beta tester invoices for T-005.
 
