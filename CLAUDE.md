@@ -176,6 +176,8 @@ If user selected "I have existing code" in Q5, add:
 "Point me to your codebase and I'll analyze the structure, then set up appropriate rules and initial tasks."
 <!-- SETUP:END -->
 
+See @README.md for project overview and quick start.
+
 ## Project Overview
 
 **Project:** [PROJECT NAME — replace this]
