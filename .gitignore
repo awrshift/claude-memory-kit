@@ -21,3 +21,11 @@ venv/
 
 # Node
 node_modules/
+
+# Memory Kit v2 — runtime state (never committed)
+.claude/state/*
+!.claude/state/.gitkeep
+
+# Daily session logs (private by default — user can opt in to commit)
+daily/*.md
+!daily/.gitkeep

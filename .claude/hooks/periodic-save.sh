@@ -5,10 +5,10 @@
 # Every SAVE_INTERVAL exchanges, blocks the agent to save progress.
 # Anti-loop: stop_hook_active=true → pass through immediately.
 
-SAVE_INTERVAL="${CLAUDE_SAVE_INTERVAL:-15}"
+SAVE_INTERVAL="${CLAUDE_SAVE_INTERVAL:-50}"
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-STATE_DIR="$HOME/.claude-starter-kit/hook_state"
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+STATE_DIR="$PROJECT_DIR/.claude/state"
 mkdir -p "$STATE_DIR"
 
 # Read JSON input from stdin

@@ -5,8 +5,8 @@
 # Checks MEMORY.md mtime — if updated < 2 min ago, allows (agent already saved).
 # Otherwise blocks with dynamic context (line count, staleness, project count).
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-STATE_DIR="$HOME/.claude-starter-kit/hook_state"
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+STATE_DIR="$PROJECT_DIR/.claude/state"
 mkdir -p "$STATE_DIR"
 
 MEMORY_FILE="$PROJECT_DIR/.claude/memory/MEMORY.md"

@@ -4,8 +4,8 @@
 # Shows: session counter, memory capacity + staleness, project list with
 # task counts and staleness, active experiments, git status.
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-STATE_DIR="$HOME/.claude-starter-kit/hook_state"
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+STATE_DIR="$PROJECT_DIR/.claude/state"
 mkdir -p "$STATE_DIR"
 
 NOW=$(date +%s)
@@ -28,7 +28,7 @@ MEMORY_FILE="$PROJECT_DIR/.claude/memory/MEMORY.md"
 if [ -f "$MEMORY_FILE" ]; then
     LINES=$(wc -l < "$MEMORY_FILE" | tr -d ' ')
     CAPACITY=$((LINES * 100 / 200))
-    TOPICS=$(find "$PROJECT_DIR/.claude/memory/topics" -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
+    KNOWLEDGE=$(find "$PROJECT_DIR/.claude/memory/knowledge" -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
 
     MTIME=$(stat -f '%m' "$MEMORY_FILE" 2>/dev/null || stat -c '%Y' "$MEMORY_FILE" 2>/dev/null)
     if [ -n "$MTIME" ]; then
@@ -44,7 +44,7 @@ if [ -f "$MEMORY_FILE" ]; then
     [ -n "$MTIME" ] && [ "$DAYS_AGO" -ge 5 ] && STALE_FLAG=" !! STALE"
 
     echo "MEMORY.md: $LINES/200 lines (${CAPACITY}% full) — updated $AGE$STALE_FLAG"
-    echo "Topics: $TOPICS files"
+    echo "Knowledge wiki: $KNOWLEDGE articles"
 else
     echo "No MEMORY.md found"
 fi
