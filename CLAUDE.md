@@ -60,9 +60,9 @@ Using answers from Phase 1, replace ALL placeholders in this file (below the SET
 
 Using the project name from Q1 (kebab-case):
 
-1. Create `projects/{project-name}/JOURNAL.md` with a clean template:
+1. Create `projects/{project-name}/BACKLOG.md` with a clean template:
    ```markdown
-   # {Project Name} — Journal
+   # {Project Name} — Backlog
 
    **Last updated:** {today}
    **Source of truth:** This file for all tasks, decisions, and status
@@ -110,12 +110,12 @@ Using the project name from Q1 (kebab-case):
    <!-- PROJECT:{project-name} -->
    ## {Project Name}
 
-   **Journal:** `projects/{project-name}/JOURNAL.md`
+   **Backlog:** `projects/{project-name}/BACKLOG.md`
 
    **Last session:** Initial setup complete.
 
    ### IMMEDIATE NEXT
-   1. Define first tasks in JOURNAL.md
+   1. Define first tasks in BACKLOG.md
    2. Start working on the project
    <!-- /PROJECT:{project-name} -->
 
@@ -132,7 +132,7 @@ Using the project name from Q1 (kebab-case):
 
 Make hooks executable:
 ```bash
-chmod +x .claude/hooks/session-start.sh .claude/hooks/pre-compact.sh .claude/hooks/periodic-save.sh .claude/hooks/session-end.sh .claude/hooks/protect-tests.sh
+chmod +x .claude/hooks/session-start.py .claude/hooks/pre-compact.sh .claude/hooks/periodic-save.sh .claude/hooks/session-end.sh .claude/hooks/protect-tests.sh
 ```
 
 #### Step 5: Clean up ALL scaffolding
@@ -164,7 +164,7 @@ Commit: `git commit -am "setup: remove first-run instructions"`
 Tell the user in their chosen language:
 
 "Setup complete. Here's your project:"
-- Project: {name} — `projects/{project-name}/JOURNAL.md`
+- Project: {name} — `projects/{project-name}/BACKLOG.md`
 - Memory: `.claude/memory/` — I'll save patterns across sessions
 - Experiments: `experiments/` — for research before building
 - Hooks: session-start (context overview) + pre-compact (blocks until saved) + periodic-save (checkpoint every 50 exchanges) + session-end (auto-flush transcripts to daily/) + protect-tests (blocks edits to existing test files)
@@ -189,12 +189,13 @@ See @README.md for project overview and quick start.
 ## Session Workflow
 
 **Start:**
-1. Read `context/next-session-prompt.md` — find your `<!-- PROJECT:name -->` section
-2. `.claude/memory/MEMORY.md` is auto-loaded (patterns from past sessions)
-3. If user asks about a specific project -> read that project's `JOURNAL.md`
-4. If working on specific area -> read relevant `.claude/memory/knowledge/` articles via `index.md`
+1. `.claude/hooks/session-start.py` fires automatically and injects context into your session (see "SessionStart Injection" below). You see session stats, knowledge index, and recent daily logs as `additionalContext`.
+2. Read `context/next-session-prompt.md` — find your `<!-- PROJECT:name -->` section.
+3. `.claude/memory/MEMORY.md` is auto-loaded (patterns from past sessions).
+4. If user asks about a specific project → read that project's `BACKLOG.md`.
+5. If working on specific area → read relevant `.claude/memory/knowledge/` articles via `index.md` (already injected at start).
 
-**During:** Work on tasks. Update project JOURNAL.md after completing work.
+**During:** Work on tasks. Update project BACKLOG.md after completing work.
 
 **End — Context Save Protocol:**
 
@@ -204,13 +205,13 @@ Execute ALL 3 steps in order:
 
 1. **MEMORY.md** — add new verified patterns (with `[YYYY-MM]` date). Keep < 200 lines. If a theme grows > 5 entries → write a knowledge article in `.claude/memory/knowledge/concepts/{slug}.md`.
 2. **next-session-prompt.md** — update ONLY your `<!-- PROJECT:name -->` section: what was done, key decisions, `### IMMEDIATE NEXT` (exact first steps for next session).
-3. **JOURNAL.md** — update task statuses if any active tasks.
+3. **BACKLOG.md** — update task statuses if any active tasks.
 
 **Definition of Done (all must be true):**
 - [ ] MEMORY.md has new patterns from this session (or explicitly "no new patterns")
 - [ ] Each new MEMORY.md entry has `[YYYY-MM]` date tag
 - [ ] Your project section in next-session-prompt.md has `### IMMEDIATE NEXT` with 3+ concrete steps
-- [ ] JOURNAL.md task statuses reflect current reality (not stale from session start)
+- [ ] BACKLOG.md task statuses reflect current reality (not stale from session start)
 - [ ] No unsaved decisions — if you made a choice during the session, it's recorded somewhere
 
 **Before /compact (MANDATORY):**
@@ -220,6 +221,58 @@ The `pre-compact.sh` hook BLOCKS compaction until MEMORY.md is updated (mtime ch
 
 **Auto session-end flush:** The `session-end.sh` hook fires when the Claude Code process terminates. It extracts the last 100 turns / 50KB from the transcript and spawns `.claude/memory/scripts/flush.py` in background — uses `claude -p` (subscription, zero cost) to distill the session into structured markdown, appended to `daily/YYYY-MM-DD.md`. Completely transparent, logs to `.claude/state/flush.log`.
 
+**End-of-day auto-compile:** After 18:00 local time (configurable via `CMK_COMPILE_AFTER_HOUR`), `flush.py` checks if today's `daily/YYYY-MM-DD.md` has changed since its last successful compile (hash comparison). If yes, it spawns `compile.py` as a detached background process — transforms raw daily logs into structured `knowledge/` wiki articles without manual intervention. Manual override available via `/memory-compile` slash command.
+
+### SessionStart Injection (v3)
+
+When a session starts, `.claude/hooks/session-start.py` prints a JSON object to stdout:
+
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "SessionStart",
+    "additionalContext": "..."
+  }
+}
+```
+
+Claude Code injects `additionalContext` into the agent's initial context. Content (in priority order):
+
+1. **Session stats** — session counter, MEMORY.md capacity + staleness, projects with task counts, experiments with status, git branch + short status
+2. **`knowledge/index.md`** — full master catalog so agent knows what articles exist
+3. **Recent daily logs** — last 1-2 `daily/YYYY-MM-DD.md` entries for session-recency context
+4. **Top recent concepts** — 3 most recently-modified articles from `knowledge/concepts/`
+
+**Budget:** 50K chars default (configurable via `CMK_INJECT_BUDGET` env var). On Opus 4.6 1M-window this is ~1% usage — safe to inject aggressively.
+
+This pattern is inspired by Cole Medin's `claude-memory-compiler` (Karpathy's LLM knowledge base architecture). The key value: agent always "sees" the knowledge base catalog without needing explicit `/memory` queries.
+
+### End-of-day Auto-Compile (v3)
+
+`flush.py` includes `maybe_trigger_compilation()` which checks if it's past `COMPILE_AFTER_HOUR` (default 18) local time and if today's daily log has unsaved changes. If both true, it spawns `compile.py` detached. This runs at most once per day per unique daily log state (SHA-256 hash skip).
+
+Manual override: `/memory-compile` slash command (or `python3 .claude/memory/scripts/compile.py`).
+
+Configure:
+- `CMK_COMPILE_AFTER_HOUR=18` — hour threshold (0-23)
+- Logs: `.claude/state/flush.log` + `.claude/state/compile.log`
+
+### CLAUDE_INVOKED_BY — recursion guard (critical)
+
+`flush.py` and `compile.py` spawn `claude -p` subprocesses. Each subprocess starts a new Claude Code session, which fires the SessionEnd hook → spawns another `flush.py` → infinite loop.
+
+The guard: `flush.py` sets `os.environ["CLAUDE_INVOKED_BY"] = "memory_flush"` at the top of the file. `session-end.sh` (and any hook that spawns memory scripts) checks this env var at the top:
+
+```bash
+if [[ -n "${CLAUDE_INVOKED_BY:-}" ]]; then
+    exit 0
+fi
+```
+
+This short-circuits nested hook firing. The env var propagates through `subprocess.Popen` because we pass `env={k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}` + explicit `env["CLAUDE_INVOKED_BY"] = "memory_flush"`.
+
+**IMPORTANT:** any future hook that spawns `claude -p` MUST propagate this guard, otherwise recursion is guaranteed.
+
 ### Multi-Project Safety
 
 When the user has multiple projects, each project gets its own `<!-- PROJECT:name -->` section in `next-session-prompt.md`. Multiple Claude Code windows may run in parallel on different projects.
@@ -227,7 +280,7 @@ When the user has multiple projects, each project gets its own `<!-- PROJECT:nam
 **Critical rules:**
 - **next-session-prompt.md** — ONLY edit within your project's `<!-- PROJECT:name -->` / `<!-- /PROJECT:name -->` tags. Another window may be editing a different project section at the same time.
 - **MEMORY.md** — shared across all projects. Write patterns that apply broadly. Tag project-specific patterns: `[Project: name]`.
-- **JOURNAL.md** — each project has its own. No conflicts possible (one file per project).
+- **BACKLOG.md** — each project has its own. No conflicts possible (one file per project).
 
 ### next-session-prompt.md — How It Works
 
@@ -241,38 +294,39 @@ This file is the **cross-project hub**. It uses `<!-- PROJECT:name -->` / `<!-- 
 5. **Header** (date, session number) -> last writer wins, acceptable.
 
 **What goes in each project section (max 5-7 lines):**
-- Pointer to project JOURNAL.md (source of truth)
+- Pointer to project BACKLOG.md (source of truth)
 - What was done (key files, decisions)
 - `### IMMEDIATE NEXT` — exact first steps after restart
 - Any urgent deadlines or pending actions
 
 **What does NOT go here:**
-- Full task lists (those live in JOURNAL.md)
+- Full task lists (those live in BACKLOG.md)
 - Session history or detailed notes
-- Decision rationale (inline in JOURNAL tasks)
+- Decision rationale (inline in BACKLOG tasks)
 
 ## Context Architecture
 
 | Layer | Files | When loaded |
 |-------|-------|-------------|
-| **L1: Auto** | This file + `.claude/rules/` + `.claude/memory/MEMORY.md` (index, < 200 lines) | Every session |
-| **L2: Start** | `context/next-session-prompt.md` | Session start |
-| **L3: Project** | `projects/X/JOURNAL.md` | When working on project X |
-| **L4: Knowledge wiki** | `.claude/memory/knowledge/{concepts,connections,meetings,qa,projects,experiments}/*.md` | On-demand via `index.md` |
+| **L1: Auto** | This file + `.claude/rules/` + `.claude/memory/MEMORY.md` (index, < 200 lines) + **SessionStart injection** (index.md + recent daily logs + top concepts, ~50K budget) | Every session |
+| **L2: Start** | `context/next-session-prompt.md` | Session start (read explicitly) |
+| **L3: Project** | `projects/X/BACKLOG.md` | When working on project X |
+| **L4: Knowledge wiki** | `.claude/memory/knowledge/{concepts,connections,meetings}/*.md` | On-demand via `index.md` (already injected at L1) |
 | **L5: Daily logs** | `daily/YYYY-MM-DD.md` | Raw source, auto-captured by `session-end.sh` |
 | **Sandbox** | `experiments/NNN-*/` | On-demand (isolated research) |
 
 ### Key principles
 
-- **Each project = one JOURNAL.md** — single source of truth for tasks, decisions, status
-- **Decisions live inline with tasks** in JOURNAL, not in separate files
-- **next-session-prompt = pointers** to journals (5-7 lines per project, not full history)
-- **Rules = stable behavior**, not volatile data (counts, statuses go in journals)
+- **BACKLOG = task queue** (what to do). **daily/ = chronological log** (what happened). Two distinct files with different semantics.
+- **Each project = one BACKLOG.md** — single source of truth for tasks, decisions, status
+- **Decisions live inline with tasks** in BACKLOG, not in separate ADR files
+- **next-session-prompt = pointers** to backlogs (5-7 lines per project, not full history)
+- **Rules = stable behavior**, not volatile data (counts, statuses go in backlogs)
 - **Memory = verified cross-session patterns** managed in `.claude/memory/MEMORY.md`
 
 ## Experiments (Sandbox)
 
-The `experiments/` folder is an isolated sandbox for research, prototyping, and validation — outside the main project flow. Unlike tasks in JOURNAL.md (clear path, just build it), experiments are for questions that need investigation before committing.
+The `experiments/` folder is an isolated sandbox for research, prototyping, and validation — outside the main project flow. Unlike tasks in BACKLOG.md (clear path, just build it), experiments are for questions that need investigation before committing.
 
 An experiment can serve one project, multiple projects, or the system itself.
 
@@ -313,7 +367,7 @@ What does success look like?
 
 ## Decision
 GO / NO-GO / ITERATE — with reasoning.
-If GO: what tasks to create in which JOURNAL, what patterns to save to MEMORY.md.
+If GO: what tasks to create in which BACKLOG, what patterns to save to MEMORY.md.
 ```
 
 ### Lifecycle
@@ -329,14 +383,14 @@ Not every experiment needs all phases. A quick PoC can go IDENTIFY → IMPLEMENT
 1. **Always a folder** — `experiments/NNN-description/` with EXPERIMENT.md inside
 2. **Sandbox isolation** — experiment code/data stays in the experiment folder, not in project dirs
 3. **One experiment = one focused question** — don't mix unrelated investigations
-4. **Port results, not files** — after DECIDE(GO), create tasks in JOURNAL.md and patterns in MEMORY.md. Don't move experiment files into the project.
+4. **Port results, not files** — after DECIDE(GO), create tasks in BACKLOG.md and patterns in MEMORY.md. Don't move experiment files into the project.
 5. **Index** — keep `experiments/README.md` Active Experiments table updated
 
 **Naming:** `NNN-short-description/` (sequential number + kebab-case)
 
 **When to use experiments vs tasks:**
 - Unknown path, multiple options, need to research → experiment
-- Clear path, just build it → task in JOURNAL.md
+- Clear path, just build it → task in BACKLOG.md
 
 ### Example experiments (delete when ready)
 
@@ -347,7 +401,7 @@ These are demos. Delete them when you create your first real experiment.
 
 ## Projects
 
-Projects live in `projects/`. Each project has a `JOURNAL.md` — the single source of truth for tasks, decisions, and status.
+Projects live in `projects/`. Each project has a `BACKLOG.md` — the single source of truth for tasks, decisions, and status.
 
 ### Example projects (delete when ready)
 
@@ -359,9 +413,9 @@ These are **not real projects**. Delete both folders when you create your first 
 
 ## Adding a New Project
 
-1. Create `projects/new-project/JOURNAL.md` (copy the template from any example project)
+1. Create `projects/new-project/BACKLOG.md` (copy the template from any example project)
 2. Add a `<!-- PROJECT:new-project -->` section in `context/next-session-prompt.md` before `<!-- SHARED -->`
-3. Optionally add `.claude/rules/new-project.md` with domain-specific rules (use `paths:` frontmatter to scope)
+3. Optionally add `.claude/rules/new-project.md` with domain-specific rules (scoping via `paths:` frontmatter is documented but not verified — treat rules as globally loaded by default)
 
 ## Memory System (Tier-based)
 
@@ -370,7 +424,7 @@ Two tiers preserve context across sessions:
 | Tier | File | Loaded | Size limit |
 |------|------|--------|-----------|
 | **Index** | `.claude/memory/MEMORY.md` | Every session (auto) | **< 200 lines** (Anthropic limit — content beyond 200 lines is truncated) |
-| **Wiki** | `.claude/memory/knowledge/{concepts,connections,meetings,qa,projects,experiments}/*.md` | On-demand via `knowledge/index.md` | No limit |
+| **Wiki** | `.claude/memory/knowledge/{concepts,connections,meetings}/*.md` | Via SessionStart injection (index.md + top concepts) + on-demand reads | No limit |
 
 The wiki uses plain Markdown with `[[wikilinks]]`. **Obsidian is optional** — it only provides a visual graph view. The wiki works in any Markdown editor (VS Code, Sublime, plain `cat`, GitHub web view). Scripts and pipeline are fully independent of Obsidian.
 
@@ -417,45 +471,53 @@ When a theme in MEMORY.md grows beyond 5-10 entries, write detailed articles in 
 ```
 .claude/memory/
 ├── MEMORY.md              ← Index (< 200 lines, loaded every session)
-├── scripts/               ← Memory Kit v2 pipeline (compile/lint/query/flush)
+├── scripts/               ← Memory Kit v3 pipeline (compile/lint/query/flush/config)
 └── knowledge/             ← Wiki (on-demand, Obsidian-compatible)
-    ├── index.md           ← Master catalog (read FIRST for any deep query)
+    ├── index.md           ← Master catalog (injected at session start)
     ├── log.md             ← Append-only build log
     ├── concepts/          ← Single-topic deep dives
     ├── connections/       ← Cross-concept relationships
-    ├── meetings/          ← Meeting index articles
-    ├── qa/                ← Filed query answers (compounding loop)
-    ├── projects/          ← Per-project wiki articles
-    └── experiments/       ← Gravestone pattern (article stays after archive)
+    └── meetings/          ← Meeting index articles
 ```
 
-### Memory Kit v2 Scripts
+### Memory Kit v3 Scripts
 
 Production pipeline for auto-compiling knowledge from daily logs. All scripts use Python stdlib only (no `pip install`) and call `claude -p` as a subprocess (uses your existing subscription, zero extra cost).
 
 ```bash
 # Compile: daily/ → knowledge/ articles (incremental via SHA-256 hash)
 python3 .claude/memory/scripts/compile.py
+# Or via slash command:
+/memory-compile
 
-# Lint: 7 structural health checks on knowledge wiki
+# Lint: 6 structural health checks on knowledge wiki
 python3 .claude/memory/scripts/lint.py
 python3 .claude/memory/scripts/lint.py --fix    # auto-add missing backlinks
+/memory-lint
 
 # Query: index-guided retrieval across the wiki
 python3 .claude/memory/scripts/query.py "your question"
-python3 .claude/memory/scripts/query.py "your question" --file-back   # also files answer to qa/
+/memory-query "your question"
 
 # Flush: called automatically by session-end.sh hook (background, detached)
 # Do not call manually — hook handles it
+# Auto-triggers compile.py after 18:00 local (Cole's end-of-day pattern)
 ```
 
-**Pipeline flow:** `session-end.sh` → `flush.py` (Opus, 100 turns/50KB window) → `daily/YYYY-MM-DD.md` → (you run) `compile.py` → `knowledge/*.md`.
+**Pipeline flow:**
+```
+session-end.sh → flush.py (claude -p, Opus, 100 turns/50KB)
+             → daily/YYYY-MM-DD.md
+             → (if >18:00) spawns compile.py detached
+             → compile.py → knowledge/*.md articles
+             → session-start.py injects updated index.md + latest daily next session
+```
 
 ## System Evolution
 
 After significant work — update relevant files:
 - **Behavioral rule** -> `.claude/rules/*.md`
-- **Task/decision** -> `projects/X/JOURNAL.md` (inline with the task)
+- **Task/decision** -> `projects/X/BACKLOG.md` (inline with the task)
 - **What to do next** -> `context/next-session-prompt.md` (your project section only)
 - **Learned pattern** -> `.claude/memory/MEMORY.md` (index, < 200 lines)
 - **Detailed knowledge** -> `.claude/memory/knowledge/concepts/{name}.md` (on-demand wiki, no size limit)
@@ -463,7 +525,7 @@ After significant work — update relevant files:
 
 ## Rules
 
-`.claude/rules/` contains domain-specific rules that auto-load. Rules without `paths:` frontmatter load globally (every session). Rules with `paths:` load only when working on matching files.
+`.claude/rules/` contains domain-specific rules that auto-load. Rules without `paths:` frontmatter load globally (every session). Rules with `paths:` are documented to scope loading, but this has not been independently verified — treat all rules as globally loaded by default.
 
 Create your own rules as needed. Example: `api-conventions.md` for API patterns, `testing.md` for test requirements.
 
