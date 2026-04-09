@@ -132,7 +132,7 @@ Using the project name from Q1 (kebab-case):
 
 Make hooks executable:
 ```bash
-chmod +x .claude/hooks/session-start.sh .claude/hooks/pre-compact.sh .claude/hooks/periodic-save.sh
+chmod +x .claude/hooks/session-start.sh .claude/hooks/pre-compact.sh .claude/hooks/periodic-save.sh .claude/hooks/session-end.sh .claude/hooks/protect-tests.sh
 ```
 
 #### Step 5: Clean up ALL scaffolding
@@ -167,7 +167,8 @@ Tell the user in their chosen language:
 - Project: {name} — `projects/{project-name}/JOURNAL.md`
 - Memory: `.claude/memory/` — I'll save patterns across sessions
 - Experiments: `experiments/` — for research before building
-- Hooks: session-start (context overview) + pre-compact (blocks until saved) + periodic-save (checkpoint every 15 exchanges)
+- Hooks: session-start (context overview) + pre-compact (blocks until saved) + periodic-save (checkpoint every 50 exchanges) + session-end (auto-flush transcripts to daily/) + protect-tests (blocks edits to existing test files)
+- Memory Kit v2 pipeline: `.claude/memory/scripts/` — compile, lint, query, flush (opt-in, Python stdlib only)
 
 "To start working, just tell me what you want to build. I'll create tasks in your journal and track progress."
 
@@ -189,7 +190,7 @@ If user selected "I have existing code" in Q5, add:
 1. Read `context/next-session-prompt.md` — find your `<!-- PROJECT:name -->` section
 2. `.claude/memory/MEMORY.md` is auto-loaded (patterns from past sessions)
 3. If user asks about a specific project -> read that project's `JOURNAL.md`
-4. If working on specific area -> read relevant `.claude/memory/topics/*.md`
+4. If working on specific area -> read relevant `.claude/memory/knowledge/` articles via `index.md`
 
 **During:** Work on tasks. Update project JOURNAL.md after completing work.
 
@@ -213,7 +214,9 @@ Execute ALL 3 steps in order:
 **Before /compact (MANDATORY):**
 The `pre-compact.sh` hook BLOCKS compaction until MEMORY.md is updated (mtime check). Execute steps 1-3 above — compaction proceeds only after files are saved.
 
-**Periodic save:** The `periodic-save.sh` hook blocks every 15 exchanges to checkpoint progress. Same 3 steps, same Definition of Done.
+**Periodic save:** The `periodic-save.sh` hook blocks every 50 exchanges (configurable via `CLAUDE_SAVE_INTERVAL`) to checkpoint progress. Same 3 steps, same Definition of Done.
+
+**Auto session-end flush:** The `session-end.sh` hook fires when the Claude Code process terminates. It extracts the last 100 turns / 50KB from the transcript and spawns `.claude/memory/scripts/flush.py` in background — uses `claude -p` (subscription, zero cost) to distill the session into structured markdown, appended to `daily/YYYY-MM-DD.md`. Completely transparent, logs to `.claude/state/flush.log`.
 
 ### Multi-Project Safety
 
@@ -253,7 +256,8 @@ This file is the **cross-project hub**. It uses `<!-- PROJECT:name -->` / `<!-- 
 | **L1: Auto** | This file + `.claude/rules/` + `.claude/memory/MEMORY.md` (index, < 200 lines) | Every session |
 | **L2: Start** | `context/next-session-prompt.md` | Session start |
 | **L3: Project** | `projects/X/JOURNAL.md` | When working on project X |
-| **L4: Topics** | `.claude/memory/topics/*.md` | On-demand (when working on specific area) |
+| **L4: Knowledge wiki** | `.claude/memory/knowledge/{concepts,connections,meetings,qa,projects,experiments}/*.md` | On-demand via `index.md` |
+| **L5: Daily logs** | `daily/YYYY-MM-DD.md` | Raw source, auto-captured by `session-end.sh` |
 | **Sandbox** | `experiments/NNN-*/` | On-demand (isolated research) |
 
 ### Key principles
@@ -364,7 +368,9 @@ Two tiers preserve context across sessions:
 | Tier | File | Loaded | Size limit |
 |------|------|--------|-----------|
 | **Index** | `.claude/memory/MEMORY.md` | Every session (auto) | **< 200 lines** (Anthropic limit — content beyond 200 lines is truncated) |
-| **Topics** | `.claude/memory/topics/*.md` | On-demand (when needed) | No limit |
+| **Wiki** | `.claude/memory/knowledge/{concepts,connections,meetings,qa,projects,experiments}/*.md` | On-demand via `knowledge/index.md` | No limit |
+
+The wiki uses plain Markdown with `[[wikilinks]]`. **Obsidian is optional** — it only provides a visual graph view. The wiki works in any Markdown editor (VS Code, Sublime, plain `cat`, GitHub web view). Scripts and pipeline are fully independent of Obsidian.
 
 ### MEMORY.md (Index) — What goes here
 
@@ -372,7 +378,7 @@ Two tiers preserve context across sessions:
 - User preferences for workflow and communication
 - Key architectural decisions (one line each)
 - Failed approaches table (so you don't repeat mistakes)
-- **Topic Files table** — index of what's in `topics/` and when to read each file
+- **Wiki Index pointer** — note to read `.claude/memory/knowledge/index.md` for deep queries
 
 ### Temporal Facts
 
@@ -399,21 +405,49 @@ Before writing to MEMORY.md, self-check every entry:
 ### MEMORY.md — What does NOT go here
 
 - Session-specific details (current task, temporary state)
-- Detailed knowledge on a single topic (move to `topics/`)
+- Detailed knowledge on a single topic (move to `knowledge/concepts/X.md`)
 - Anything already in CLAUDE.md or rules/
 
-### Topic Files — Detailed knowledge
+### Knowledge Wiki — Detailed knowledge
 
-When a theme in MEMORY.md grows beyond 5-10 entries, move details to `.claude/memory/topics/{name}.md`. Keep a one-line summary + table entry in MEMORY.md. Claude reads topic files on-demand — they don't consume context every session.
+When a theme in MEMORY.md grows beyond 5-10 entries, write detailed articles in `.claude/memory/knowledge/concepts/{name}.md`. Keep a one-line summary in MEMORY.md. Claude reads wiki articles on-demand — they don't consume context every session.
 
 ```
 .claude/memory/
 ├── MEMORY.md              ← Index (< 200 lines, loaded every session)
-└── topics/
-    ├── api.md             ← Example: API conventions, endpoints, auth
-    ├── database.md        ← Example: Schema decisions, migration patterns
-    └── deployment.md      ← Example: CI/CD, hosting, env variables
+├── scripts/               ← Memory Kit v2 pipeline (compile/lint/query/flush)
+└── knowledge/             ← Wiki (on-demand, Obsidian-compatible)
+    ├── index.md           ← Master catalog (read FIRST for any deep query)
+    ├── log.md             ← Append-only build log
+    ├── concepts/          ← Single-topic deep dives
+    ├── connections/       ← Cross-concept relationships
+    ├── meetings/          ← Meeting index articles
+    ├── qa/                ← Filed query answers (compounding loop)
+    ├── projects/          ← Per-project wiki articles
+    └── experiments/       ← Gravestone pattern (article stays after archive)
 ```
+
+### Memory Kit v2 Scripts
+
+Production pipeline for auto-compiling knowledge from daily logs. All scripts use Python stdlib only (no `pip install`) and call `claude -p` as a subprocess (uses your existing subscription, zero extra cost).
+
+```bash
+# Compile: daily/ → knowledge/ articles (incremental via SHA-256 hash)
+python3 .claude/memory/scripts/compile.py
+
+# Lint: 7 structural health checks on knowledge wiki
+python3 .claude/memory/scripts/lint.py
+python3 .claude/memory/scripts/lint.py --fix    # auto-add missing backlinks
+
+# Query: index-guided retrieval across the wiki
+python3 .claude/memory/scripts/query.py "your question"
+python3 .claude/memory/scripts/query.py "your question" --file-back   # also files answer to qa/
+
+# Flush: called automatically by session-end.sh hook (background, detached)
+# Do not call manually — hook handles it
+```
+
+**Pipeline flow:** `session-end.sh` → `flush.py` (Opus, 100 turns/50KB window) → `daily/YYYY-MM-DD.md` → (you run) `compile.py` → `knowledge/*.md`.
 
 ## System Evolution
 
@@ -422,7 +456,7 @@ After significant work — update relevant files:
 - **Task/decision** -> `projects/X/JOURNAL.md` (inline with the task)
 - **What to do next** -> `context/next-session-prompt.md` (your project section only)
 - **Learned pattern** -> `.claude/memory/MEMORY.md` (index, < 200 lines)
-- **Detailed knowledge** -> `.claude/memory/topics/*.md` (on-demand, no size limit)
+- **Detailed knowledge** -> `.claude/memory/knowledge/concepts/{name}.md` (on-demand wiki, no size limit)
 - **New experiment** -> `experiments/NNN-description/EXPERIMENT.md` + update `experiments/README.md`
 
 ## Rules

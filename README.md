@@ -42,11 +42,33 @@ Each project gets its own Journal — a single file where Claude tracks tasks, d
 
 ### Context that survives compression
 
-Long conversations get compressed by Claude Code. Without this kit, your progress disappears. With it, a **blocking hook** physically prevents compression until your agent saves. A second hook auto-checkpoints every 15 exchanges during long sessions. Nothing is lost — even if you forget to save.
+Long conversations get compressed by Claude Code. Without this kit, your progress disappears. With it, a **blocking hook** physically prevents compression until your agent saves. A second hook auto-checkpoints every 50 exchanges during long sessions. A third hook auto-captures every session end to `daily/YYYY-MM-DD.md` in the background. Nothing is lost — even if you forget to save.
 
 ### Experiment sandbox
 
 Not sure which approach to take? The experiments folder is an isolated sandbox — each experiment gets its own folder with context, data, and prototypes. Define a question, explore options, validate, make a GO/NO-GO decision. Results get ported to your project as tasks and memory patterns.
+
+---
+
+## What's New in v2
+
+- **Auto-capture sessions** — `session-end.sh` hook flushes each conversation to `daily/YYYY-MM-DD.md` automatically (runs in background, uses your Claude subscription, zero extra cost)
+- **Compile knowledge** — `python3 .claude/memory/scripts/compile.py` turns daily logs into a structured wiki (`knowledge/concepts/`, `knowledge/connections/`, `knowledge/meetings/`, etc.)
+- **Query knowledge** — `python3 .claude/memory/scripts/query.py "your question"` does index-guided retrieval across the wiki. With `--file-back`, answers become searchable Q&A articles (compounding loop)
+- **Lint knowledge** — `python3 .claude/memory/scripts/lint.py --fix` runs 7 structural health checks and auto-fixes missing backlinks
+- **Protect tests** — `protect-tests.sh` hook blocks edits to existing test files (agent must fix implementation, not tests)
+
+All scripts use Python stdlib only. **No `pip install` needed, no external services, no database.**
+
+### Do I need Obsidian?
+
+**No.** The `knowledge/` wiki is plain Markdown with `[[wikilinks]]`. You can read and edit it in:
+
+- **VS Code** (add the [Foam](https://foambubble.github.io/foam/) extension for wikilink navigation)
+- **Any Markdown editor** — Sublime, Zed, Cursor, nano, vim
+- **GitHub web view** — wikilinks render as plain text but the file tree works
+
+Obsidian is **only** needed if you want the visual graph view. If you don't install it, everything still works — scripts, pipeline, wiki structure, and graph relationships are independent of Obsidian.
 
 ---
 
@@ -84,8 +106,10 @@ Once set up, you interact with Claude naturally. Here are the key commands:
 
 **Safety nets work automatically:**
 - Before context compression → agent is blocked until it saves (you'll see a brief pause)
-- Every ~15 exchanges → agent checkpoints progress (you'll see a brief pause)
+- Every ~50 exchanges → agent checkpoints progress (you'll see a brief pause)
 - Session start → agent shows you memory status, active projects, and what's next
+- Session end → background process captures the conversation to `daily/YYYY-MM-DD.md` (no pause, fully transparent)
+- Editing tests → blocked unless creating a new test file (forces fixing implementation, not tests)
 
 ---
 
@@ -186,7 +210,11 @@ Yes. During setup, choose "I have existing code" and point Claude to your codeba
 <details>
 <summary><strong>What happens if I mess up the memory files?</strong></summary>
 
-Everything is plain text in git. Roll back with `git checkout .claude/memory/` or just delete and let Claude rebuild from your project files.
+Everything is plain text in git. Three recovery options:
+
+1. **Roll back** — `git checkout .claude/memory/`
+2. **Lint + auto-fix** — `python3 .claude/memory/scripts/lint.py --fix` (7 structural checks, auto-adds missing backlinks)
+3. **Rebuild from daily logs** — delete the wiki and run `python3 .claude/memory/scripts/compile.py --all` to regenerate from `daily/YYYY-MM-DD.md` history
 </details>
 
 <details>
