@@ -46,12 +46,12 @@ Three layers load at different times. Light context on every session, heavy cont
 
 ```mermaid
 graph TD
-    A[Session Start] --> B[Load CLAUDE.md + rules + MEMORY.md]
-    B --> C[Read next-session-prompt.md]
-    C --> D[Work on project - read JOURNAL.md on demand]
+    A[Session Start] --> B["Load CLAUDE.md<br/>rules + MEMORY.md"]
+    B --> C["Read<br/>next-session-prompt.md"]
+    C --> D["Work on project<br/>JOURNAL.md on demand"]
     D --> E[Session End]
-    E --> F[session-end.sh hook writes to daily/]
-    F --> G[Next session resumes from context hub]
+    E --> F["Hook flushes<br/>to daily/"]
+    F --> G["Next session<br/>resumes from hub"]
 ```
 
 ### Loading tiers
