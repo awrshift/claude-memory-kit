@@ -30,6 +30,12 @@ STATE_DIR = ROOT / ".claude" / "state"
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 STATE_FILE = STATE_DIR / "last-flush.json"
 LOG_FILE = STATE_DIR / "flush.log"
+COMPILE_STATE_FILE = STATE_DIR / "compile-state.json"
+COMPILE_SCRIPT = SCRIPTS_DIR / "compile.py"
+
+# End-of-day auto-compile: after this hour, spawn compile.py if today's
+# daily log has new content since the last successful compile.
+COMPILE_AFTER_HOUR = int(os.environ.get("CMK_COMPILE_AFTER_HOUR", "18"))
 
 # File-based logging (parent redirects stdout/stderr to DEVNULL)
 logging.basicConfig(
@@ -128,6 +134,72 @@ worth saving, respond with exactly: FLUSH_OK
         return "FLUSH_ERROR: claude not found"
 
 
+def maybe_trigger_compilation() -> None:
+    """
+    End-of-day auto-compile trigger.
+
+    After COMPILE_AFTER_HOUR local time, check if today's daily log has
+    changed since the last successful compile. If yes, spawn compile.py
+    as a detached background process so it doesn't block the current
+    flush completion.
+
+    Skips gracefully if: too early, no daily log, already compiled with
+    matching hash, or compile.py missing.
+    """
+    import hashlib
+
+    now = datetime.now(timezone.utc).astimezone()
+    if now.hour < COMPILE_AFTER_HOUR:
+        return
+
+    today_name = f"{now.strftime('%Y-%m-%d')}.md"
+    today_log = DAILY_DIR / today_name
+    if not today_log.exists():
+        return
+
+    if not COMPILE_SCRIPT.exists():
+        logging.warning("compile.py not found at %s, cannot auto-trigger", COMPILE_SCRIPT)
+        return
+
+    # Hash-based skip: if already compiled and content unchanged, do nothing.
+    try:
+        current_hash = hashlib.sha256(today_log.read_bytes()).hexdigest()[:16]
+    except OSError as e:
+        logging.error("Failed to hash %s: %s", today_log, e)
+        return
+
+    if COMPILE_STATE_FILE.exists():
+        try:
+            compile_state = json.loads(COMPILE_STATE_FILE.read_text(encoding="utf-8"))
+            ingested = compile_state.get("ingested", {})
+            if today_name in ingested and ingested[today_name].get("hash") == current_hash:
+                logging.info("End-of-day compile: %s unchanged since last compile, skipping", today_name)
+                return
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    logging.info("End-of-day compile triggered for %s (after %d:00)", today_name, COMPILE_AFTER_HOUR)
+
+    # Spawn compile.py detached. Env inherits CLAUDE_INVOKED_BY so any
+    # nested hooks (compile.py itself invokes claude -p) short-circuit.
+    env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+    env["CLAUDE_INVOKED_BY"] = "memory_flush"
+
+    try:
+        compile_log = open(str(STATE_DIR / "compile.log"), "a")
+        subprocess.Popen(
+            ["python3", str(COMPILE_SCRIPT)],
+            stdout=compile_log,
+            stderr=subprocess.STDOUT,
+            cwd=str(ROOT),
+            env=env,
+            start_new_session=True,
+        )
+        logging.info("Spawned compile.py detached (pid logged to compile.log)")
+    except Exception as e:
+        logging.error("Failed to spawn compile.py: %s", e)
+
+
 def main():
     if len(sys.argv) < 3:
         logging.error("Usage: %s <context_file.md> <session_id>", sys.argv[0])
@@ -172,6 +244,10 @@ def main():
 
     save_flush_state({"session_id": session_id, "timestamp": time.time()})
     context_file.unlink(missing_ok=True)
+
+    # End-of-day auto-compile trigger (Cole pattern, Karpathy's flush-then-compile loop)
+    maybe_trigger_compilation()
+
     logging.info("Flush complete for %s", session_id)
 
 

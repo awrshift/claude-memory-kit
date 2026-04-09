@@ -40,7 +40,7 @@ fi
 # Count active projects
 PROJECT_COUNT=0
 if [ -d "$PROJECT_DIR/projects" ]; then
-    PROJECT_COUNT=$(find "$PROJECT_DIR/projects" -name "JOURNAL.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+    PROJECT_COUNT=$(find "$PROJECT_DIR/projects" -name "BACKLOG.md" -type f 2>/dev/null | wc -l | tr -d ' ')
 fi
 
 echo "[$(date '+%H:%M:%S')] BLOCKING compact — MEMORY.md last updated $MEMORY_AGE" >> "$STATE_DIR/hook.log"
@@ -48,6 +48,6 @@ echo "[$(date '+%H:%M:%S')] BLOCKING compact — MEMORY.md last updated $MEMORY_
 cat << HOOKJSON
 {
   "decision": "block",
-  "reason": "CONTEXT COMPRESSION IMMINENT. Your memory files are stale (MEMORY.md: ${MEMORY_LINES}/200 lines, last updated ${MEMORY_AGE}). You MUST save before compaction proceeds:\n\n1. Update .claude/memory/MEMORY.md — save new patterns from this session (keep < 200 lines)\n2. Update context/next-session-prompt.md — your project section only (what was done + IMMEDIATE NEXT)\n3. Update project JOURNAL.md — task statuses (${PROJECT_COUNT} project(s) active)\n\nWrite to these files NOW. Compaction will proceed after files are updated."
+  "reason": "CONTEXT COMPRESSION IMMINENT. Your memory files are stale (MEMORY.md: ${MEMORY_LINES}/200 lines, last updated ${MEMORY_AGE}). You MUST save before compaction proceeds:\n\n1. Update .claude/memory/MEMORY.md — save new patterns from this session (keep < 200 lines)\n2. Update context/next-session-prompt.md — your project section only (what was done + IMMEDIATE NEXT)\n3. Update project BACKLOG.md — task statuses (${PROJECT_COUNT} project(s) active)\n\nWrite to these files NOW. Compaction will proceed after files are updated."
 }
 HOOKJSON

@@ -15,18 +15,11 @@ import re
 from pathlib import Path
 
 from config import (
-    ARCHIVE_DIR,
     CONCEPTS_DIR,
     CONNECTIONS_DIR,
     DAILY_DIR,
-    EXPERIMENTS_RAW_DIR,
-    EXPERIMENTS_WIKI_DIR,
     KNOWLEDGE_DIR,
     MEETINGS_WIKI_DIR,
-    PROJECTS_WIKI_DIR,
-    QA_DIR,
-    ROOT_DIR,
-    SCRIPTS_DIR,
     STATE_FILE,
     today_iso,
 )
@@ -34,35 +27,10 @@ from config import (
 
 def list_wiki_articles() -> list[Path]:
     articles = []
-    for subdir in [
-        CONCEPTS_DIR,
-        CONNECTIONS_DIR,
-        QA_DIR,
-        EXPERIMENTS_WIKI_DIR,
-        PROJECTS_WIKI_DIR,
-        MEETINGS_WIKI_DIR,
-    ]:
+    for subdir in [CONCEPTS_DIR, CONNECTIONS_DIR, MEETINGS_WIKI_DIR]:
         if subdir.exists():
             articles.extend(sorted(subdir.glob("*.md")))
     return articles
-
-
-def parse_frontmatter(content: str) -> dict:
-    """Parse YAML frontmatter from article. Returns empty dict if none or malformed."""
-    if not content.startswith("---"):
-        return {}
-    end = content.find("---", 3)
-    if end == -1:
-        return {}
-    fm_text = content[3:end]
-    result = {}
-    for line in fm_text.strip().split("\n"):
-        line = line.rstrip()
-        if ":" not in line or line.startswith(" ") or line.startswith("-"):
-            continue
-        key, _, value = line.partition(":")
-        result[key.strip()] = value.strip().strip('"').strip("'")
-    return result
 
 
 def extract_wikilinks(content: str) -> list[str]:
@@ -226,94 +194,6 @@ def check_missing_frontmatter() -> list[dict]:
     return issues
 
 
-def check_stale_experiments() -> list[dict]:
-    """
-    Sync between experiments/ raw folders and knowledge/experiments/ wiki articles.
-
-    Detects 4 types of drift:
-    1. Raw folder exists but no wiki article → unindexed experiment
-    2. Wiki article exists but no raw folder AND no archive_path → orphan gravestone
-    3. Wiki article has status: archived but raw folder still has >2 files → move to archive
-    4. Wiki article claims archive_path that doesn't exist on disk → broken reference
-    """
-    issues = []
-
-    # Gather raw experiment folders
-    raw_experiments = {}
-    if EXPERIMENTS_RAW_DIR.exists():
-        for folder in sorted(EXPERIMENTS_RAW_DIR.iterdir()):
-            if folder.is_dir() and not folder.name.startswith("."):
-                file_count = sum(1 for _ in folder.rglob("*") if _.is_file())
-                raw_experiments[folder.name] = file_count
-
-    # Gather wiki articles
-    wiki_articles = {}
-    if EXPERIMENTS_WIKI_DIR.exists():
-        for article in sorted(EXPERIMENTS_WIKI_DIR.glob("*.md")):
-            content = article.read_text(encoding="utf-8")
-            fm = parse_frontmatter(content)
-            wiki_articles[article.stem] = {"path": article, "frontmatter": fm}
-
-    # Check 1: Raw folder without wiki article
-    for name in raw_experiments:
-        if name not in wiki_articles:
-            issues.append({
-                "severity": "warning",
-                "check": "stale_experiment",
-                "file": f"experiments/{name}/",
-                "detail": f"Raw experiment exists but no wiki article in knowledge/experiments/{name}.md",
-            })
-
-    # Check 2: Wiki article without raw folder and no archive_path
-    for name, data in wiki_articles.items():
-        fm = data["frontmatter"]
-        rel = data["path"].relative_to(KNOWLEDGE_DIR)
-        archive_path = fm.get("archive_path", "")
-
-        if name not in raw_experiments:
-            if not archive_path:
-                issues.append({
-                    "severity": "warning",
-                    "check": "stale_experiment",
-                    "file": str(rel),
-                    "detail": f"Wiki article has no matching raw folder AND no archive_path in frontmatter",
-                })
-
-    # Check 3: Wiki marked archived but raw folder still has content (>2 files)
-    for name, data in wiki_articles.items():
-        fm = data["frontmatter"]
-        status = fm.get("status", "").lower()
-        rel = data["path"].relative_to(KNOWLEDGE_DIR)
-
-        if "archived" in status and name in raw_experiments:
-            file_count = raw_experiments[name]
-            if file_count > 2:
-                issues.append({
-                    "severity": "suggestion",
-                    "check": "stale_experiment",
-                    "file": str(rel),
-                    "detail": f"Marked archived but experiments/{name}/ has {file_count} files — should be a stub (1-2 files)",
-                })
-
-    # Check 4: archive_path set but doesn't exist on disk
-    for name, data in wiki_articles.items():
-        fm = data["frontmatter"]
-        archive_path = fm.get("archive_path", "")
-        rel = data["path"].relative_to(KNOWLEDGE_DIR)
-
-        if archive_path:
-            resolved = ROOT_DIR / archive_path
-            if not resolved.exists():
-                issues.append({
-                    "severity": "error",
-                    "check": "stale_experiment",
-                    "file": str(rel),
-                    "detail": f"archive_path `{archive_path}` does not exist on disk",
-                })
-
-    return issues
-
-
 # ── Auto-fix ─────────────────────────────────────────────────────
 
 
@@ -398,7 +278,6 @@ def main():
         ("Missing backlinks", check_missing_backlinks),
         ("Sparse articles", check_sparse_articles),
         ("Missing frontmatter", check_missing_frontmatter),
-        ("Stale experiments", check_stale_experiments),
     ]
 
     for name, check_fn in checks:

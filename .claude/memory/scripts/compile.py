@@ -28,7 +28,7 @@ from config import (
     INDEX_FILE,
     KNOWLEDGE_DIR,
     LOG_FILE,
-    QA_DIR,
+    MEETINGS_WIKI_DIR,
     ROOT_DIR,
     SCRIPTS_DIR,
     STATE_FILE,
@@ -63,7 +63,7 @@ def list_daily_logs() -> list[Path]:
 
 def list_wiki_articles() -> list[Path]:
     articles = []
-    for subdir in [CONCEPTS_DIR, CONNECTIONS_DIR, QA_DIR]:
+    for subdir in [CONCEPTS_DIR, CONNECTIONS_DIR, MEETINGS_WIKI_DIR]:
         if subdir.exists():
             articles.extend(sorted(subdir.glob("*.md")))
     return articles
@@ -230,7 +230,7 @@ def main():
     args = parser.parse_args()
 
     # Ensure directories exist
-    for d in [DAILY_DIR, CONCEPTS_DIR, CONNECTIONS_DIR, QA_DIR]:
+    for d in [DAILY_DIR, CONCEPTS_DIR, CONNECTIONS_DIR, MEETINGS_WIKI_DIR]:
         d.mkdir(parents=True, exist_ok=True)
 
     state = load_state()

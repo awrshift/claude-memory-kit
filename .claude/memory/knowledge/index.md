@@ -2,10 +2,7 @@
 
 > Master catalog — read this FIRST for any deep query.
 > Populated automatically by `python .claude/memory/scripts/compile.py` from `daily/` logs.
-
-## Projects
-
-_(empty — compile.py will populate this table as projects accumulate)_
+> Also injected into every Claude Code session via the SessionStart hook (`additionalContext`).
 
 ## Concepts
 
@@ -15,17 +12,9 @@ _(empty — single-topic deep-dive articles)_
 
 _(empty — cross-concept relationship articles)_
 
-## Experiments
-
-_(empty — gravestone pattern: wiki article stays even after raw files archived)_
-
 ## Meetings
 
 _(empty — structured index articles of meeting transcripts)_
-
-## Q&A
-
-_(empty — filed query answers via `query.py --file-back`, the compounding loop)_
 
 ---
 
@@ -60,3 +49,18 @@ Prose explanation.
 ```
 
 Wikilinks use `[[subdir/slug]]` format (no `.md` extension — Obsidian-compatible, works in any markdown editor).
+
+## Wiki Structure
+
+Memory Kit v3 uses 3 subdirectories (collapsed from 6 in v2):
+
+| Subdir | Purpose |
+|---|---|
+| `concepts/` | Single-topic deep-dive articles — one concept per file |
+| `connections/` | Cross-concept synthesis — links 2+ concepts |
+| `meetings/` | Structured meeting index articles |
+
+Previous subdirs (`qa/`, `projects/`, `experiments/`) were removed in v3. Rationale:
+- `qa/` was empty in practice (compounding loop rarely fired manually)
+- `projects/` duplicated root-level `projects/X/BACKLOG.md`
+- `experiments/` duplicated root-level `experiments/NNN/EXPERIMENT.md`
