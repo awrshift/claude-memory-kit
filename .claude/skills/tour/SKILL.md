@@ -1,6 +1,6 @@
 ---
 name: tour
-description: Interactive guided tour of the Claude Memory Kit. Claude teaches the system from inside by reading actual project files and explaining what they do. Use this skill whenever the user says "/tour", "show me how memory works", "how does this kit work", "проведи тур", "покажи как всё устроено", "explain this system", "help me get started", or seems lost after cloning the repo. Also trigger on questions about specific components (memory, journals, hooks, rules, experiments). This is the primary onboarding and education tool — prefer it over ad-hoc explanations.
+description: Interactive guided tour of the Claude Memory Kit. Claude teaches the system from inside by reading actual project files and explaining what they do. Use this skill whenever the user says "/tour", "show me how memory works", "how does this kit work", "проведи тур", "покажи как всё устроено", "explain this system", "help me get started", or seems lost after cloning the repo. Also trigger on questions about specific components (memory, backlogs, hooks, rules, experiments). This is the primary onboarding and education tool — prefer it over ad-hoc explanations.
 ---
 
 # Tour — Interactive Guide to Claude Memory Kit
@@ -15,7 +15,7 @@ An interactive walkthrough where you teach the user the Memory Kit by working wi
 
 3. **One step at a time.** Never dump multiple steps in one message. Present one step, wait for the user's response, then continue. This is a conversation.
 
-4. **Do, don't lecture.** Each step ends with the user (or you) actually writing to a file. The tour produces real artifacts — a memory entry, a project journal, maybe a rule. Not just knowledge.
+4. **Do, don't lecture.** Each step ends with the user (or you) actually writing to a file. The tour produces real artifacts — a memory entry, a project backlog, maybe a rule. Not just knowledge.
 
 5. **Adapt.** Use the language from CLAUDE.md. Match the user's technical level. If they're experienced, be concise. If they're new, use analogies. Never condescend.
 

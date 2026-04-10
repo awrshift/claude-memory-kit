@@ -124,7 +124,7 @@ This is the most powerful part of the system. Every conversation you have gets a
 - **SessionStart injection** — wiki index + recent daily logs auto-injected into every session ([Karpathy](https://karpathy.ai/)/[Cole](https://github.com/coleam00) pattern)
 - **End-of-day auto-compile** — `flush.py` spawns `compile.py` after 18:00 if today's daily log has new content
 - **`/memory-compile`, `/memory-lint`, `/memory-query`** — slash commands for the knowledge pipeline
-- **BACKLOG.md** replaces JOURNAL.md — task queue and chronological log are now separate files
+- **BACKLOG.md** — single source of truth per project (tasks, decisions, status)
 - **Knowledge wiki simplified** — 3 subdirs (`concepts/`, `connections/`, `meetings/`) instead of 6
 - **Recursion guard** — `CLAUDE_INVOKED_BY` prevents infinite hook loops
 
