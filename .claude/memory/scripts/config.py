@@ -6,11 +6,10 @@ from datetime import datetime, timezone
 # Root = Head-of-AI project (config.py is at .claude/memory/scripts/)
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
-# Knowledge base paths — 3 subdirs since v3 (collapsed from 6 in v2).
-# concepts/ = single-topic articles, connections/ = cross-concept synthesis,
-# meetings/ = meeting index articles.
+# Knowledge base paths — 3 subdirs since v3.1 (moved to project root to avoid
+# Claude Code .claude/** sensitive file protection blocking compile.py writes).
 MEMORY_DIR = ROOT_DIR / ".claude" / "memory"
-KNOWLEDGE_DIR = MEMORY_DIR / "knowledge"
+KNOWLEDGE_DIR = ROOT_DIR / "knowledge"
 CONCEPTS_DIR = KNOWLEDGE_DIR / "concepts"
 CONNECTIONS_DIR = KNOWLEDGE_DIR / "connections"
 MEETINGS_WIKI_DIR = KNOWLEDGE_DIR / "meetings"

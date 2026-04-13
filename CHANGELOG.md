@@ -1,5 +1,29 @@
 # Changelog
 
+## [3.1.0] — 2026-04-13
+
+### Breaking Change
+
+- **`knowledge/` moved from `.claude/memory/knowledge/` to project root `knowledge/`**
+  - Claude Code hardcodes everything under `.claude/` as sensitive file protection — `compile.py` (via `claude -p`) could not write to `.claude/memory/knowledge/*.md` even with `--permission-mode acceptEdits`
+  - Fix: `KNOWLEDGE_DIR` in `config.py` changed from `MEMORY_DIR / "knowledge"` to `ROOT_DIR / "knowledge"`
+  - Same change in `session-start.py`: `PROJECT_DIR / "knowledge"` (was `PROJECT_DIR / ".claude" / "memory" / "knowledge"`)
+  - `MEMORY.md` stays at `.claude/memory/MEMORY.md` (auto-loaded as rule, no write needed by compile)
+
+### Added
+
+- **`/knowledge-update` slash command** — manual wiki update trigger for mid-session use
+- **`compile.py` Rule 6** — "PRESERVE manually-written content. ADD sections at bottom rather than rewriting."
+
+### Migration from v3.0.x
+
+1. `mv .claude/memory/knowledge knowledge` (move to project root)
+2. Copy updated `config.py` and `session-start.py` from kit
+3. `git add knowledge/ && git commit`
+4. Verify: `python3 .claude/memory/scripts/lint.py` (0 errors)
+
+---
+
 ## [3.0.1] — 2026-04-09
 
 Patch release: critical fix for `compile.py` silent failure mode discovered during rnd-hub live test of v3.0.0.

@@ -35,7 +35,7 @@ from pathlib import Path
 PROJECT_DIR = Path(os.environ.get("CLAUDE_PROJECT_DIR", Path(__file__).resolve().parent.parent.parent))
 STATE_DIR = PROJECT_DIR / ".claude" / "state"
 MEMORY_FILE = PROJECT_DIR / ".claude" / "memory" / "MEMORY.md"
-KNOWLEDGE_DIR = PROJECT_DIR / ".claude" / "memory" / "knowledge"
+KNOWLEDGE_DIR = PROJECT_DIR / "knowledge"
 INDEX_FILE = KNOWLEDGE_DIR / "index.md"
 CONCEPTS_DIR = KNOWLEDGE_DIR / "concepts"
 DAILY_DIR = PROJECT_DIR / "daily"

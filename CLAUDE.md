@@ -194,7 +194,7 @@ See @README.md for project overview and quick start.
 2. Read `context/next-session-prompt.md` — find your `<!-- PROJECT:name -->` section.
 3. `.claude/memory/MEMORY.md` is auto-loaded (patterns from past sessions).
 4. If user asks about a specific project → read that project's `BACKLOG.md`.
-5. If working on specific area → read relevant `.claude/memory/knowledge/` articles via `index.md` (already injected at start).
+5. If working on specific area → read relevant `knowledge/` articles via `index.md` (already injected at start).
 
 **During:** Work on tasks. Update project BACKLOG.md after completing work.
 
@@ -204,7 +204,7 @@ Triggers: user says "save context" / "update context", session is ending, or hoo
 
 Execute ALL 3 steps in order:
 
-1. **MEMORY.md** — add new verified patterns (with `[YYYY-MM]` date). Keep < 200 lines. If a theme grows > 5 entries → write a knowledge article in `.claude/memory/knowledge/concepts/{slug}.md`.
+1. **MEMORY.md** — add new verified patterns (with `[YYYY-MM]` date). Keep < 200 lines. If a theme grows > 5 entries → write a knowledge article in `knowledge/concepts/{slug}.md`.
 2. **next-session-prompt.md** — update ONLY your `<!-- PROJECT:name -->` section: what was done, key decisions, `### IMMEDIATE NEXT` (exact first steps for next session).
 3. **BACKLOG.md** — update task statuses if any active tasks.
 
@@ -312,7 +312,7 @@ This file is the **cross-project hub**. It uses `<!-- PROJECT:name -->` / `<!-- 
 | **L1: Auto** | This file + `.claude/rules/` + `.claude/memory/MEMORY.md` (index, < 200 lines) + **SessionStart injection** (index.md + recent daily logs + top concepts, ~50K budget) | Every session |
 | **L2: Start** | `context/next-session-prompt.md` | Session start (read explicitly) |
 | **L3: Project** | `projects/X/BACKLOG.md` | When working on project X |
-| **L4: Knowledge wiki** | `.claude/memory/knowledge/{concepts,connections,meetings}/*.md` | On-demand via `index.md` (already injected at L1) |
+| **L4: Knowledge wiki** | `knowledge/{concepts,connections,meetings}/*.md` | On-demand via `index.md` (already injected at L1) |
 | **L5: Daily logs** | `daily/YYYY-MM-DD.md` | Raw source, auto-captured by `session-end.sh` |
 | **Sandbox** | `experiments/NNN-*/` | On-demand (isolated research) |
 
@@ -425,7 +425,7 @@ Two tiers preserve context across sessions:
 | Tier | File | Loaded | Size limit |
 |------|------|--------|-----------|
 | **Index** | `.claude/memory/MEMORY.md` | Every session (auto) | **< 200 lines** (Anthropic limit — content beyond 200 lines is truncated) |
-| **Wiki** | `.claude/memory/knowledge/{concepts,connections,meetings}/*.md` | Via SessionStart injection (index.md + top concepts) + on-demand reads | No limit |
+| **Wiki** | `knowledge/{concepts,connections,meetings}/*.md` | Via SessionStart injection (index.md + top concepts) + on-demand reads | No limit |
 
 The wiki uses plain Markdown with `[[wikilinks]]`. **Obsidian is optional** — it only provides a visual graph view. The wiki works in any Markdown editor (VS Code, Sublime, plain `cat`, GitHub web view). Scripts and pipeline are fully independent of Obsidian.
 
@@ -435,7 +435,7 @@ The wiki uses plain Markdown with `[[wikilinks]]`. **Obsidian is optional** — 
 - User preferences for workflow and communication
 - Key architectural decisions (one line each)
 - Failed approaches table (so you don't repeat mistakes)
-- **Wiki Index pointer** — note to read `.claude/memory/knowledge/index.md` for deep queries
+- **Wiki Index pointer** — note to read `knowledge/index.md` for deep queries
 
 ### Temporal Facts
 
@@ -467,7 +467,7 @@ Before writing to MEMORY.md, self-check every entry:
 
 ### Knowledge Wiki — Detailed knowledge
 
-When a theme in MEMORY.md grows beyond 5-10 entries, write detailed articles in `.claude/memory/knowledge/concepts/{name}.md`. Keep a one-line summary in MEMORY.md. Claude reads wiki articles on-demand — they don't consume context every session.
+When a theme in MEMORY.md grows beyond 5-10 entries, write detailed articles in `knowledge/concepts/{name}.md`. Keep a one-line summary in MEMORY.md. Claude reads wiki articles on-demand — they don't consume context every session.
 
 ```
 .claude/memory/
@@ -521,7 +521,7 @@ After significant work — update relevant files:
 - **Task/decision** -> `projects/X/BACKLOG.md` (inline with the task)
 - **What to do next** -> `context/next-session-prompt.md` (your project section only)
 - **Learned pattern** -> `.claude/memory/MEMORY.md` (index, < 200 lines)
-- **Detailed knowledge** -> `.claude/memory/knowledge/concepts/{name}.md` (on-demand wiki, no size limit)
+- **Detailed knowledge** -> `knowledge/concepts/{name}.md` (on-demand wiki, no size limit)
 - **New experiment** -> `experiments/NNN-description/EXPERIMENT.md` + update `experiments/README.md`
 
 ## Rules
