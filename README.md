@@ -4,6 +4,8 @@
 
 **The OS layer for Claude Code. Not just memory — the entire context management lifecycle.**
 
+[![Version](https://img.shields.io/github/v/release/awrshift/claude-memory-kit?label=version&color=brightgreen)](https://github.com/awrshift/claude-memory-kit/releases)
+[![Last Commit](https://img.shields.io/github/last-commit/awrshift/claude-memory-kit?label=last%20update&color=blue)](https://github.com/awrshift/claude-memory-kit/commits/main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-6366f1)](https://docs.anthropic.com/en/docs/claude-code/overview)
 [![Python 3](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
