@@ -29,9 +29,3 @@ node_modules/
 # Daily session logs (private by default — user can opt in to commit)
 daily/*.md
 !daily/.gitkeep
-
-# Working artifacts (screenshots, temp files)
-/tmp/
-
-# Screenshots safety net — never save PNGs to repo root (use tmp/screenshots/)
-/*.png
