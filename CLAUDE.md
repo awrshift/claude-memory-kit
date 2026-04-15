@@ -422,9 +422,9 @@ These are **not real projects**. Delete both folders when you create your first 
 
 Two tiers preserve context across sessions:
 
-| Tier | File | Loaded | Size limit |
+| Tier | File | Loaded | Size guidance |
 |------|------|--------|-----------|
-| **Index** | `.claude/memory/MEMORY.md` | Every session (auto) | **< 200 lines** (Anthropic limit — content beyond 200 lines is truncated) |
+| **Index** | `.claude/memory/MEMORY.md` | Every session (auto) | Hot cache — see Rotation Rule below. Content beyond 200 lines is truncated by Claude Code auto-load (session-start hook can inject more via `additionalContext`) |
 | **Wiki** | `knowledge/{concepts,connections,meetings}/*.md` | Via SessionStart injection (index.md + top concepts) + on-demand reads | No limit |
 
 The wiki uses plain Markdown with `[[wikilinks]]`. **Obsidian is optional** — it only provides a visual graph view. The wiki works in any Markdown editor (VS Code, Sublime, plain `cat`, GitHub web view). Scripts and pipeline are fully independent of Obsidian.
@@ -450,20 +450,40 @@ Every entry in MEMORY.md MUST include a date tag:
 - `[YYYY-MM → YYYY-MM]` = temporal range (superseded facts)
 - Strikethrough `~~` = invalidated entry (keep for history, prevents re-learning)
 
-### Memory Entry Quality
+### MEMORY.md Rotation Rule
 
-Before writing to MEMORY.md, self-check every entry:
-1. **Dated** — has `[YYYY-MM]`? If no → add it
+MEMORY.md is a **hot cache, not an archive.** SSOT discipline matters more than line count — 500 lines of clean short one-liners is fine; 200 lines with paragraph-long entries that duplicate wiki concepts is not.
+
+**Rotation triggers** (any one is sufficient):
+1. **Duplicate detected** — any entry whose topic already has a `knowledge/concepts/{topic}.md` article → replace with 1-line pointer immediately. **This is the #1 trigger.**
+2. **Entry too long** — any single entry over ~200 characters (one short paragraph) → move detail to a concept, keep 1-line summary with link.
+3. **Section overgrown** — if a section grows past ~15 related entries that aren't clean one-liners, split by theme and rotate duplicates.
+4. **Stale entries** — patterns from completed projects, resolved issues, one-time migration details.
+
+**Rotation steps:**
+1. Identify target (duplicate OR too-long entry OR overgrown section OR stale)
+2. Move content to `knowledge/concepts/{topic}.md` (create if needed, **merge** if exists — do not overwrite)
+3. Replace in MEMORY.md with a short pointer: `- Topic summary. Details: knowledge/concepts/{topic}.md`
+4. Update `knowledge/index.md` if the concept is new
+5. Update MEMORY.md header `Last updated` line
+
+**Before writing NEW entries, self-check:**
+1. **Dated** — has `[YYYY-MM]`?
 2. **Specific** — "always use parameterized queries" > "be careful with SQL"
-3. **Actionable** — changes your future behavior, not just states a fact
-4. **Not duplicate** — scan existing entries, update if exists
-5. **One line** — needs more? → knowledge article in `knowledge/concepts/{slug}.md`
+3. **Not duplicate** — scan BOTH MEMORY.md AND wiki concepts first
+4. **Concise** — under ~200 characters. If longer → write to `knowledge/concepts/` article and put a 1-line pointer here
+5. **Right layer** — is this hot cache (accessed every session) or wiki (on-demand)?
+
+**Architectural principle:** MEMORY.md = orchestration layer (role, methodology, active projects, universal patterns, pointers). Wiki = SSOT details. If a fact exists in both places, wiki wins and MEMORY.md must be updated to point at it.
+
+**Anti-pattern to avoid:** paragraph-length entries that technically fit under a line count but violate the hot-cache principle. A 200-line MEMORY.md full of 2000-char "one-liners" is WORSE than a 500-line MEMORY.md full of real one-liners.
 
 ### MEMORY.md — What does NOT go here
 
 - Session-specific details (current task, temporary state)
 - Detailed knowledge on a single topic (move to `knowledge/concepts/X.md`)
 - Anything already in CLAUDE.md or rules/
+- Anything that duplicates an existing wiki concept
 
 ### Knowledge Wiki — Detailed knowledge
 
@@ -514,13 +534,31 @@ session-end.sh → flush.py (claude -p, Opus, 100 turns/50KB)
              → session-start.py injects updated index.md + latest daily next session
 ```
 
+## Working Artifacts (Screenshots, Temp Files)
+
+**NEVER save screenshots, console logs, or ephemeral scratch files to the repo root.** All working artifacts go to `tmp/` (gitignored).
+
+| Artifact Type | Destination | Notes |
+|---------------|-------------|-------|
+| Screenshots (Playwright MCP, Chrome MCP, manual) | `tmp/screenshots/` | Use descriptive names with date prefix if multi-session work |
+| Playwright MCP auto-logs | `.playwright-mcp/` | Managed by MCP itself, gitignored |
+| Experiment scratch files | `experiments/<name>/` | If part of a real experiment |
+| One-off debug output | `tmp/` | Delete when done |
+
+**Rules:**
+- Playwright MCP calls to `browser_take_screenshot` must use `filename` parameter pointing to `tmp/screenshots/{descriptive-name}.png` — never bare filenames (which default to cwd)
+- `.gitignore` has `/*.png` as a safety net — PNGs in repo root will be ignored by git, but **do not rely on it** — clean up the root
+- If a screenshot is referenced by a doc/article, move it to the appropriate `projects/<project>/assets/` or `experiments/NNN/assets/` subdirectory with an explicit filename
+
+**Why:** git status pollution, review noise, accidental commits of binary data, loss of context when scattered across root.
+
 ## System Evolution
 
 After significant work — update relevant files:
 - **Behavioral rule** -> `.claude/rules/*.md`
 - **Task/decision** -> `projects/X/BACKLOG.md` (inline with the task)
 - **What to do next** -> `context/next-session-prompt.md` (your project section only)
-- **Learned pattern** -> `.claude/memory/MEMORY.md` (index, < 200 lines)
+- **Learned pattern** -> `.claude/memory/MEMORY.md` (hot cache — see Rotation Rule)
 - **Detailed knowledge** -> `knowledge/concepts/{name}.md` (on-demand wiki, no size limit)
 - **New experiment** -> `experiments/NNN-description/EXPERIMENT.md` + update `experiments/README.md`
 
