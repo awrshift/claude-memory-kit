@@ -33,8 +33,5 @@ daily/*.md
 # Working artifacts (screenshots, temp files)
 /tmp/
 
-# Playwright MCP working directory (console logs, page snapshots)
-.playwright-mcp/
-
 # Screenshots safety net — never save PNGs to repo root (use tmp/screenshots/)
 /*.png

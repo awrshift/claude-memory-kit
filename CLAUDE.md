@@ -540,15 +540,14 @@ session-end.sh → flush.py (claude -p, Opus, 100 turns/50KB)
 
 | Artifact Type | Destination | Notes |
 |---------------|-------------|-------|
-| Screenshots (Playwright MCP, Chrome MCP, manual) | `tmp/screenshots/` | Use descriptive names with date prefix if multi-session work |
-| Playwright MCP auto-logs | `.playwright-mcp/` | Managed by MCP itself, gitignored |
+| Screenshots (any source) | `tmp/screenshots/` | Use descriptive names with date prefix if multi-session work |
 | Experiment scratch files | `experiments/<name>/` | If part of a real experiment |
 | One-off debug output | `tmp/` | Delete when done |
 
 **Rules:**
-- Playwright MCP calls to `browser_take_screenshot` must use `filename` parameter pointing to `tmp/screenshots/{descriptive-name}.png` — never bare filenames (which default to cwd)
-- `.gitignore` has `/*.png` as a safety net — PNGs in repo root will be ignored by git, but **do not rely on it** — clean up the root
-- If a screenshot is referenced by a doc/article, move it to the appropriate `projects/<project>/assets/` or `experiments/NNN/assets/` subdirectory with an explicit filename
+- If your toolchain includes a browser automation or screenshot capture step, pass an explicit file path (typically a `filename` / `output_path` parameter) pointing at `tmp/screenshots/{descriptive-name}.png` — never bare filenames (which default to cwd = repo root).
+- `.gitignore` has `/*.png` as a safety net — PNGs in repo root will be ignored by git, but **do not rely on it** — clean up the root.
+- If a screenshot is referenced by a doc/article, move it to the appropriate `projects/<project>/assets/` or `experiments/NNN/assets/` subdirectory with an explicit filename.
 
 **Why:** git status pollution, review noise, accidental commits of binary data, loss of context when scattered across root.
 
