@@ -138,11 +138,32 @@ Everything is in git. `git checkout .claude/memory/` rolls back instantly. Or ru
 
 ---
 
+## Project Structure
+
+```
+SKILL.md              ← Skill entry point (for aggregators)
+CLAUDE.md             ← Agent brain
+README.md             ← You are here
+ARCHITECTURE.md       ← Full technical details
+skills/
+├── close-day/        ← End-of-day synthesis skill
+└── tour/             ← Interactive guided tour skill
+knowledge/            ← Wiki articles (grows over time)
+projects/             ← Per-project backlogs
+context/              ← Session handoff
+daily/                ← Daily summaries
+.claude/
+├── memory/MEMORY.md  ← Hot cache (~200 lines)
+├── hooks/            ← 4 safety hooks
+├── rules/            ← Domain conventions
+└── commands/         ← Slash commands
+```
+
 ## How It Works (for the curious)
 
-The system has 10 components, but you only interact with 3: your project files, slash commands, and Claude.
+You interact with 3 things: your project files, slash commands, and Claude. Everything else is automatic.
 
-Under the hood: a `session-start.py` hook injects your knowledge wiki index at startup. Safety hooks (`periodic-save`, `pre-compact`) checkpoint progress automatically. `/close-day` synthesizes daily articles. `/memory-compile` transforms them into structured wiki entries.
+Under the hood: a `session-start.py` hook injects your knowledge wiki index at startup. Safety hooks checkpoint progress automatically. `/close-day` synthesizes daily articles. `/memory-compile` transforms them into structured wiki entries.
 
 **Full architecture details:** [ARCHITECTURE.md](ARCHITECTURE.md)
 
