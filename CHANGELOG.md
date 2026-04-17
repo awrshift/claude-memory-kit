@@ -1,5 +1,29 @@
 # Changelog
 
+## [3.2.0] — 2026-04-17
+
+### Changed
+
+- **Date tags: `[YYYY-MM]` → `[YYYY-MM-DD]`** — day-granularity enables `/close-day` synthesis. All MEMORY.md entries now require `[YYYY-MM-DD]` format.
+- **`session-end.sh` simplified** — default behavior is now timestamp-only logging. Auto-flush via `flush.py` is preserved as commented-out optional section for advanced users.
+- **Pipeline flow inverted** — recommended flow is now: in-session saves → `/close-day` manual → daily/ article → `/memory-compile` manual → knowledge/. Old flow (auto-flush → auto-compile) remains available but opt-in.
+- **CLAUDE.md template** — Context Save Protocol now includes optional step 4 (`/close-day`). "< 200 lines" softened to "target ~200 lines, SSOT discipline over hard count".
+
+### Added
+
+- **`/close-day` skill** (`.claude/skills/close-day/SKILL.md`) — end-of-day synthesis command. Scans all files modified today (mtime + `[YYYY-MM-DD]` date tags), synthesizes into `daily/YYYY-MM-DD.md`. Replaces auto-flush as the primary daily article creation method.
+
+### Why this change
+
+Auto-flush (`session-end.sh` → `flush.py` → `claude -p` background) was unreliable in production:
+- ~50% failure rate (no transcript, `claude -p` exit errors)
+- Lower quality output (background process lacks project context)
+- `compile.py` auto-trigger never actually fired in real usage
+
+Meanwhile, in-session saves (MEMORY.md, next-session-prompt.md, BACKLOG.md) already capture high-quality structured knowledge. `/close-day` synthesizes these structured changes into a daily article — higher quality, more reliable, user-controlled timing.
+
+---
+
 ## [3.1.0] — 2026-04-13
 
 ### Breaking Change

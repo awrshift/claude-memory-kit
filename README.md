@@ -2,22 +2,20 @@
 
 # Claude Memory Kit
 
-**The OS layer for Claude Code. Not just memory — the entire context management lifecycle.**
+**Your Claude agent remembers everything. Across sessions. Across projects. Zero setup.**
 
 [![Version](https://img.shields.io/github/v/release/awrshift/claude-memory-kit?label=version&color=brightgreen)](https://github.com/awrshift/claude-memory-kit/releases)
-[![Last Commit](https://img.shields.io/github/last-commit/awrshift/claude-memory-kit?label=last%20update&color=blue)](https://github.com/awrshift/claude-memory-kit/commits/main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-6366f1)](https://docs.anthropic.com/en/docs/claude-code/overview)
-[![Python 3](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
 [![Stars](https://img.shields.io/github/stars/awrshift/claude-memory-kit?style=social)](https://github.com/awrshift/claude-memory-kit/stargazers)
 
 ## The Problem
 
-Every new Claude session starts from zero. Your project structure, last week's decisions, yesterday's bug fix — all gone. You waste the first 10 minutes re-explaining what Claude already knew, then lost.
+Every new Claude session starts from zero. Yesterday's decisions, last week's research, the bug you fixed three days ago — gone. You waste the first 10 minutes re-explaining what Claude already knew.
 
-**Claude Memory Kit fixes this in a 5-minute setup. Zero API cost. Runs on your existing Claude subscription.**
+**Claude Memory Kit fixes this in 3 commands. No API cost. Runs on your existing subscription.**
 
-## Quick Start
+## Get Started
 
 ```bash
 git clone https://github.com/awrshift/claude-memory-kit.git my-project
@@ -25,222 +23,140 @@ cd my-project
 claude
 ```
 
-Claude handles the rest — asks your name, project name, and preferred language, then sets everything up.
+That's it. Claude sets everything up and asks a few questions (your name, project name, language).
 
 > [!TIP]
-> After setup, type `/tour` — Claude walks you through the system using your actual project files.
+> Type `/tour` after setup — Claude walks you through the system using your actual files.
 
 ---
 
-## What's Inside
+## Before and After
 
-Ten components. Five safety hooks. Five pipeline scripts. Three slash commands. One system.
+![](.github/assets/01-before-after.png)
 
-![](.github/assets/01-agent-anatomy-mindmap.png)
-
-| Component | File | What it does |
-|-----------|------|-------------|
-| **Brain** | `CLAUDE.md` | Agent identity, behavior rules, session workflow |
-| **Hot Memory** | `.claude/memory/MEMORY.md` | Fast-access patterns, < 200 lines, loaded every session |
-| **Deep Memory** | `.claude/memory/knowledge/` | Wiki articles with `[[wikilinks]]` — concepts, connections, meetings |
-| **Hooks** | `.claude/hooks/` | 5 scripts that protect your context automatically |
-| **Rules** | `.claude/rules/` | Your domain-specific conventions, auto-loaded |
-| **Commands** | `.claude/commands/` | `/memory-compile`, `/memory-lint`, `/memory-query` |
-| **Projects** | `projects/X/BACKLOG.md` | Per-project task queue, decisions, status |
-| **Context Hub** | `context/next-session-prompt.md` | "Pick up exactly here" between sessions |
-| **Daily Logs** | `daily/` | Automatic session history — you never write these |
-| **Experiments** | `experiments/` | Sandbox for research before committing to a path |
-
-Everything is plain Markdown. No database. No external services. If anything breaks, `git checkout` fixes it.
+| | Without Memory Kit | With Memory Kit |
+|---|---|---|
+| **New session** | Starts from zero. "What project is this?" | Knows your project, last session, current tasks |
+| **After 10 sessions** | Nothing accumulated | Searchable wiki of decisions, patterns, lessons |
+| **Multiple projects** | Total chaos | Each project has its own context, automatically |
+| **Context compression** | Silently loses everything | Hook blocks Claude until it saves first |
+| **Next day** | "Remind me what we did yesterday" | Agent already knows — injected at session start |
 
 ---
 
-## How Context Loads — The Pyramid
+## Your Daily Workflow
 
-Not everything loads at once. Light context loads every session. Heavy context loads only when needed.
+![](.github/assets/02-daily-workflow.png)
 
-![](.github/assets/02-context-layers-pyramid.png)
+Three steps. That's your entire workflow:
 
-| Tier | What loads | When |
-|------|-----------|------|
-| **L1 Auto** | CLAUDE.md + rules + MEMORY.md + SessionStart injection (wiki index + recent daily logs + top 3 concepts) | Every session — automatic |
-| **L2 Start** | `next-session-prompt.md` | Session start — agent reads it first |
-| **L3 Project** | `projects/X/BACKLOG.md` | When working on a specific project |
-| **L4 Wiki** | `knowledge/*.md` articles | On-demand — for deep questions |
-| **L5 Raw** | `daily/YYYY-MM-DD.md` | Never read directly — raw source for the pipeline |
+### 1. Open a session
+Claude automatically loads your context — project state, recent decisions, knowledge wiki. You don't do anything.
 
-**Why this matters:** Claude Code has a context window. If you load everything at once, you waste space on old data. The pyramid ensures Claude always has the right context at the right time — light and fast for routine work, deep and rich when it needs to remember something specific.
+### 2. Work normally
+Talk to Claude. Build features. Fix bugs. Research. Safety hooks run invisibly in the background — they checkpoint your progress every ~50 exchanges and before context compression.
 
----
+### 3. Close the day
+When you're done, type `/close-day`. Claude scans everything you changed today and writes a daily summary. Takes 30 seconds.
 
-## Session Lifecycle — What Happens Automatically
-
-Every session follows the same cycle. Hooks fire at key moments to make sure nothing gets lost.
-
-![](.github/assets/03-session-lifecycle-flow.png)
-
-**Start:**
-1. `session-start.py` injects context — session stats, wiki catalog, recent logs, top concepts (50K char budget)
-2. Agent reads `next-session-prompt.md` — finds its `<!-- PROJECT:name -->` block and knows what to do
-
-**During work:**
-3. Agent works on tasks (`BACKLOG.md`) and reads knowledge articles when needed
-4. Every 50 exchanges → `periodic-save.sh` **blocks** the agent until it saves progress
-5. Before context compression → `pre-compact.sh` **blocks** until memory files are updated
-
-**End:**
-6. `session-end.sh` extracts the last 100 turns from the conversation transcript
-7. `flush.py` runs in the background — uses Claude to summarize the session into `daily/YYYY-MM-DD.md`
-8. After 18:00 local time → automatically compiles daily logs into structured wiki articles
-9. Next session starts with updated knowledge — **the cycle closes**
-
-You don't manage any of this. It just works.
+**That's it.** Tomorrow's session starts exactly where you left off.
 
 ---
 
-## Memory Pipeline — From Conversation to Knowledge
+## Knowledge Compounds Over Time
 
-This is the most powerful part of the system. Every conversation you have gets automatically transformed into structured, searchable knowledge.
+![](.github/assets/03-knowledge-growth.png)
 
-![](.github/assets/04-memory-pipeline-flow.png)
+Every `/close-day` feeds into a growing knowledge base:
 
-**The chain:**
+- **Day 1–7:** Basic patterns, project structure, your preferences
+- **Week 2–4:** Decisions accumulate. Agent starts referencing past reasoning
+- **Month 2+:** Full wiki of concepts, cross-project connections, lessons learned
 
-| Step | What happens | Tool | Cost |
-|------|-------------|------|------|
-| Session ends | Hook extracts last 100 turns from transcript | `session-end.sh` | Free |
-| Summarize | Claude reads the raw conversation and pulls out decisions, lessons, TODOs | `flush.py` → Claude Opus | $0 (subscription) |
-| Store | Summary is appended to today's daily log | `daily/YYYY-MM-DD.md` | Free |
-| Compile | After 18:00, Claude structures daily logs into wiki articles with YAML frontmatter and `[[wikilinks]]` | `compile.py` → Claude Sonnet | $0 (subscription) |
-| Index | Wiki catalog is updated with new articles | `knowledge/index.md` | Free |
-| Inject | Next session starts with the updated catalog already in context | `session-start.py` | Free |
-
-**The result:** after a few weeks, you have a personal knowledge base that grows automatically. Every decision, every lesson, every pattern — indexed and searchable. No manual work required.
-
-**Safety:** `CLAUDE_INVOKED_BY` environment variable prevents infinite recursion when pipeline scripts call `claude -p` (which would trigger hooks, which would call scripts again). SHA-256 hash comparison ensures `compile.py` only runs when daily logs actually changed.
+Run `/memory-compile` periodically to structure daily logs into searchable wiki articles. Or don't — the daily logs alone give you 80% of the value.
 
 ---
 
-## What's New in v3
+## What You Get
 
-- **SessionStart injection** — wiki index + recent daily logs auto-injected into every session ([Karpathy](https://karpathy.ai/)/[Cole](https://github.com/coleam00) pattern)
-- **End-of-day auto-compile** — `flush.py` spawns `compile.py` after 18:00 if today's daily log has new content
-- **`/memory-compile`, `/memory-lint`, `/memory-query`** — slash commands for the knowledge pipeline
-- **BACKLOG.md** — single source of truth per project (tasks, decisions, status)
-- **Knowledge wiki simplified** — 3 subdirs (`concepts/`, `connections/`, `meetings/`) instead of 6
-- **Recursion guard** — `CLAUDE_INVOKED_BY` prevents infinite hook loops
+| What | How it helps |
+|------|-------------|
+| **Persistent memory** | Patterns and decisions survive between sessions |
+| **Multi-project support** | Each project has its own backlog and context |
+| **Session handoff** | `next-session-prompt.md` — "pick up exactly here" |
+| **Knowledge wiki** | Structured articles with search, built from your daily work |
+| **Safety hooks** | Agent can't lose context during compression or long sessions |
+| **Slash commands** | `/close-day`, `/memory-compile`, `/memory-lint`, `/memory-query` |
 
-See [CHANGELOG.md](CHANGELOG.md) for migration notes from v2.
-
----
-
-## Usage
-
-### Talk to Claude
-
-| What you say | What happens |
-|-------------|-------------|
-| `/tour` | Interactive guided walkthrough using your actual files |
-| `/memory-compile` | Compile daily logs into structured wiki articles |
-| `/memory-lint` | Run 6 health checks on the knowledge base |
-| `/memory-query "question"` | Ask the knowledge base a natural-language question |
-| "Let's work on [project]" | Agent reads that project's BACKLOG.md and resumes |
-| "Save context" | Agent saves patterns to memory and updates session prompt |
-| "Create an experiment about [question]" | Agent creates a sandbox folder for structured research |
-| "What do you remember about [topic]?" | Agent searches MEMORY.md and relevant wiki articles |
-
-### Safety nets (automatic)
-
-- **Before context compression** → agent is blocked until it saves (brief pause)
-- **Every ~50 exchanges** → agent checkpoints progress (brief pause)
-- **Session end** → background process captures conversation to `daily/`
-- **Test file protection** → existing test files can't be modified (new tests allowed)
-
----
-
-## Installation
-
-### Requirements
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) CLI installed
-- Claude Pro/Max subscription OR API credits
-- Python 3.9+ (for memory pipeline scripts, optional)
-
-### macOS / Linux
-
-```bash
-git clone https://github.com/awrshift/claude-memory-kit.git my-project
-cd my-project
-claude
-```
-
-<details>
-<summary>Install on Windows (WSL2)</summary>
-
-Same commands as macOS/Linux, run inside WSL2:
-
-```bash
-git clone https://github.com/awrshift/claude-memory-kit.git my-project
-cd my-project
-claude
-```
-
-Native PowerShell is untested — WSL2 recommended for hook compatibility.
-
-</details>
+Everything is plain Markdown files. No database. No external services. `git checkout` recovers anything.
 
 ---
 
 ## FAQ
 
 <details>
-<summary>Do I need to know how to code?</summary>
+<summary><b>Do I need to know how to code?</b></summary>
 
-No. After setup, you talk to Claude in plain language. "Read the marketing plan and draft three emails" works just as well as technical commands.
-
-</details>
-
-<details>
-<summary>Is my data private?</summary>
-
-Yes. Everything stays on your computer. Claude Code talks to Anthropic's API, which does not train on your data by default.
+No. You talk to Claude in plain language. "Read the marketing plan and draft three emails" works perfectly.
 
 </details>
 
 <details>
-<summary>How much does it cost?</summary>
+<summary><b>How much does it cost?</b></summary>
 
-The kit is free and open source. Claude Code needs a Claude Max/Pro subscription or API credits. The memory pipeline uses your existing subscription — no extra cost.
-
-</details>
-
-<details>
-<summary>Can I use this with an existing project?</summary>
-
-Yes. During setup, choose "I have existing code" and point Claude to your codebase. It will analyze the structure and set up context around it.
+The kit is free and open source. You need a Claude Pro or Max subscription (which you probably already have). No extra API cost.
 
 </details>
 
 <details>
-<summary>What happens if I mess up the memory files?</summary>
+<summary><b>Is my data private?</b></summary>
 
-Everything is plain text in git. Three recovery options:
-1. **Roll back:** `git checkout .claude/memory/`
-2. **Lint + auto-fix:** `python3 .claude/memory/scripts/lint.py --fix` — runs 6 structural checks, auto-adds missing backlinks
-3. **Full rebuild:** delete the wiki and run `python3 .claude/memory/scripts/compile.py --all` to regenerate from daily log history
+Yes. Everything stays on your computer in plain text files.
 
 </details>
 
 <details>
-<summary>Do I need Obsidian?</summary>
+<summary><b>Can I use this with an existing project?</b></summary>
 
-No. The `knowledge/` wiki is plain Markdown with `[[wikilinks]]`. Works in VS Code, any text editor, or GitHub web view. Obsidian is optional — only needed for the visual graph view.
+Yes. During setup, tell Claude you have existing code. It analyzes the structure and sets up context around it.
 
 </details>
+
+<details>
+<summary><b>What if I forget to run /close-day?</b></summary>
+
+Nothing bad happens. Your in-session saves (patterns, tasks, handoff notes) are already captured by safety hooks. `/close-day` adds a richer daily summary on top — nice to have, not critical.
+
+</details>
+
+<details>
+<summary><b>What happens if I mess up the memory files?</b></summary>
+
+Everything is in git. `git checkout .claude/memory/` rolls back instantly. Or run `/memory-lint` to auto-fix structural issues.
+
+</details>
+
+---
+
+## How It Works (for the curious)
+
+The system has 10 components, but you only interact with 3: your project files, slash commands, and Claude.
+
+Under the hood: a `session-start.py` hook injects your knowledge wiki index at startup. Safety hooks (`periodic-save`, `pre-compact`) checkpoint progress automatically. `/close-day` synthesizes daily articles. `/memory-compile` transforms them into structured wiki entries.
+
+**Full architecture details:** [ARCHITECTURE.md](ARCHITECTURE.md)
+
+---
+
+## Provenance
+
+Built on ideas from [Andrej Karpathy](https://karpathy.ai/) (LLM knowledge base patterns) and [Cole Medin](https://github.com/coleam00)'s `claude-memory-compiler`. Simplified for daily CLI use — auto-flush replaced with deliberate `/close-day` synthesis after real-world testing showed ~50% failure rate in background automation.
+
+700+ real sessions across 7 projects. This is what survived.
 
 ## Contributing
 
-Issues and PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Issues and PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

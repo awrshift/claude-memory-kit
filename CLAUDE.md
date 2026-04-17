@@ -167,9 +167,9 @@ Tell the user in their chosen language:
 - Project: {name} — `projects/{project-name}/BACKLOG.md`
 - Memory: `.claude/memory/` — I'll save patterns across sessions
 - Experiments: `experiments/` — for research before building
-- Hooks: session-start.py (injects index.md + recent daily into every session via `additionalContext`) + pre-compact (blocks until saved) + periodic-save (checkpoint every 50 exchanges) + session-end (auto-flush transcripts to daily/, triggers end-of-day compile after 18:00) + protect-tests (blocks edits to existing test files)
-- Memory Kit v3 pipeline: `.claude/memory/scripts/` — compile, lint, query, flush (opt-in, Python stdlib only)
-- Slash commands: `/memory-compile`, `/memory-lint`, `/memory-query`
+- Hooks: session-start.py (injects index.md + recent daily into every session via `additionalContext`) + pre-compact (blocks until saved) + periodic-save (checkpoint every 50 exchanges) + session-end (logs timestamp) + protect-tests (blocks edits to existing test files)
+- Memory Kit v3 pipeline: `.claude/memory/scripts/` — compile, lint, query (Python stdlib only)
+- Slash commands: `/close-day` (end-of-day synthesis), `/memory-compile`, `/memory-lint`, `/memory-query`
 
 "To start working, just tell me what you want to build. I'll create tasks in your backlog and track progress."
 
@@ -202,15 +202,16 @@ See @README.md for project overview and quick start.
 
 Triggers: user says "save context" / "update context", session is ending, or hook blocks you.
 
-Execute ALL 3 steps in order:
+Execute ALL 3 steps in order (+ optional step 4):
 
-1. **MEMORY.md** — add new verified patterns (with `[YYYY-MM]` date). Keep < 200 lines. If a theme grows > 5 entries → write a knowledge article in `knowledge/concepts/{slug}.md`.
+1. **MEMORY.md** — add new verified patterns (with `[YYYY-MM-DD]` date). Target ~200 lines, SSOT discipline over hard count. If a theme grows > 5 entries → write a knowledge article in `knowledge/concepts/{slug}.md`.
 2. **next-session-prompt.md** — update ONLY your `<!-- PROJECT:name -->` section: what was done, key decisions, `### IMMEDIATE NEXT` (exact first steps for next session).
 3. **BACKLOG.md** — update task statuses if any active tasks.
+4. **(Optional) `/close-day`** — if this is the last session of the day. Scans all files modified today (mtime + `[YYYY-MM-DD]` date tags), synthesizes into `daily/YYYY-MM-DD.md`. See `.claude/skills/close-day/SKILL.md`.
 
 **Definition of Done (all must be true):**
 - [ ] MEMORY.md has new patterns from this session (or explicitly "no new patterns")
-- [ ] Each new MEMORY.md entry has `[YYYY-MM]` date tag
+- [ ] Each new MEMORY.md entry has `[YYYY-MM-DD]` date tag
 - [ ] Your project section in next-session-prompt.md has `### IMMEDIATE NEXT` with 3+ concrete steps
 - [ ] BACKLOG.md task statuses reflect current reality (not stale from session start)
 - [ ] No unsaved decisions — if you made a choice during the session, it's recorded somewhere
@@ -220,9 +221,11 @@ The `pre-compact.sh` hook BLOCKS compaction until MEMORY.md is updated (mtime ch
 
 **Periodic save:** The `periodic-save.sh` hook blocks every 50 exchanges (configurable via `CLAUDE_SAVE_INTERVAL`) to checkpoint progress. Same 3 steps, same Definition of Done.
 
-**Auto session-end flush:** The `session-end.sh` hook fires when the Claude Code process terminates. It extracts the last 100 turns / 50KB from the transcript and spawns `.claude/memory/scripts/flush.py` in background — uses `claude -p` (subscription, zero cost) to distill the session into structured markdown, appended to `daily/YYYY-MM-DD.md`. Completely transparent, logs to `.claude/state/flush.log`.
+**Daily synthesis (recommended):** Use `/close-day` at the end of your work day. It scans all files modified today (mtime + `[YYYY-MM-DD]` date tags in MEMORY.md), synthesizes into `daily/YYYY-MM-DD.md`. Higher quality than auto-extraction because it runs in-context with full project knowledge.
 
-**End-of-day auto-compile:** After 18:00 local time (configurable via `CMK_COMPILE_AFTER_HOUR`), `flush.py` checks if today's `daily/YYYY-MM-DD.md` has changed since its last successful compile (hash comparison). If yes, it spawns `compile.py` as a detached background process — transforms raw daily logs into structured `knowledge/` wiki articles without manual intervention. Manual override available via `/memory-compile` slash command.
+**Auto session-end flush (optional, advanced):** The `session-end.sh` hook fires when the Claude Code process terminates. By default it only logs the session timestamp. To enable auto-flush, uncomment the flush.py spawn section in `session-end.sh` — it extracts the last 100 turns from the transcript and uses `claude -p` (subscription, zero cost) to distill into `daily/YYYY-MM-DD.md`. Note: auto-flush can be unreliable (transcript may not be available, `claude -p` may fail). `/close-day` is the recommended alternative.
+
+**Manual compile:** Transform daily logs into knowledge articles: `/memory-compile` or `python3 .claude/memory/scripts/compile.py`. Auto-compile after 18:00 is available if auto-flush is enabled (see flush.py `maybe_trigger_compilation()`).
 
 ### SessionStart Injection (v3)
 
@@ -442,11 +445,11 @@ The wiki uses plain Markdown with `[[wikilinks]]`. **Obsidian is optional** — 
 Every entry in MEMORY.md MUST include a date tag:
 
 ```markdown
-- **Pattern name** [2026-03] — description
-- ~~**Old pattern** [2025-11 → 2026-02]~~ — superseded by X
+- **Pattern name** [2026-04-17] — description
+- ~~**Old pattern** [2025-11-03 → 2026-02-15]~~ — superseded by X
 ```
 
-- `[YYYY-MM]` = when first confirmed
+- `[YYYY-MM-DD]` = when first confirmed
 - `[YYYY-MM → YYYY-MM]` = temporal range (superseded facts)
 - Strikethrough `~~` = invalidated entry (keep for history, prevents re-learning)
 
@@ -468,7 +471,7 @@ MEMORY.md is a **hot cache, not an archive.** SSOT discipline matters more than 
 5. Update MEMORY.md header `Last updated` line
 
 **Before writing NEW entries, self-check:**
-1. **Dated** — has `[YYYY-MM]`?
+1. **Dated** — has `[YYYY-MM-DD]`?
 2. **Specific** — "always use parameterized queries" > "be careful with SQL"
 3. **Not duplicate** — scan BOTH MEMORY.md AND wiki concepts first
 4. **Concise** — under ~200 characters. If longer → write to `knowledge/concepts/` article and put a 1-line pointer here
@@ -525,12 +528,13 @@ python3 .claude/memory/scripts/query.py "your question"
 # Auto-triggers compile.py after 18:00 local (Cole's end-of-day pattern)
 ```
 
-**Pipeline flow:**
+**Pipeline flow (recommended):**
 ```
-session-end.sh → flush.py (claude -p, Opus, 100 turns/50KB)
-             → daily/YYYY-MM-DD.md
-             → (if >18:00) spawns compile.py detached
-             → compile.py → knowledge/*.md articles
+in-session saves (MEMORY.md, NSP, BACKLOG — via hooks + manual)
+             → /close-day (manual, end of day)
+             → daily/YYYY-MM-DD.md (synthesis article)
+             → /memory-compile (manual, when needed)
+             → knowledge/*.md articles
              → session-start.py injects updated index.md + latest daily next session
 ```
 
@@ -543,6 +547,7 @@ After significant work — update relevant files:
 - **Learned pattern** -> `.claude/memory/MEMORY.md` (hot cache — see Rotation Rule)
 - **Detailed knowledge** -> `knowledge/concepts/{name}.md` (on-demand wiki, no size limit)
 - **New experiment** -> `experiments/NNN-description/EXPERIMENT.md` + update `experiments/README.md`
+- **Daily synthesis** -> `daily/YYYY-MM-DD.md` (via `/close-day` skill, manual end-of-day trigger)
 
 ## Rules
 
