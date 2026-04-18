@@ -154,7 +154,7 @@ context/              ← Session handoff
 daily/                ← Daily summaries
 .claude/
 ├── memory/MEMORY.md  ← Hot cache (~200 lines)
-├── hooks/            ← 4 safety hooks
+├── hooks/            ← 5 hooks (context injection + safety nets)
 ├── rules/            ← Domain conventions
 └── commands/         ← Slash commands
 ```

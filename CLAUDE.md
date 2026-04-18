@@ -316,7 +316,7 @@ This file is the **cross-project hub**. It uses `<!-- PROJECT:name -->` / `<!-- 
 | **L2: Start** | `context/next-session-prompt.md` | Session start (read explicitly) |
 | **L3: Project** | `projects/X/BACKLOG.md` | When working on project X |
 | **L4: Knowledge wiki** | `knowledge/{concepts,connections,meetings}/*.md` | On-demand via `index.md` (already injected at L1) |
-| **L5: Daily logs** | `daily/YYYY-MM-DD.md` | Raw source, auto-captured by `session-end.sh` |
+| **L5: Daily logs** | `daily/YYYY-MM-DD.md` | Synthesized by `/close-day` skill at end-of-day (in-context). Auto-capture via `session-end.sh`/`flush.py` is opt-in since v3.2.0 |
 | **Sandbox** | `experiments/NNN-*/` | On-demand (isolated research) |
 
 ### Key principles
@@ -494,14 +494,15 @@ When a theme in MEMORY.md grows beyond 5-10 entries, write detailed articles in 
 
 ```
 .claude/memory/
-├── MEMORY.md              ← Index (< 200 lines, loaded every session)
-├── scripts/               ← Memory Kit v3 pipeline (compile/lint/query/flush/config)
-└── knowledge/             ← Wiki (on-demand, Obsidian-compatible)
-    ├── index.md           ← Master catalog (injected at session start)
-    ├── log.md             ← Append-only build log
-    ├── concepts/          ← Single-topic deep dives
-    ├── connections/       ← Cross-concept relationships
-    └── meetings/          ← Meeting index articles
+├── MEMORY.md              ← Hot cache (~200 lines target, loaded every session)
+└── scripts/               ← Memory Kit v3 pipeline (compile/lint/query/flush/config)
+
+knowledge/                 ← Wiki at project root (moved out of .claude/ in v3.1.0)
+├── index.md               ← Master catalog (injected at session start)
+├── log.md                 ← Append-only build log
+├── concepts/              ← Single-topic deep dives
+├── connections/           ← Cross-concept relationships
+└── meetings/              ← Meeting index articles
 ```
 
 ### Memory Kit v3 Scripts
@@ -523,9 +524,10 @@ python3 .claude/memory/scripts/lint.py --fix    # auto-add missing backlinks
 python3 .claude/memory/scripts/query.py "your question"
 /memory-query "your question"
 
-# Flush: called automatically by session-end.sh hook (background, detached)
-# Do not call manually — hook handles it
-# Auto-triggers compile.py after 18:00 local (Cole's end-of-day pattern)
+# Flush: OPT-IN since v3.2.0 (was auto-triggered by session-end.sh in v3.0-3.1).
+# To re-enable, uncomment the flush section in session-end.sh.
+# When enabled, auto-triggers compile.py after 18:00 local (Cole's end-of-day pattern).
+# Recommended instead: use /close-day skill for deliberate in-context synthesis.
 ```
 
 **Pipeline flow (recommended):**

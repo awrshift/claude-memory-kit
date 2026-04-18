@@ -34,7 +34,7 @@ Claude handles the rest — asks your name, project name, and preferred language
 
 ## What's Inside
 
-Ten components. Four safety hooks. Four pipeline scripts. Four slash commands. One system.
+Eleven components. Five hooks (context injection + safety nets). Four pipeline scripts. Five slash commands (`/close-day`, `/tour`, `/memory-compile`, `/memory-lint`, `/memory-query`). One system.
 
 ![](.github/assets/01-agent-anatomy-mindmap.png)
 
@@ -43,8 +43,9 @@ Ten components. Four safety hooks. Four pipeline scripts. Four slash commands. O
 | **Brain** | `CLAUDE.md` | Agent identity, behavior rules, session workflow |
 | **Hot Memory** | `.claude/memory/MEMORY.md` | Fast-access patterns, target ~200 lines, loaded every session |
 | **Deep Memory** | `knowledge/` | Wiki articles with `[[wikilinks]]` — concepts, connections, meetings (project root, not .claude/) |
-| **Hooks** | `.claude/hooks/` | 4 hooks that protect your context automatically |
+| **Hooks** | `.claude/hooks/` | 5 hooks: `session-start.py` (context injection) + `pre-compact.sh`, `periodic-save.sh`, `session-end.sh`, `protect-tests.sh` (safety nets) |
 | **Rules** | `.claude/rules/` | Your domain-specific conventions, auto-loaded |
+| **Skills** | `.claude/skills/` | `/close-day` (end-of-day synthesis), `/tour` (guided walkthrough) |
 | **Commands** | `.claude/commands/` | `/memory-compile`, `/memory-lint`, `/memory-query` |
 | **Projects** | `projects/X/BACKLOG.md` | Per-project task queue, decisions, status |
 | **Context Hub** | `context/next-session-prompt.md` | "Pick up exactly here" between sessions |
@@ -67,7 +68,7 @@ Not everything loads at once. Light context loads every session. Heavy context l
 | **L2 Start** | `next-session-prompt.md` | Session start — agent reads it first |
 | **L3 Project** | `projects/X/BACKLOG.md` | When working on a specific project |
 | **L4 Wiki** | `knowledge/*.md` articles | On-demand — for deep questions |
-| **L5 Raw** | `daily/YYYY-MM-DD.md` | Never read directly — raw source for the pipeline |
+| **L5 Daily** | `daily/YYYY-MM-DD.md` | Synthesized by `/close-day` at end-of-day; raw source for `/memory-compile` when folding into wiki articles |
 
 **Why this matters:** Claude Code has a context window. If you load everything at once, you waste space on old data. The pyramid ensures Claude always has the right context at the right time — light and fast for routine work, deep and rich when it needs to remember something specific.
 

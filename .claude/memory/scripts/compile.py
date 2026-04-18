@@ -2,7 +2,8 @@
 Compile daily conversation logs into structured knowledge articles.
 
 Reads daily/*.md logs and uses `claude -p` (subscription, no API key)
-to create/update wiki articles in .claude/memory/knowledge/.
+to create/update wiki articles in knowledge/ (project root — moved out of
+.claude/memory/ in v3.1.0 to work around Claude Code sensitive-path protection).
 
 Usage:
     python scripts/compile.py                         # compile new/changed only

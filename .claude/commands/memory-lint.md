@@ -4,7 +4,7 @@ description: Run 6 structural health checks on the knowledge base
 
 # /memory-lint
 
-Run 6 structural health checks on `.claude/memory/knowledge/`:
+Run 6 structural health checks on `knowledge/` (project root):
 
 1. **Broken links** — `[[wikilinks]]` pointing to non-existent articles
 2. **Orphan pages** — Articles with zero inbound links (not even from index.md)

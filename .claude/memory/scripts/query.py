@@ -35,7 +35,7 @@ def build_query_prompt(question: str) -> str:
     wiki_index = read_wiki_index()
 
     return f"""You are a knowledge base query engine. Answer the user's question by consulting
-the wiki in `.claude/memory/knowledge/`.
+the wiki in `knowledge/` (project root).
 
 ## How to Answer
 
