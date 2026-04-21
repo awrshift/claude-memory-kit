@@ -2,7 +2,7 @@
 name: claude-memory-kit
 description: "Persistent memory system for Claude Code. Your agent remembers everything across sessions and projects. Two-layer architecture: hot cache (MEMORY.md) + knowledge wiki. Safety hooks prevent context loss. /close-day captures your day in one command. Zero external dependencies, runs on existing subscription."
 tags: [memory, context-management, productivity, claude-code, agent-memory, knowledge-base]
-version: 3.2.0
+version: 3.2.1
 author: awrshift
 license: MIT
 repository: https://github.com/awrshift/claude-memory-kit

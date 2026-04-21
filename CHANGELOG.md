@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.2.1] — 2026-04-21
+
+### Fixed
+
+- **Skills duplication drift** — `/skills/close-day/SKILL.md` and `/skills/tour/SKILL.md` were identical copies of the files under `.claude/skills/`. After clone, editing one left the other stale. Now symlinks: `skills/{close-day,tour}/SKILL.md → ../../.claude/skills/{close-day,tour}/SKILL.md`. Runtime source is `.claude/skills/`; root `skills/` stays in sync for skill aggregators that scan repository roots.
+- **ARCHITECTURE.md "Five slash commands"** — three of the listed items (`/memory-compile`, `/memory-lint`, `/memory-query`) are commands; two (`/close-day`, `/tour`) are skills. They invoke similarly but use different Claude Code mechanisms. Reworded to "three slash commands and two skills" for accurate terminology.
+- **ARCHITECTURE.md "Four pipeline scripts"** — actually five (`compile.py`, `lint.py`, `query.py`, `flush.py`, `config.py`). Corrected.
+- **README.md command table** — added `/tour` (was missing). Split commands from skills to match the ARCHITECTURE terminology.
+- **README.md Project Structure** — unified with ARCHITECTURE. Added `memory/scripts/` and `skills/` under `.claude/`, annotated root `skills/` as symlinks-for-aggregators, noted the `_example.md.disabled` rule template.
+
+### Added
+
+- **`.claude/rules/_example.md.disabled`** — reference skeleton for writing a new rule. Previously the rules/ directory held only `.gitkeep`, so users had no shape to copy from. Rename (drop `.disabled`) to activate.
+
+---
+
 ## [3.2.0] — 2026-04-17
 
 ### Changed

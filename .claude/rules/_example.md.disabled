@@ -1,0 +1,43 @@
+---
+name: Example Rule
+description: Reference skeleton for writing your own rules. Rename this file to .md (drop .disabled) to activate a new rule from this template.
+---
+
+# Example Rule — domain-specific convention
+
+> One paragraph: what this rule governs. Why it matters. When the agent applies it.
+
+## Scope
+
+What code/docs does this rule apply to?
+- File patterns, folders, or domains the rule covers.
+- If scoped, use a `paths:` frontmatter field (documented but not fully verified — see CLAUDE.md note about global loading).
+
+## The rule
+
+State the rule in one crisp sentence. Imperative form — "always do X" / "never do Y" / "when X, do Y".
+
+**Why:** Reason. Ideally a concrete failure that led to the rule (past bug, review finding, incident).
+
+**How to apply:**
+1. Specific actionable step the agent follows.
+2. Second step if needed.
+3. How to verify the rule held (grep, test, manual check).
+
+## Anti-patterns
+
+What does a rule violation look like?
+
+```
+Bad example — what NOT to do
+```
+
+```
+Good example — rewritten to follow the rule
+```
+
+## Cross-references
+
+- Related rules: `.claude/rules/other-rule.md`
+- Related concepts: `knowledge/concepts/{topic}.md`
+- Past decisions: `projects/{project}/BACKLOG.md` entries that triggered this rule

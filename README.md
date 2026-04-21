@@ -86,7 +86,8 @@ Run `/memory-compile` periodically to structure daily logs into searchable wiki 
 | **Session handoff** | `next-session-prompt.md` — "pick up exactly here" |
 | **Knowledge wiki** | Structured articles with search, built from your daily work |
 | **Safety hooks** | Agent can't lose context during compression or long sessions |
-| **Slash commands** | `/close-day`, `/memory-compile`, `/memory-lint`, `/memory-query` |
+| **Commands** | `/memory-compile`, `/memory-lint`, `/memory-query` (in `.claude/commands/`) |
+| **Skills** | `/close-day`, `/tour` (in `.claude/skills/`) |
 
 Everything is plain Markdown files. No database. No external services. `git checkout` recovers anything.
 
@@ -145,19 +146,23 @@ SKILL.md              ← Skill entry point (for aggregators)
 CLAUDE.md             ← Agent brain
 README.md             ← You are here
 ARCHITECTURE.md       ← Full technical details
-skills/
-├── close-day/        ← End-of-day synthesis skill
-└── tour/             ← Interactive guided tour skill
+skills/               ← Aggregator-facing skill index (symlinks into .claude/skills/)
+├── close-day/SKILL.md → ../../.claude/skills/close-day/SKILL.md
+└── tour/SKILL.md     → ../../.claude/skills/tour/SKILL.md
 knowledge/            ← Wiki articles (grows over time)
 projects/             ← Per-project backlogs
 context/              ← Session handoff
 daily/                ← Daily summaries
 .claude/
 ├── memory/MEMORY.md  ← Hot cache (~200 lines)
+├── memory/scripts/   ← Pipeline: compile, lint, query, flush, config
 ├── hooks/            ← 5 hooks (context injection + safety nets)
-├── rules/            ← Domain conventions
-└── commands/         ← Slash commands
+├── rules/            ← Domain conventions (see _example.md.disabled)
+├── commands/         ← Slash commands (/memory-compile, /memory-lint, /memory-query)
+└── skills/           ← Skills runtime source (/close-day, /tour)
 ```
+
+Runtime reads skills from `.claude/skills/`. The root `skills/` directory exists for Claude Code skill aggregators that scan repository roots — kept in sync via symlinks so edits to one reflect in the other.
 
 ## How It Works (for the curious)
 

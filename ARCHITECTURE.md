@@ -34,7 +34,7 @@ Claude handles the rest — asks your name, project name, and preferred language
 
 ## What's Inside
 
-Eleven components. Five hooks (context injection + safety nets). Four pipeline scripts. Five slash commands (`/close-day`, `/tour`, `/memory-compile`, `/memory-lint`, `/memory-query`). One system.
+Eleven components. Five hooks (context injection + safety nets). Five pipeline scripts (compile, lint, query, flush, config). Three slash commands (`/memory-compile`, `/memory-lint`, `/memory-query`) and two skills (`/close-day`, `/tour`). One system.
 
 ![](.github/assets/01-agent-anatomy-mindmap.png)
 
