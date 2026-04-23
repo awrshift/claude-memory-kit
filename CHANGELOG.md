@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.2.2] — 2026-04-23
+
+### Fixed
+
+- **CLAUDE.md terminology drift** — the template still actively documented 18:00 auto-compile and `flush.py` as available features, confusing agents and users onboarded on the kit. In reality, `/close-day` has been the default end-of-day flow since v3.2.0; `flush.py` is opt-in legacy. The "End-of-day Auto-Compile (v3)" section and all 18:00 references have been removed from CLAUDE.md. A single one-paragraph "Legacy note" replaces them, pointing readers at `/close-day` and the v3.2.0 deprecation rationale.
+- **`.claude/commands/memory-compile.md`** — removed the legacy auto-trigger paragraph that described `CMK_COMPILE_AFTER_HOUR=18` and `session-end.sh` uncomment instructions. The command doc now says only what the command does.
+- **Skills symlink regression** — `skills/close-day/SKILL.md` and `skills/tour/SKILL.md` had been converted from symlinks to regular files (macOS dereferenced them during a copy), and the original symlinks lingered as `SKILL 2.md`. Content was still identical, but the structure contradicted v3.2.1's "source is `.claude/skills/`, root is a mirror via symlinks" invariant. Restored symlinks, removed `SKILL 2.md` artefacts.
+
+### Not changed
+
+- `flush.py` and the commented-out auto-flush section in `session-end.sh` remain in place as opt-in legacy for users upgrading from v3.0/v3.1. No code removed.
+- CHANGELOG history (v3.2.0, v3.1.0, v3.0.0) retains original wording — it is the historical record of how the 18:00 auto-compile feature was introduced and then deprecated.
+
+---
+
 ## [3.2.1] — 2026-04-21
 
 ### Fixed

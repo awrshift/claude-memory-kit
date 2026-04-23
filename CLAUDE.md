@@ -223,9 +223,9 @@ The `pre-compact.sh` hook BLOCKS compaction until MEMORY.md is updated (mtime ch
 
 **Daily synthesis (recommended):** Use `/close-day` at the end of your work day. It scans all files modified today (mtime + `[YYYY-MM-DD]` date tags in MEMORY.md), synthesizes into `daily/YYYY-MM-DD.md`. Higher quality than auto-extraction because it runs in-context with full project knowledge.
 
-**Auto session-end flush (optional, advanced):** The `session-end.sh` hook fires when the Claude Code process terminates. By default it only logs the session timestamp. To enable auto-flush, uncomment the flush.py spawn section in `session-end.sh` — it extracts the last 100 turns from the transcript and uses `claude -p` (subscription, zero cost) to distill into `daily/YYYY-MM-DD.md`. Note: auto-flush can be unreliable (transcript may not be available, `claude -p` may fail). `/close-day` is the recommended alternative.
+**Manual compile:** Transform daily logs into knowledge articles when you want to fold them into structured wiki: `/memory-compile` or `python3 .claude/memory/scripts/compile.py`.
 
-**Manual compile:** Transform daily logs into knowledge articles: `/memory-compile` or `python3 .claude/memory/scripts/compile.py`. Auto-compile after 18:00 is available if auto-flush is enabled (see flush.py `maybe_trigger_compilation()`).
+**Legacy note:** `flush.py` and the auto-flush section in `session-end.sh` remain in the repo as an opt-in path for users upgrading from v3.0/v3.1. Not recommended — showed ~50% failure rate in production (transcript unavailable, `claude -p` subprocess failures). Use `/close-day` instead. See `CHANGELOG.md` v3.2.0 for deprecation rationale.
 
 ### SessionStart Injection (v3)
 
@@ -251,17 +251,7 @@ Claude Code injects `additionalContext` into the agent's initial context. Conten
 
 This pattern is inspired by Cole Medin's `claude-memory-compiler` (Karpathy's LLM knowledge base architecture). The key value: agent always "sees" the knowledge base catalog without needing explicit `/memory` queries.
 
-### End-of-day Auto-Compile (v3)
-
-`flush.py` includes `maybe_trigger_compilation()` which checks if it's past `COMPILE_AFTER_HOUR` (default 18) local time and if today's daily log has unsaved changes. If both true, it spawns `compile.py` detached. This runs at most once per day per unique daily log state (SHA-256 hash skip).
-
-Manual override: `/memory-compile` slash command (or `python3 .claude/memory/scripts/compile.py`).
-
-Configure:
-- `CMK_COMPILE_AFTER_HOUR=18` — hour threshold (0-23)
-- Logs: `.claude/state/flush.log` + `.claude/state/compile.log`
-
-### CLAUDE_INVOKED_BY — recursion guard (critical)
+### CLAUDE_INVOKED_BY — recursion guard (needed for hooks spawning `claude -p`)
 
 `flush.py` and `compile.py` spawn `claude -p` subprocesses. Each subprocess starts a new Claude Code session, which fires the SessionEnd hook → spawns another `flush.py` → infinite loop.
 
@@ -316,7 +306,7 @@ This file is the **cross-project hub**. It uses `<!-- PROJECT:name -->` / `<!-- 
 | **L2: Start** | `context/next-session-prompt.md` | Session start (read explicitly) |
 | **L3: Project** | `projects/X/BACKLOG.md` | When working on project X |
 | **L4: Knowledge wiki** | `knowledge/{concepts,connections,meetings}/*.md` | On-demand via `index.md` (already injected at L1) |
-| **L5: Daily logs** | `daily/YYYY-MM-DD.md` | Synthesized by `/close-day` skill at end-of-day (in-context). Auto-capture via `session-end.sh`/`flush.py` is opt-in since v3.2.0 |
+| **L5: Daily logs** | `daily/YYYY-MM-DD.md` | Synthesized by `/close-day` skill at end-of-day (in-context) |
 | **Sandbox** | `experiments/NNN-*/` | On-demand (isolated research) |
 
 ### Key principles
@@ -495,7 +485,7 @@ When a theme in MEMORY.md grows beyond 5-10 entries, write detailed articles in 
 ```
 .claude/memory/
 ├── MEMORY.md              ← Hot cache (~200 lines target, loaded every session)
-└── scripts/               ← Memory Kit v3 pipeline (compile/lint/query/flush/config)
+└── scripts/               ← Memory Kit v3 pipeline (compile/lint/query; flush is legacy opt-in)
 
 knowledge/                 ← Wiki at project root (moved out of .claude/ in v3.1.0)
 ├── index.md               ← Master catalog (injected at session start)
@@ -524,10 +514,9 @@ python3 .claude/memory/scripts/lint.py --fix    # auto-add missing backlinks
 python3 .claude/memory/scripts/query.py "your question"
 /memory-query "your question"
 
-# Flush: OPT-IN since v3.2.0 (was auto-triggered by session-end.sh in v3.0-3.1).
-# To re-enable, uncomment the flush section in session-end.sh.
-# When enabled, auto-triggers compile.py after 18:00 local (Cole's end-of-day pattern).
-# Recommended instead: use /close-day skill for deliberate in-context synthesis.
+# flush.py: legacy script, kept as opt-in.
+# Use /close-day skill instead for deliberate in-context synthesis.
+# See CHANGELOG.md v3.2.0 for the deprecation rationale.
 ```
 
 **Pipeline flow (recommended):**
