@@ -566,7 +566,7 @@ footer {
   <div class="canvas" id="canvas">
     <p class="canvas-caption">Живая карта — клик по узлу открывает детали справа</p>
 
-    <svg class="tree" viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg" aria-label="Memory Kit interactive file tree">
+    <svg class="tree" viewBox="0 0 900 900" xmlns="http://www.w3.org/2000/svg" aria-label="Memory Kit interactive file tree">
       <defs>
         <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#16181C"/>
@@ -580,7 +580,7 @@ footer {
         <rect class="layer-strip" x="40" y="344" width="820" height="212" rx="3"/>
         <rect class="layer-strip" x="40" y="576" width="820" height="68" rx="3"/>
         <rect class="layer-strip" x="40" y="664" width="820" height="58" rx="3"/>
-        <rect class="layer-strip" x="40" y="742" width="820" height="88" rx="3"/>
+        <rect class="layer-strip" x="40" y="742" width="820" height="130" rx="3"/>
       </g>
 
       <g id="layer-labels">
@@ -594,13 +594,13 @@ footer {
         <text class="layer-label-sub" x="60" y="284">по совпадению пути или ключа</text>
 
         <text class="layer-label" x="60" y="364">Ролевые справочники</text>
-        <text class="layer-label-sub" x="60" y="382">auto-load по описанию (reference skills)</text>
+        <text class="layer-label-sub" x="60" y="382">агент подключает сам по теме разговора</text>
 
         <text class="layer-label" x="60" y="596">Глубокие статьи</text>
         <text class="layer-label-sub" x="60" y="614">по явной ссылке</text>
 
         <text class="layer-label" x="60" y="684">Хронология</text>
-        <text class="layer-label-sub" x="60" y="702">только grep</text>
+        <text class="layer-label-sub" x="60" y="702">архив — только через поиск</text>
 
         <text class="layer-label" x="60" y="762">Операторы</text>
         <text class="layer-label-sub" x="60" y="780">вы вызываете сами через /имя</text>
@@ -701,35 +701,35 @@ footer {
           <text class="node-sublabel" x="110" y="37">daily/YYYY-MM-DD.md</text>
         </g>
 
-        <g class="node" data-id="close-day" data-layer="operator" data-load="slash-invoke" data-lifecycle="audit" transform="translate(70, 764)">
+        <g class="node" data-id="close-day" data-layer="operator" data-load="slash-invoke" data-lifecycle="audit" transform="translate(70, 806)">
           <rect class="node-body" x="0" y="0" width="130" height="48" rx="3"/>
           <text class="node-label" x="65" y="20">/close-day</text>
-          <text class="node-sublabel" x="65" y="36">аудит + синтез дня</text>
+          <text class="node-sublabel" x="65" y="36">в конце рабочего дня</text>
         </g>
-        <g class="node" data-id="memory-audit" data-layer="operator" data-load="slash-invoke" transform="translate(212, 764)">
+        <g class="node" data-id="memory-audit" data-layer="operator" data-load="slash-invoke" transform="translate(212, 806)">
           <rect class="node-body" x="0" y="0" width="130" height="48" rx="3"/>
           <text class="node-label" x="65" y="20">/memory-audit</text>
-          <text class="node-sublabel" x="65" y="36">раздел толстых skill</text>
+          <text class="node-sublabel" x="65" y="36">если справочник разросся</text>
         </g>
-        <g class="node" data-id="memory-lint" data-layer="operator" data-load="slash-invoke" transform="translate(354, 764)">
+        <g class="node" data-id="memory-lint" data-layer="operator" data-load="slash-invoke" transform="translate(354, 806)">
           <rect class="node-body" x="0" y="0" width="130" height="48" rx="3"/>
           <text class="node-label" x="65" y="20">/memory-lint</text>
-          <text class="node-sublabel" x="65" y="36">7 проверок целостности</text>
+          <text class="node-sublabel" x="65" y="36">если что-то поплыло</text>
         </g>
-        <g class="node" data-id="memory-compile" data-layer="operator" data-load="slash-invoke" transform="translate(496, 764)">
+        <g class="node" data-id="memory-compile" data-layer="operator" data-load="slash-invoke" transform="translate(496, 806)">
           <rect class="node-body" x="0" y="0" width="130" height="48" rx="3"/>
           <text class="node-label" x="65" y="20">/memory-compile</text>
-          <text class="node-sublabel" x="65" y="36">daily в concepts</text>
+          <text class="node-sublabel" x="65" y="36">раз в неделю, итоги</text>
         </g>
-        <g class="node" data-id="memory-query" data-layer="operator" data-load="slash-invoke" transform="translate(638, 764)">
+        <g class="node" data-id="memory-query" data-layer="operator" data-load="slash-invoke" transform="translate(638, 806)">
           <rect class="node-body" x="0" y="0" width="130" height="48" rx="3"/>
           <text class="node-label" x="65" y="20">/memory-query</text>
-          <text class="node-sublabel" x="65" y="36">поиск по всей памяти</text>
+          <text class="node-sublabel" x="65" y="36">спросить у памяти</text>
         </g>
-        <g class="node" data-id="tour" data-layer="operator" data-load="slash-invoke" transform="translate(780, 764)">
+        <g class="node" data-id="tour" data-layer="operator" data-load="slash-invoke" transform="translate(780, 806)">
           <rect class="node-body" x="0" y="0" width="80" height="48" rx="3"/>
           <text class="node-label" x="40" y="20">/tour</text>
-          <text class="node-sublabel" x="40" y="36">гид</text>
+          <text class="node-sublabel" x="40" y="36">экскурсия по системе</text>
         </g>
       </g>
 
@@ -800,7 +800,7 @@ footer {
   </div>
   <div class="legend-item">
     <strong>Хронология</strong>
-    <span class="tag">grep</span>
+    <span class="tag">архив</span>
     Дневники сессий — архив. Агент лезет только если вы попросите найти что-то.
   </div>
   <div class="legend-item">
@@ -884,8 +884,8 @@ const NODES = {
     label: 'Жёсткие правила проекта',
     path: '.claude/rules/*.md (около 18 файлов)',
     layer: 'Правила',
-    purpose: 'Законы бренда и кода: «никогда X», «всегда Y». Механические запреты которые проверяются grep-ом, линтером, хуками. Меняются редко.',
-    whenLoaded: 'По ключевому слову в запросе или по пути к файлу (paths:).',
+    purpose: 'Законы бренда и кода: «никогда X», «всегда Y». Механические запреты, которые легко проверить автоматом. Меняются редко, когда сам бренд меняется.',
+    whenLoaded: 'Агент подключает по ключевому слову в разговоре или по пути файла, с которым работает.',
     writtenBy: 'Агент (через /close-day, после 6+ месяцев стабильности в справочнике)',
     connections: ['claudemd', 'design-guidance', 'close-day'],
   },
@@ -893,8 +893,8 @@ const NODES = {
     label: 'Справочник: разработка',
     path: '.claude/skills/dev-guidance/SKILL.md',
     layer: 'Ролевой справочник',
-    purpose: 'Как думает инженер в этом проекте. Grep-дисциплина, паттерны upstream-PR, Tailwind-тихие-проседания, React-гоrchki. Не запреты, а опыт.',
-    whenLoaded: 'Автоматически когда разговор попадает в описание (ключевые слова: code, refactor, Tailwind, Vadim, PR, grep audit).',
+    purpose: 'Как думает инженер в этом проекте. Дисциплина проверок перед правкой, паттерны сдачи кода во внешний репо, подводные камни фреймворков. Не запреты, а накопленный опыт — то, что не поймаешь механическим правилом.',
+    whenLoaded: 'Автоматически, когда разговор попадает в тему: код, рефакторинг, обзор пулл-реквеста, разработка фичи.',
     writtenBy: 'Агент (через /close-day после вашего «да»)',
     connections: ['rules', 'design-guidance', 'close-day'],
   },
@@ -902,7 +902,7 @@ const NODES = {
     label: 'Справочник: дизайн',
     path: '.claude/skills/design-guidance/SKILL.md',
     layer: 'Ролевой справочник',
-    purpose: 'Вкус дизайнера этого проекта. Тёплое против холодного, свет против жирности, shadow-growth вместо translateY. Вся тонкая материя которую grep-правилом не поймаешь.',
+    purpose: 'Вкус дизайнера этого проекта. Тёплое против холодного, светлый шрифт против жирного, тени на наведение вместо сдвигов. Вся тонкая материя, которую механическим правилом не поймаешь.',
     whenLoaded: 'Авто по описанию — когда разговор про design, visual taste, brand DNA, warmth, typography, hover.',
     writtenBy: 'Агент (через /close-day)',
     connections: ['rules', 'founder-profile', 'dev-guidance'],
@@ -929,8 +929,8 @@ const NODES = {
     label: 'Справочник: SEO и GEO',
     path: '.claude/skills/seo-geo-guidance/SKILL.md',
     layer: 'Ролевой справочник',
-    purpose: 'Как попадать в AI-ответы (Perplexity, ChatGPT Search). Длина FAQ-ответа (40-60 слов), schema-паттерны, стратегия pillar-кластеров, дисциплина SSR для AI-краулеров.',
-    whenLoaded: 'Авто — SEO, GEO, image, LCP, CWV, crawler, AI citation, pillar.',
+    purpose: 'Как попадать в AI-ответы (Perplexity, ChatGPT Search, AI Overviews). Оптимальная длина FAQ-ответа (40-60 слов), структура страницы для цитирования, стратегия опорных тематических кластеров, дисциплина выдачи готового HTML для AI-роботов.',
+    whenLoaded: 'Автоматически, когда разговор про SEO, GEO, AI-цитирование, скорость страницы, опорные статьи, техническое SEO.',
     writtenBy: 'Агент (через /close-day)',
     connections: ['editorial-guidance', 'rules'],
   },
@@ -974,7 +974,7 @@ const NODES = {
     label: 'Глубокие тематические статьи',
     path: 'knowledge/concepts/*.md',
     layer: 'Глубокие статьи',
-    purpose: 'Канонический ответ на «что правда в этой теме». Факты + обоснование. Типо-скейл (43 токена), система цветов, паттерны интеракций, Vadim-review-паттерны.',
+    purpose: 'Канонический ответ на вопрос «что правда в этой теме». Факты плюс обоснование каждого решения. Типографическая шкала, система цветов, паттерны интеракций, накопленные заметки из код-ревью.',
     whenLoaded: 'По явной ссылке: когда другой файл пишет «see knowledge/concepts/X».',
     writtenBy: 'Агент (через /memory-compile из daily)',
     connections: ['knowledgeindex', 'memory-compile'],
@@ -983,8 +983,8 @@ const NODES = {
     label: 'Дневник сессий',
     path: 'daily/YYYY-MM-DD.md',
     layer: 'Хронология',
-    purpose: 'Архив. Каждый день после /close-day агент пишет сюда всё что сегодня произошло. Вы эти файлы не открываете — но через них можно grep-ом найти «когда мы это решили».',
-    whenLoaded: 'Только через grep / /memory-query — не автозагружается.',
+    purpose: 'Архив. Каждый день после /close-day агент пишет сюда всё, что сегодня произошло. Вы эти файлы не открываете, но через них можно найти «когда мы это решили» командой /memory-query.',
+    whenLoaded: 'Не автозагружается. Читается только по запросу — через /memory-query или прямой поиск.',
     writtenBy: 'Агент (через /close-day)',
     connections: ['close-day', 'memorymd', 'memory-compile'],
   },
@@ -992,54 +992,54 @@ const NODES = {
     label: '/close-day',
     path: '.claude/skills/close-day/SKILL.md',
     layer: 'Оператор',
-    purpose: 'Аудит-ритуал конца дня. Синтезирует сессии в дневник, сравнивает с MEMORY.md и ролевыми справочниками, голосом предлагает промоушен 2-4 паттернов. Вы говорите «да» — агент пишет patch.',
-    whenLoaded: 'Когда вы вводите /close-day.',
-    writtenBy: 'Вы вызываете',
+    purpose: 'Ритуал закрытия дня. Агент собирает все сегодняшние сессии в один дневник, сравнивает свежие находки с тем, что уже знает, и голосом предлагает 2-4 вещи записать в канон. Вы говорите «да/нет», агент всё пишет сам — в файлы не лезете.',
+    whenLoaded: 'Вечером, когда закончили работать на сегодня. Единственная команда с ежедневным ритмом — пропустите день и свежие паттерны уйдут в хронологию без повышения в канон.',
+    writtenBy: 'Вы вызываете командой /close-day',
     connections: ['daily', 'memorymd', 'design-guidance', 'founder-profile', 'rules'],
   },
   'memory-audit': {
     label: '/memory-audit',
     path: '.claude/skills/memory-audit/SKILL.md',
     layer: 'Оператор',
-    purpose: 'Структурная проверка. Ищет ролевые справочники которые разрослись выше 500 строк с несвязанными темами — предлагает разделить. Вы «да» — агент режет по темам на дочерние skill.',
-    whenLoaded: 'Когда вы вводите /memory-audit.',
-    writtenBy: 'Вы вызываете',
+    purpose: 'Проверяет, не пора ли разделить разросшийся справочник. Например, если в «дизайн» уже 800 строк про типографику + цвета + анимации одновременно — агент предложит разнести по трём отдельным справочникам. Вы «да» — агент аккуратно перекладывает.',
+    whenLoaded: 'Когда заметили, что какой-то справочник стал тяжёлым и покрывает слишком разные темы. Обычно раз в пару месяцев. Если сомневаетесь — запустите, команда только предлагает, сама ничего не делает.',
+    writtenBy: 'Вы вызываете командой /memory-audit',
     connections: ['design-guidance', 'memory-lint'],
   },
   'memory-lint': {
     label: '/memory-lint',
     path: 'scripts/lint.py (обёртка)',
     layer: 'Оператор',
-    purpose: '7 структурных проверок: битые ссылки, страницы-сироты, пустые дневники, отсутствие backlink-ов, слишком короткие статьи, отсутствие frontmatter, раздутые справочники.',
-    whenLoaded: 'Когда вы вводите /memory-lint.',
-    writtenBy: 'Вы вызываете',
+    purpose: 'Проверка здоровья всей базы памяти. Семь автотестов: битые ссылки, заброшенные файлы, пропущенные связки, слишком короткие статьи. Отчёт, и всё — ничего не меняется.',
+    whenLoaded: 'Когда база кажется «рваной» — после большой правки, перед важной сессией, или просто для спокойствия. Безопасно запускать когда угодно — команда только смотрит, а не чинит.',
+    writtenBy: 'Вы вызываете командой /memory-lint',
     connections: ['concepts', 'memory-audit'],
   },
   'memory-compile': {
     label: '/memory-compile',
     path: 'scripts/compile.py (обёртка)',
     layer: 'Оператор',
-    purpose: 'Превращает накопленные дневники в тематическую статью. Например, 10 записей про типографику за месяц — одна статья knowledge/concepts/typography-scale.md.',
-    whenLoaded: 'Когда вы вводите /memory-compile.',
-    writtenBy: 'Вы вызываете',
+    purpose: 'Превращает россыпь дневниковых записей по одной теме в цельный справочник. Накопилось за месяц 10 заметок про типографику — одной командой собираете всё в статью «Типографическая шкала» и дальше ссылаетесь на неё целиком.',
+    whenLoaded: 'Раз в неделю-месяц, когда в дневниках накопилось много записей по одной теме и хочется их упорядочить. Необязательная команда — если пропустите, ничего не сломается, просто знания останутся разрозненными.',
+    writtenBy: 'Вы вызываете командой /memory-compile',
     connections: ['daily', 'concepts', 'knowledgeindex'],
   },
   'memory-query': {
     label: '/memory-query',
     path: 'scripts/query.py (обёртка)',
     layer: 'Оператор',
-    purpose: 'Натуральный поиск по всей памяти — дневникам, справочникам, концептам. «Что мы решили про X?» — агент ищет везде и возвращает контекст с датами.',
-    whenLoaded: 'Когда вы вводите /memory-query что-то.',
-    writtenBy: 'Вы вызываете',
+    purpose: 'Задаёте вопрос простыми словами — агент ищет ответ во всей памяти (дневники, справочники, статьи) и показывает что нашёл с датами и ссылками. Как поиск по прошлому: «А что мы в феврале решили про SEO для агентств?»',
+    whenLoaded: 'Когда помните, что что-то решали, но не помните где или когда. Или хотите быстро проверить, есть ли уже ответ — прежде чем изобретать заново.',
+    writtenBy: 'Вы вызываете командой /memory-query ваш вопрос',
     connections: ['daily', 'concepts', 'design-guidance'],
   },
   'tour': {
     label: '/tour',
     path: '.claude/skills/tour/SKILL.md',
     layer: 'Оператор',
-    purpose: 'Интерактивный гид по системе. Агент проводит вас через 10 станций — каждый слой, зачем он нужен, что там лежит. Полезно в начале работы с Memory Kit.',
-    whenLoaded: 'Когда вы вводите /tour.',
-    writtenBy: 'Вы вызываете',
+    purpose: 'Пошаговая экскурсия по системе памяти. Агент проводит через каждый слой, показывает что где лежит и зачем. Вместо чтения документации — разговор с агентом, который водит по вашим же файлам.',
+    whenLoaded: 'Первый раз заходите в Memory Kit, или подключаете к проекту нового человека (копирайтера, дизайнера). Один раз прошли — можно не возвращаться.',
+    writtenBy: 'Вы вызываете командой /tour',
     connections: [],
   },
 };
@@ -1091,9 +1091,10 @@ function renderPanel(id) {
   panel.appendChild(el('div', 'panel-path', n.path));
   panel.appendChild(el('p', 'panel-purpose', n.purpose));
 
-  // Row: when loaded
+  // Row: when loaded (for operators — "when to use"; for everything else — "when loaded")
   const row1 = el('div', 'panel-row');
-  row1.appendChild(el('div', 'panel-row-label', 'Когда грузится'));
+  const row1Label = n.layer === 'Оператор' ? 'Когда использовать' : 'Когда грузится';
+  row1.appendChild(el('div', 'panel-row-label', row1Label));
   row1.appendChild(el('div', 'panel-row-value', n.whenLoaded));
   panel.appendChild(row1);
 
