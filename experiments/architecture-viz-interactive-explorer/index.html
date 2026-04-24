@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Kit — интерактивная карта</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --paper: #FCF9F0;
+  --ink: #16181C;
+  --ink-80: #3A3C42;
+  --ink-60: #6B6D73;
+  --ink-40: #A1A3A8;
+  --ink-20: #D8D9DB;
+  --ink-10: #EDEDEE;
+
+  --gold-50: #E9CB94;
+  --gold-40: #C48A45;
+  --gold-30: #A07B42;
+
+  --rose-50: #E1B5C9;
+  --rose-40: #B87B9A;
+  --rose-30: #9E7189;
+
+  --sage-50: #B5CEBB;
+  --sage-40: #86A88C;
+  --sage-30: #6E8F73;
+
+  --amber-50: #F5DDA8;
+  --amber-40: #E0AE60;
+
+  --crystal-50: #CED4DA;
+  --crystal-40: #8D99A6;
+
+  --edge: rgba(22, 24, 28, 0.12);
+  --edge-strong: rgba(22, 24, 28, 0.25);
+  --soft-shadow: 0 1px 2px rgba(22, 24, 28, 0.04), 0 4px 16px rgba(22, 24, 28, 0.06);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--edge-strong); text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--ink); }
+
+code, .mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.86em;
+  letter-spacing: -0.01em;
+}
+
+main { max-width: 1260px; margin: 0 auto; padding: 80px 40px 80px; }
+
+/* ───── Header ───── */
+.hero {
+  text-align: center;
+  padding-bottom: 64px;
+  border-bottom: 1px solid var(--edge);
+  margin-bottom: 48px;
+}
+.hero-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-60);
+  margin-bottom: 16px;
+}
+.hero h1 {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(44px, 6vw, 72px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+.hero-lede {
+  max-width: 580px;
+  margin: 0 auto;
+  color: var(--ink-80);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* ───── Intro prose ───── */
+.intro {
+  max-width: 680px;
+  margin: 0 auto 64px;
+  color: var(--ink-80);
+  font-size: 16px;
+  line-height: 1.75;
+}
+.intro p { margin-bottom: 18px; }
+.intro p:last-child { margin-bottom: 0; }
+.intro em { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.05em; }
+
+/* ───── Canvas layout ───── */
+.canvas-wrap {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 32px;
+  margin-bottom: 48px;
+  align-items: start;
+}
+
+.canvas {
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  padding: 28px 24px;
+  overflow: visible;
+  box-shadow: var(--soft-shadow);
+  position: relative;
+}
+
+.canvas-caption {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-40);
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+svg.tree {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Layer strip backgrounds (subtle) */
+.layer-strip {
+  fill: rgba(22, 24, 28, 0.015);
+  stroke: var(--edge);
+  stroke-width: 0.5;
+  stroke-dasharray: 2 4;
+  rx: 3;
+}
+
+.layer-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: var(--ink-40);
+}
+
+.layer-label-sub {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 13px;
+  fill: var(--ink-60);
+}
+
+/* Nodes */
+.node { cursor: pointer; }
+.node .node-body {
+  fill: #FFFDF6;
+  stroke: var(--ink);
+  stroke-width: 1;
+  transition: fill 200ms ease, stroke-width 200ms ease, filter 200ms ease;
+}
+.node .node-label {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 13px;
+  fill: var(--ink);
+  pointer-events: none;
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+.node .node-sublabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  fill: var(--ink-60);
+  pointer-events: none;
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+
+/* Layer-specific fill tints */
+.node[data-layer="session-entry"] .node-body { fill: #FDF8E8; }
+.node[data-layer="hot-path"] .node-body { fill: #F8F0D6; }
+.node[data-layer="rules"] .node-body { fill: #EEE7DA; }
+.node[data-layer="reference-skill"] .node-body { fill: #F8EEDA; }
+.node[data-layer="concepts"] .node-body { fill: #EEF0F2; }
+.node[data-layer="chronological"] .node-body { fill: #F3F1EC; }
+.node[data-layer="operator"] .node-body { fill: #E9EDE0; }
+
+.node:hover .node-body,
+.node.active .node-body {
+  stroke-width: 1.8;
+  filter: drop-shadow(0 2px 6px rgba(22, 24, 28, 0.12));
+}
+
+.node.active .node-body { fill: var(--ink) !important; }
+.node.active .node-label,
+.node.active .node-sublabel { fill: var(--paper) !important; }
+
+/* Mode-based highlights */
+.canvas.mode-lifecycle .node:not([data-lifecycle]) { opacity: 0.25; }
+.canvas.mode-lifecycle .node[data-lifecycle] .node-body { stroke-width: 1.5; }
+
+.canvas.mode-loadtime .node { opacity: 0.35; }
+.canvas.mode-loadtime .node[data-load="session-start"] { opacity: 1; }
+.canvas.mode-loadtime .node[data-load="session-start"] .node-body {
+  fill: var(--gold-40); stroke: var(--gold-30);
+}
+.canvas.mode-loadtime .node[data-load="session-start"] .node-label,
+.canvas.mode-loadtime .node[data-load="session-start"] .node-sublabel { fill: var(--paper); }
+
+.canvas.mode-loadtime .node[data-load="description-match"] { opacity: 0.95; }
+.canvas.mode-loadtime .node[data-load="description-match"] .node-body { fill: var(--rose-50); }
+
+.canvas.mode-loadtime .node[data-load="keyword-trigger"] { opacity: 0.95; }
+.canvas.mode-loadtime .node[data-load="keyword-trigger"] .node-body { fill: var(--sage-50); }
+
+.canvas.mode-loadtime .node[data-load="slash-invoke"] { opacity: 0.9; }
+.canvas.mode-loadtime .node[data-load="slash-invoke"] .node-body { fill: var(--crystal-50); }
+
+.canvas.mode-loadtime .node[data-load="grep-only"] { opacity: 0.55; }
+
+/* Lifecycle arrow */
+.lifecycle-arrow {
+  stroke: var(--ink);
+  stroke-width: 1.2;
+  fill: none;
+  marker-end: url(#arrowhead);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.canvas.mode-lifecycle .lifecycle-arrow {
+  opacity: 1;
+  stroke-dasharray: 4 3;
+  animation: dash-flow 1.8s linear infinite;
+}
+@keyframes dash-flow { to { stroke-dashoffset: -14; } }
+@media (prefers-reduced-motion: reduce) { .lifecycle-arrow { animation: none !important; } }
+
+/* ───── Detail panel ───── */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  padding: 28px 28px 32px;
+  position: sticky;
+  top: 24px;
+  box-shadow: var(--soft-shadow);
+  min-height: 420px;
+}
+
+.panel-empty {
+  color: var(--ink-40);
+  font-size: 15px;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  line-height: 1.6;
+  padding-top: 48px;
+  text-align: center;
+}
+
+.panel-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-40);
+  margin-bottom: 10px;
+}
+
+.panel-title {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+  font-weight: 400;
+}
+
+.panel-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-60);
+  background: rgba(22, 24, 28, 0.04);
+  padding: 6px 10px;
+  border-radius: 3px;
+  margin-bottom: 20px;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.panel-purpose {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-80);
+  margin-bottom: 24px;
+}
+
+.panel-row {
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--edge);
+  font-size: 13.5px;
+}
+.panel-row:last-of-type { border-bottom: 1px solid var(--edge); }
+.panel-row-label {
+  flex: 0 0 115px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-40);
+  padding-top: 2px;
+}
+.panel-row-value {
+  flex: 1;
+  color: var(--ink-80);
+  line-height: 1.55;
+}
+
+.panel-connections { margin-top: 20px; }
+.panel-connections-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-40);
+  margin-bottom: 10px;
+}
+.panel-connection {
+  display: inline-block;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-80);
+  background: var(--ink-10);
+  padding: 4px 10px;
+  border-radius: 14px;
+  margin: 0 6px 6px 0;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 150ms, color 150ms, border-color 150ms;
+}
+.panel-connection:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+.panel-empty-connections {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-40);
+}
+
+/* ───── Mode switcher ───── */
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 48px;
+}
+.mode-btn {
+  background: var(--paper);
+  border: 1px solid var(--edge-strong);
+  padding: 10px 18px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink);
+  transition: background 150ms, color 150ms;
+}
+.mode-btn:hover { background: var(--ink-10); }
+.mode-btn.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.mode-btn-gloss {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: inherit;
+  opacity: 0.55;
+  font-style: normal;
+  margin-top: 3px;
+}
+.mode-btn.active .mode-btn-gloss { opacity: 0.7; }
+
+/* ───── Mode explanation ───── */
+.mode-explainer {
+  max-width: 680px;
+  margin: 0 auto 64px;
+  padding: 24px 28px;
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  color: var(--ink-80);
+  font-size: 14.5px;
+  line-height: 1.65;
+  min-height: 92px;
+  box-shadow: var(--soft-shadow);
+}
+.mode-explainer-title {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 19px;
+  color: var(--ink);
+  margin-bottom: 6px;
+  font-weight: 400;
+}
+
+/* ───── Legend ───── */
+.legend {
+  max-width: 920px;
+  margin: 0 auto 48px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.legend-item {
+  border-left: 2px solid var(--ink-40);
+  padding: 4px 14px 4px;
+  font-size: 13.5px;
+  color: var(--ink-80);
+  line-height: 1.5;
+}
+.legend-item strong {
+  display: block;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 2px;
+  font-size: 13.5px;
+}
+.legend-item .tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-40);
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+/* ───── Closing ───── */
+.closing {
+  max-width: 680px;
+  margin: 96px auto 64px;
+  text-align: center;
+  padding-top: 48px;
+  border-top: 1px solid var(--edge);
+}
+.closing-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-60);
+  margin-bottom: 12px;
+}
+.closing h2 {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin-bottom: 20px;
+}
+.closing p {
+  font-size: 16px;
+  color: var(--ink-80);
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+.closing em { font-family: 'Instrument Serif', serif; font-style: italic; }
+.closing-links {
+  margin-top: 32px;
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.closing-link {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+/* ───── Footer ───── */
+footer {
+  max-width: 1260px;
+  margin: 48px auto 0;
+  padding: 24px 40px;
+  border-top: 1px solid var(--edge);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-40);
+  text-transform: uppercase;
+}
+
+/* ───── Responsive ───── */
+@media (max-width: 960px) {
+  .canvas-wrap { grid-template-columns: 1fr; }
+  .panel { position: relative; top: 0; }
+}
+@media (max-width: 600px) {
+  main { padding: 48px 20px; }
+  .hero h1 { font-size: 40px; }
+  .canvas { padding: 16px 8px; }
+  .modes { flex-direction: column; }
+  .mode-btn { text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<main>
+
+<header class="hero">
+  <p class="hero-kicker">Memory Kit · интерактивная карта</p>
+  <h1>Где лежит память агента —<br>и как она туда попадает.</h1>
+  <p class="hero-lede">
+    Нажми на любой файл, папку или оператор, чтобы увидеть зачем он нужен, когда агент его читает и кто в него пишет. Переключи режим внизу — посмотри как контекст течёт через слои.
+  </p>
+</header>
+
+<section class="intro">
+  <p>
+    Claude-агент с Memory Kit держит память не в одной базе данных, а в <em>слоистой системе файлов</em>. Одни загружаются сами в каждую сессию, другие всплывают только по ключевым словам, третьи лежат в архиве — и агент лезет в них только если вы сами попросите.
+  </p>
+  <p>
+    Эта карта показывает всю структуру разом: <strong>7 слоёв</strong>, <strong>6 операторов</strong>, ~<strong>23 узла</strong>. Каждый кликабелен. Справа — детальная карточка с тем, как оно работает и с чем связано.
+  </p>
+</section>
+
+<div class="canvas-wrap">
+
+  <div class="canvas" id="canvas">
+    <p class="canvas-caption">Живая карта — клик по узлу открывает детали справа</p>
+
+    <svg class="tree" viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg" aria-label="Memory Kit interactive file tree">
+      <defs>
+        <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#16181C"/>
+        </marker>
+      </defs>
+
+      <g id="layer-strips">
+        <rect class="layer-strip" x="40" y="30"  width="820" height="88" rx="3"/>
+        <rect class="layer-strip" x="40" y="138" width="820" height="88" rx="3"/>
+        <rect class="layer-strip" x="40" y="246" width="820" height="78" rx="3"/>
+        <rect class="layer-strip" x="40" y="344" width="820" height="212" rx="3"/>
+        <rect class="layer-strip" x="40" y="576" width="820" height="68" rx="3"/>
+        <rect class="layer-strip" x="40" y="664" width="820" height="58" rx="3"/>
+        <rect class="layer-strip" x="40" y="742" width="820" height="88" rx="3"/>
+      </g>
+
+      <g id="layer-labels">
+        <text class="layer-label" x="60" y="50">Вход в сессию</text>
+        <text class="layer-label-sub" x="60" y="68">грузится всегда первым</text>
+
+        <text class="layer-label" x="60" y="158">Горячий путь</text>
+        <text class="layer-label-sub" x="60" y="176">всегда в контексте</text>
+
+        <text class="layer-label" x="60" y="266">Правила</text>
+        <text class="layer-label-sub" x="60" y="284">по совпадению пути или ключа</text>
+
+        <text class="layer-label" x="60" y="364">Ролевые справочники</text>
+        <text class="layer-label-sub" x="60" y="382">auto-load по описанию (reference skills)</text>
+
+        <text class="layer-label" x="60" y="596">Глубокие статьи</text>
+        <text class="layer-label-sub" x="60" y="614">по явной ссылке</text>
+
+        <text class="layer-label" x="60" y="684">Хронология</text>
+        <text class="layer-label-sub" x="60" y="702">только grep</text>
+
+        <text class="layer-label" x="60" y="762">Операторы</text>
+        <text class="layer-label-sub" x="60" y="780">вы вызываете сами через /имя</text>
+      </g>
+
+      <g id="nodes">
+
+        <g class="node" data-id="nsp" data-layer="session-entry" data-load="session-start" transform="translate(330, 62)">
+          <rect class="node-body" x="0" y="0" width="170" height="48" rx="3"/>
+          <text class="node-label" x="85" y="20">передача дня</text>
+          <text class="node-sublabel" x="85" y="36">next-session-prompt.md</text>
+        </g>
+        <g class="node" data-id="backlog" data-layer="session-entry" data-load="session-start" transform="translate(530, 62)">
+          <rect class="node-body" x="0" y="0" width="170" height="48" rx="3"/>
+          <text class="node-label" x="85" y="20">задачи проекта</text>
+          <text class="node-sublabel" x="85" y="36">projects/name/BACKLOG.md</text>
+        </g>
+
+        <g class="node" data-id="claudemd" data-layer="hot-path" data-load="session-start" data-lifecycle="hot" transform="translate(230, 170)">
+          <rect class="node-body" x="0" y="0" width="160" height="48" rx="3"/>
+          <text class="node-label" x="80" y="20">мозг агента</text>
+          <text class="node-sublabel" x="80" y="36">CLAUDE.md</text>
+        </g>
+        <g class="node" data-id="memorymd" data-layer="hot-path" data-load="session-start" data-lifecycle="amber" transform="translate(410, 170)">
+          <rect class="node-body" x="0" y="0" width="160" height="48" rx="3"/>
+          <text class="node-label" x="80" y="20">короткая память</text>
+          <text class="node-sublabel" x="80" y="36">.claude/memory/MEMORY.md</text>
+        </g>
+        <g class="node" data-id="knowledgeindex" data-layer="hot-path" data-load="session-start" transform="translate(590, 170)">
+          <rect class="node-body" x="0" y="0" width="160" height="48" rx="3"/>
+          <text class="node-label" x="80" y="20">каталог статей</text>
+          <text class="node-sublabel" x="80" y="36">knowledge/index.md</text>
+        </g>
+
+        <g class="node" data-id="rules" data-layer="rules" data-load="keyword-trigger" data-lifecycle="canon" transform="translate(340, 268)">
+          <rect class="node-body" x="0" y="0" width="220" height="50" rx="3"/>
+          <text class="node-label" x="110" y="20">жёсткие правила проекта</text>
+          <text class="node-sublabel" x="110" y="37">.claude/rules/*.md  (около 18 файлов)</text>
+        </g>
+
+        <g class="node" data-id="dev-guidance" data-layer="reference-skill" data-load="description-match" data-lifecycle="skill" transform="translate(110, 390)">
+          <rect class="node-body" x="0" y="0" width="210" height="48" rx="3"/>
+          <text class="node-label" x="105" y="20">разработка</text>
+          <text class="node-sublabel" x="105" y="36">dev-guidance/SKILL.md</text>
+        </g>
+        <g class="node" data-id="design-guidance" data-layer="reference-skill" data-load="description-match" data-lifecycle="skill" transform="translate(345, 390)">
+          <rect class="node-body" x="0" y="0" width="210" height="48" rx="3"/>
+          <text class="node-label" x="105" y="20">дизайн</text>
+          <text class="node-sublabel" x="105" y="36">design-guidance/SKILL.md</text>
+        </g>
+        <g class="node" data-id="editorial-guidance" data-layer="reference-skill" data-load="description-match" data-lifecycle="skill" transform="translate(580, 390)">
+          <rect class="node-body" x="0" y="0" width="210" height="48" rx="3"/>
+          <text class="node-label" x="105" y="20">копирайт и голос</text>
+          <text class="node-sublabel" x="105" y="36">editorial-guidance/SKILL.md</text>
+        </g>
+
+        <g class="node" data-id="marketing-guidance" data-layer="reference-skill" data-load="description-match" data-lifecycle="skill" transform="translate(110, 455)">
+          <rect class="node-body" x="0" y="0" width="210" height="48" rx="3"/>
+          <text class="node-label" x="105" y="20">маркетинг</text>
+          <text class="node-sublabel" x="105" y="36">marketing-guidance/SKILL.md</text>
+        </g>
+        <g class="node" data-id="seo-geo-guidance" data-layer="reference-skill" data-load="description-match" data-lifecycle="skill" transform="translate(345, 455)">
+          <rect class="node-body" x="0" y="0" width="210" height="48" rx="3"/>
+          <text class="node-label" x="105" y="20">SEO и GEO</text>
+          <text class="node-sublabel" x="105" y="36">seo-geo-guidance/SKILL.md</text>
+        </g>
+        <g class="node" data-id="product-guidance" data-layer="reference-skill" data-load="description-match" data-lifecycle="skill" transform="translate(580, 455)">
+          <rect class="node-body" x="0" y="0" width="210" height="48" rx="3"/>
+          <text class="node-label" x="105" y="20">продукт</text>
+          <text class="node-sublabel" x="105" y="36">product-guidance/SKILL.md</text>
+        </g>
+
+        <g class="node" data-id="founder-profile" data-layer="reference-skill" data-load="description-match" data-lifecycle="skill" transform="translate(110, 520)">
+          <rect class="node-body" x="0" y="0" width="210" height="48" rx="3"/>
+          <text class="node-label" x="105" y="20">профиль основателя</text>
+          <text class="node-sublabel" x="105" y="36">founder-profile/SKILL.md</text>
+        </g>
+        <g class="node" data-id="icp-profile" data-layer="reference-skill" data-load="description-match" data-lifecycle="skill" transform="translate(345, 520)">
+          <rect class="node-body" x="0" y="0" width="210" height="48" rx="3"/>
+          <text class="node-label" x="105" y="20">профиль аудитории</text>
+          <text class="node-sublabel" x="105" y="36">icp-profile/SKILL.md</text>
+        </g>
+        <g class="node" data-id="competitor-intel" data-layer="reference-skill" data-load="description-match" data-lifecycle="skill" transform="translate(580, 520)">
+          <rect class="node-body" x="0" y="0" width="210" height="48" rx="3"/>
+          <text class="node-label" x="105" y="20">конкуренты и референсы</text>
+          <text class="node-sublabel" x="105" y="36">competitor-intel/SKILL.md</text>
+        </g>
+
+        <g class="node" data-id="concepts" data-layer="concepts" data-load="keyword-trigger" transform="translate(340, 596)">
+          <rect class="node-body" x="0" y="0" width="220" height="50" rx="3"/>
+          <text class="node-label" x="110" y="20">глубокие тематические статьи</text>
+          <text class="node-sublabel" x="110" y="37">knowledge/concepts/*.md</text>
+        </g>
+
+        <g class="node" data-id="daily" data-layer="chronological" data-load="grep-only" data-lifecycle="liquid" transform="translate(340, 684)">
+          <rect class="node-body" x="0" y="0" width="220" height="50" rx="3"/>
+          <text class="node-label" x="110" y="20">дневник сессий</text>
+          <text class="node-sublabel" x="110" y="37">daily/YYYY-MM-DD.md</text>
+        </g>
+
+        <g class="node" data-id="close-day" data-layer="operator" data-load="slash-invoke" data-lifecycle="audit" transform="translate(70, 764)">
+          <rect class="node-body" x="0" y="0" width="130" height="48" rx="3"/>
+          <text class="node-label" x="65" y="20">/close-day</text>
+          <text class="node-sublabel" x="65" y="36">аудит + синтез дня</text>
+        </g>
+        <g class="node" data-id="memory-audit" data-layer="operator" data-load="slash-invoke" transform="translate(212, 764)">
+          <rect class="node-body" x="0" y="0" width="130" height="48" rx="3"/>
+          <text class="node-label" x="65" y="20">/memory-audit</text>
+          <text class="node-sublabel" x="65" y="36">раздел толстых skill</text>
+        </g>
+        <g class="node" data-id="memory-lint" data-layer="operator" data-load="slash-invoke" transform="translate(354, 764)">
+          <rect class="node-body" x="0" y="0" width="130" height="48" rx="3"/>
+          <text class="node-label" x="65" y="20">/memory-lint</text>
+          <text class="node-sublabel" x="65" y="36">7 проверок целостности</text>
+        </g>
+        <g class="node" data-id="memory-compile" data-layer="operator" data-load="slash-invoke" transform="translate(496, 764)">
+          <rect class="node-body" x="0" y="0" width="130" height="48" rx="3"/>
+          <text class="node-label" x="65" y="20">/memory-compile</text>
+          <text class="node-sublabel" x="65" y="36">daily в concepts</text>
+        </g>
+        <g class="node" data-id="memory-query" data-layer="operator" data-load="slash-invoke" transform="translate(638, 764)">
+          <rect class="node-body" x="0" y="0" width="130" height="48" rx="3"/>
+          <text class="node-label" x="65" y="20">/memory-query</text>
+          <text class="node-sublabel" x="65" y="36">поиск по всей памяти</text>
+        </g>
+        <g class="node" data-id="tour" data-layer="operator" data-load="slash-invoke" transform="translate(780, 764)">
+          <rect class="node-body" x="0" y="0" width="80" height="48" rx="3"/>
+          <text class="node-label" x="40" y="20">/tour</text>
+          <text class="node-sublabel" x="40" y="36">гид</text>
+        </g>
+      </g>
+
+      <g id="lifecycle-arrows">
+        <path class="lifecycle-arrow" d="M 450 684 C 620 500, 640 300, 570 194"/>
+        <path class="lifecycle-arrow" d="M 490 218 C 470 300, 440 360, 450 390"/>
+        <path class="lifecycle-arrow" d="M 450 390 C 420 355, 430 330, 450 318"/>
+      </g>
+
+    </svg>
+  </div>
+
+  <aside class="panel" id="panel">
+    <p class="panel-empty">
+      Кликни на любой узел слева, чтобы посмотреть что за файл, когда он загружается и с чем связан.
+    </p>
+  </aside>
+
+</div>
+
+<div class="modes" role="tablist" aria-label="Режим подсветки">
+  <button class="mode-btn active" type="button" data-mode="default">
+    Слои
+    <span class="mode-btn-gloss">структура</span>
+  </button>
+  <button class="mode-btn" type="button" data-mode="lifecycle">
+    Жизненный цикл
+    <span class="mode-btn-gloss">daily → MEMORY → skill → rule</span>
+  </button>
+  <button class="mode-btn" type="button" data-mode="loadtime">
+    Когда грузится
+    <span class="mode-btn-gloss">auto / on-match / on-call</span>
+  </button>
+</div>
+
+<div class="mode-explainer" id="modeExplainer">
+  <p class="mode-explainer-title">Режим «Слои»</p>
+  <p>
+    Показывает физическую структуру: где что лежит. Семь горизонтальных зон — от «входа в сессию» сверху до «операторов» снизу. Каждый файл — в своём слое, у каждого слоя свой цвет фона.
+  </p>
+</div>
+
+<div class="legend">
+  <div class="legend-item">
+    <strong>Вход в сессию</strong>
+    <span class="tag">auto</span>
+    Первые два файла, которые агент читает при старте — «где мы остановились» и «что сегодня делаем».
+  </div>
+  <div class="legend-item">
+    <strong>Горячий путь</strong>
+    <span class="tag">auto</span>
+    Всегда в контексте: идентичность агента, короткая память, каталог глубоких статей.
+  </div>
+  <div class="legend-item">
+    <strong>Правила</strong>
+    <span class="tag">trigger</span>
+    Жёсткие «нельзя / всегда» — грузятся по ключевым словам или по пути к файлу.
+  </div>
+  <div class="legend-item">
+    <strong>Ролевые справочники</strong>
+    <span class="tag">description</span>
+    Как думает дизайнер / маркетолог / редактор. Anthropic-native skills — агент сам решает когда подгрузить по описанию.
+  </div>
+  <div class="legend-item">
+    <strong>Глубокие статьи</strong>
+    <span class="tag">on-demand</span>
+    Фактология: что знаем про тему X. Грузится только когда прямо ссылаются.
+  </div>
+  <div class="legend-item">
+    <strong>Хронология</strong>
+    <span class="tag">grep</span>
+    Дневники сессий — архив. Агент лезет только если вы попросите найти что-то.
+  </div>
+  <div class="legend-item">
+    <strong>Операторы</strong>
+    <span class="tag">slash</span>
+    Команды которые вы явно вызываете: /close-day, /memory-audit и так далее.
+  </div>
+</div>
+
+<section class="closing">
+  <p class="closing-kicker">— Что с этим делать</p>
+  <h2>Это не админская панель.<br>Это модель, как работает память.</h2>
+  <p>
+    Вы сами не трогаете эти файлы — агент всем управляет. Карта нужна, чтобы один раз понять <em>откуда</em> он берёт контекст, и потом говорить с ним точнее: «это в founder-profile», «это в design-guidance», «это уже в правилах».
+  </p>
+  <p>
+    Когда вы видите куда что кладётся — разговор с агентом меняется. Меньше повторений, больше доверия к тому, что он запомнил.
+  </p>
+  <div class="closing-links">
+    <a class="closing-link" href="../architecture-viz-water-machine/index.html">← виз v1.4 · водная машина</a>
+    <a class="closing-link" href="https://github.com/awrshift/claude-memory-kit" target="_blank" rel="noopener">Memory Kit на GitHub →</a>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div>Memory Kit · interactive explorer · v0.1</div>
+  <div>2026-04-24 · карта-компаньон к viz v1.4</div>
+  <div>awrshift / claude-memory-kit</div>
+</footer>
+
+<script>
+const NODES = {
+  'nsp': {
+    label: 'Передача дня',
+    path: 'context/next-session-prompt.md',
+    layer: 'Вход в сессию',
+    purpose: 'Записка от вчерашнего себя: где мы остановились, что срочное, что пойти делать в первую очередь. Агент пишет её в конце дня, читает на старте.',
+    whenLoaded: 'На старте сессии (первые 80 строк — через SessionStart-хук).',
+    writtenBy: 'Агент (через /close-day)',
+    connections: ['backlog', 'close-day', 'memorymd'],
+  },
+  'backlog': {
+    label: 'Задачи проекта',
+    path: 'projects/<name>/BACKLOG.md',
+    layer: 'Вход в сессию',
+    purpose: 'Очередь задач для конкретного проекта или клиента. Если работаете с несколькими проектами — у каждого своя такая папка.',
+    whenLoaded: 'На старте сессии, когда активен проект.',
+    writtenBy: 'Агент (по вашей речи)',
+    connections: ['nsp', 'close-day'],
+  },
+  'claudemd': {
+    label: 'Мозг агента',
+    path: 'CLAUDE.md',
+    layer: 'Горячий путь',
+    purpose: 'ДНК проекта: кто вы, что строим, тон, красные линии, таблица триггеров для правил. Читается каждую сессию — это самый важный файл.',
+    whenLoaded: 'Всегда, на старте сессии.',
+    writtenBy: 'Вы (редко) + агент по вашей команде',
+    connections: ['rules', 'memorymd'],
+  },
+  'memorymd': {
+    label: 'Короткая память',
+    path: '.claude/memory/MEMORY.md',
+    layer: 'Горячий путь',
+    purpose: 'Паттерны которые агент заметил за последние дни. Короткие строки с датой. Когда строка повторяется 3+ раз — становится кандидатом для записи в ролевой справочник.',
+    whenLoaded: 'Всегда (первые 150 строк автозагружаются).',
+    writtenBy: 'Агент (по ходу работы)',
+    connections: ['daily', 'close-day', 'design-guidance', 'founder-profile'],
+  },
+  'knowledgeindex': {
+    label: 'Каталог статей',
+    path: 'knowledge/index.md',
+    layer: 'Горячий путь',
+    purpose: 'Оглавление глубоких тематических статей. Агент видит какие темы документированы и куда за подробностями идти.',
+    whenLoaded: 'Всегда, на старте сессии.',
+    writtenBy: 'Агент (через /memory-compile)',
+    connections: ['concepts', 'memory-compile'],
+  },
+  'rules': {
+    label: 'Жёсткие правила проекта',
+    path: '.claude/rules/*.md (около 18 файлов)',
+    layer: 'Правила',
+    purpose: 'Законы бренда и кода: «никогда X», «всегда Y». Механические запреты которые проверяются grep-ом, линтером, хуками. Меняются редко.',
+    whenLoaded: 'По ключевому слову в запросе или по пути к файлу (paths:).',
+    writtenBy: 'Агент (через /close-day, после 6+ месяцев стабильности в справочнике)',
+    connections: ['claudemd', 'design-guidance', 'close-day'],
+  },
+  'dev-guidance': {
+    label: 'Справочник: разработка',
+    path: '.claude/skills/dev-guidance/SKILL.md',
+    layer: 'Ролевой справочник',
+    purpose: 'Как думает инженер в этом проекте. Grep-дисциплина, паттерны upstream-PR, Tailwind-тихие-проседания, React-гоrchki. Не запреты, а опыт.',
+    whenLoaded: 'Автоматически когда разговор попадает в описание (ключевые слова: code, refactor, Tailwind, Vadim, PR, grep audit).',
+    writtenBy: 'Агент (через /close-day после вашего «да»)',
+    connections: ['rules', 'design-guidance', 'close-day'],
+  },
+  'design-guidance': {
+    label: 'Справочник: дизайн',
+    path: '.claude/skills/design-guidance/SKILL.md',
+    layer: 'Ролевой справочник',
+    purpose: 'Вкус дизайнера этого проекта. Тёплое против холодного, свет против жирности, shadow-growth вместо translateY. Вся тонкая материя которую grep-правилом не поймаешь.',
+    whenLoaded: 'Авто по описанию — когда разговор про design, visual taste, brand DNA, warmth, typography, hover.',
+    writtenBy: 'Агент (через /close-day)',
+    connections: ['rules', 'founder-profile', 'dev-guidance'],
+  },
+  'editorial-guidance': {
+    label: 'Справочник: копирайт',
+    path: '.claude/skills/editorial-guidance/SKILL.md',
+    layer: 'Ролевой справочник',
+    purpose: 'Голос бренда. Баны AI-тиков (em-dash в коротких UI, правило тройки). Паттерны заголовков по поверхности. Архив отвергнутых формулировок.',
+    whenLoaded: 'Авто по описанию — editorial, copy, voice, em-dash, AI-tell, tone, brand voice.',
+    writtenBy: 'Агент (через /close-day)',
+    connections: ['founder-profile', 'icp-profile', 'marketing-guidance'],
+  },
+  'marketing-guidance': {
+    label: 'Справочник: маркетинг',
+    path: '.claude/skills/marketing-guidance/SKILL.md',
+    layer: 'Ролевой справочник',
+    purpose: 'Позиционирование. Сообщения по сегментам ICP. Как отстраиваться от конкурентов. Шаблоны pitch-deck и cold email. Lens на POSITIONING.md — не сама SSOT, а как её применять.',
+    whenLoaded: 'Авто по описанию — positioning, pitch deck, launch, hook, messaging pillar.',
+    writtenBy: 'Агент (через /close-day)',
+    connections: ['icp-profile', 'competitor-intel', 'editorial-guidance'],
+  },
+  'seo-geo-guidance': {
+    label: 'Справочник: SEO и GEO',
+    path: '.claude/skills/seo-geo-guidance/SKILL.md',
+    layer: 'Ролевой справочник',
+    purpose: 'Как попадать в AI-ответы (Perplexity, ChatGPT Search). Длина FAQ-ответа (40-60 слов), schema-паттерны, стратегия pillar-кластеров, дисциплина SSR для AI-краулеров.',
+    whenLoaded: 'Авто — SEO, GEO, image, LCP, CWV, crawler, AI citation, pillar.',
+    writtenBy: 'Агент (через /close-day)',
+    connections: ['editorial-guidance', 'rules'],
+  },
+  'product-guidance': {
+    label: 'Справочник: продукт',
+    path: '.claude/skills/product-guidance/SKILL.md',
+    layer: 'Ролевой справочник',
+    purpose: 'Как приоритизировать фичи. Рассуждения про двойную таксономию (backend 7 стадий vs marketing 8). Трёхуровневая модель (стадии + сервисы + UI-продукты). Когда маркетинг обгоняет разработку — это фича, не баг.',
+    whenLoaded: 'Авто — product strategy, feature roadmap, dual-taxonomy, stage count, 7 vs 8.',
+    writtenBy: 'Агент (через /close-day)',
+    connections: ['marketing-guidance', 'founder-profile'],
+  },
+  'founder-profile': {
+    label: 'Профиль основателя',
+    path: '.claude/skills/founder-profile/SKILL.md',
+    layer: 'Ролевой справочник',
+    purpose: 'Самый важный справочник. Наблюдаемые предпочтения, красные линии, стиль принятия решений, сигналы-тревоги. Подгружается на ЛЮБОЕ нетривиальное решение, независимо от роли.',
+    whenLoaded: 'Авто — founder preference, would Sergey, red line, taste, aloud test. Описание нарочно широкое — чтобы всегда был в контексте.',
+    writtenBy: 'Агент (через /close-day) + глобальная user-memory',
+    connections: ['design-guidance', 'editorial-guidance', 'close-day'],
+  },
+  'icp-profile': {
+    label: 'Профиль аудитории',
+    path: '.claude/skills/icp-profile/SKILL.md',
+    layer: 'Ролевой справочник',
+    purpose: 'Кто покупатель. Сегменты (крупные агентства — primary; B2B-publishers — track-2), роли ЛПР, боли, возражения, язык (что говорим, что не говорим). Применяется к любому аудитория-фронтовому выводу.',
+    whenLoaded: 'Авто — ICP, audience, agency segment, publisher, primary segment.',
+    writtenBy: 'Агент (через /close-day) + founder-conversation',
+    connections: ['marketing-guidance', 'editorial-guidance'],
+  },
+  'competitor-intel': {
+    label: 'Конкуренты и референсы',
+    path: '.claude/skills/competitor-intel/SKILL.md',
+    layer: 'Ролевой справочник',
+    purpose: 'Разделены: бизнес-конкуренты (Jasper, Surfer, Clearscope — отстраиваемся) против aesthetic-референсов (Dia, SquareFi, Substack — адаптируем паттерны). Методология извлечения через Playwright + Chrome MCP.',
+    whenLoaded: 'Авто — competitor, Jasper, Surfer, Dia, SquareFi, Substack, Browser Company.',
+    writtenBy: 'Агент (через /close-day)',
+    connections: ['marketing-guidance', 'design-guidance'],
+  },
+  'concepts': {
+    label: 'Глубокие тематические статьи',
+    path: 'knowledge/concepts/*.md',
+    layer: 'Глубокие статьи',
+    purpose: 'Канонический ответ на «что правда в этой теме». Факты + обоснование. Типо-скейл (43 токена), система цветов, паттерны интеракций, Vadim-review-паттерны.',
+    whenLoaded: 'По явной ссылке: когда другой файл пишет «see knowledge/concepts/X».',
+    writtenBy: 'Агент (через /memory-compile из daily)',
+    connections: ['knowledgeindex', 'memory-compile'],
+  },
+  'daily': {
+    label: 'Дневник сессий',
+    path: 'daily/YYYY-MM-DD.md',
+    layer: 'Хронология',
+    purpose: 'Архив. Каждый день после /close-day агент пишет сюда всё что сегодня произошло. Вы эти файлы не открываете — но через них можно grep-ом найти «когда мы это решили».',
+    whenLoaded: 'Только через grep / /memory-query — не автозагружается.',
+    writtenBy: 'Агент (через /close-day)',
+    connections: ['close-day', 'memorymd', 'memory-compile'],
+  },
+  'close-day': {
+    label: '/close-day',
+    path: '.claude/skills/close-day/SKILL.md',
+    layer: 'Оператор',
+    purpose: 'Аудит-ритуал конца дня. Синтезирует сессии в дневник, сравнивает с MEMORY.md и ролевыми справочниками, голосом предлагает промоушен 2-4 паттернов. Вы говорите «да» — агент пишет patch.',
+    whenLoaded: 'Когда вы вводите /close-day.',
+    writtenBy: 'Вы вызываете',
+    connections: ['daily', 'memorymd', 'design-guidance', 'founder-profile', 'rules'],
+  },
+  'memory-audit': {
+    label: '/memory-audit',
+    path: '.claude/skills/memory-audit/SKILL.md',
+    layer: 'Оператор',
+    purpose: 'Структурная проверка. Ищет ролевые справочники которые разрослись выше 500 строк с несвязанными темами — предлагает разделить. Вы «да» — агент режет по темам на дочерние skill.',
+    whenLoaded: 'Когда вы вводите /memory-audit.',
+    writtenBy: 'Вы вызываете',
+    connections: ['design-guidance', 'memory-lint'],
+  },
+  'memory-lint': {
+    label: '/memory-lint',
+    path: 'scripts/lint.py (обёртка)',
+    layer: 'Оператор',
+    purpose: '7 структурных проверок: битые ссылки, страницы-сироты, пустые дневники, отсутствие backlink-ов, слишком короткие статьи, отсутствие frontmatter, раздутые справочники.',
+    whenLoaded: 'Когда вы вводите /memory-lint.',
+    writtenBy: 'Вы вызываете',
+    connections: ['concepts', 'memory-audit'],
+  },
+  'memory-compile': {
+    label: '/memory-compile',
+    path: 'scripts/compile.py (обёртка)',
+    layer: 'Оператор',
+    purpose: 'Превращает накопленные дневники в тематическую статью. Например, 10 записей про типографику за месяц — одна статья knowledge/concepts/typography-scale.md.',
+    whenLoaded: 'Когда вы вводите /memory-compile.',
+    writtenBy: 'Вы вызываете',
+    connections: ['daily', 'concepts', 'knowledgeindex'],
+  },
+  'memory-query': {
+    label: '/memory-query',
+    path: 'scripts/query.py (обёртка)',
+    layer: 'Оператор',
+    purpose: 'Натуральный поиск по всей памяти — дневникам, справочникам, концептам. «Что мы решили про X?» — агент ищет везде и возвращает контекст с датами.',
+    whenLoaded: 'Когда вы вводите /memory-query что-то.',
+    writtenBy: 'Вы вызываете',
+    connections: ['daily', 'concepts', 'design-guidance'],
+  },
+  'tour': {
+    label: '/tour',
+    path: '.claude/skills/tour/SKILL.md',
+    layer: 'Оператор',
+    purpose: 'Интерактивный гид по системе. Агент проводит вас через 10 станций — каждый слой, зачем он нужен, что там лежит. Полезно в начале работы с Memory Kit.',
+    whenLoaded: 'Когда вы вводите /tour.',
+    writtenBy: 'Вы вызываете',
+    connections: [],
+  },
+};
+
+const MODE_EXPLAINERS = {
+  default: {
+    title: 'Режим «Слои»',
+    body: 'Показывает физическую структуру: где что лежит. Семь горизонтальных зон — от «входа в сессию» сверху до «операторов» снизу. Каждый файл — в своём слое, у каждого слоя свой цвет фона.',
+  },
+  lifecycle: {
+    title: 'Режим «Жизненный цикл»',
+    body: 'Один и тот же паттерн проходит четыре фазы. Жидкость (дневник) → Янтарь (короткая память) → Справочник (роль) → Канон (правило). Стрелки с движущимися штрихами показывают путь. Неактивные узлы приглушены — чтобы путь был виден.',
+  },
+  loadtime: {
+    title: 'Режим «Когда грузится»',
+    body: 'Как агент добирается до каждого файла. Жёлтые — загружаются автоматически на старте. Розовые — подхватываются по описанию (reference skills, Anthropic-native). Зелёные — по ключевому слову или пути. Серые — только когда вы явно вызываете через слеш-команду. Тусклые — только grep, не в контексте никогда.',
+  },
+};
+
+const canvas = document.getElementById('canvas');
+const panel = document.getElementById('panel');
+const explainer = document.getElementById('modeExplainer');
+const nodeEls = document.querySelectorAll('.node');
+const modeBtns = document.querySelectorAll('.mode-btn');
+
+// Safe DOM builder helpers
+function el(tag, className, textValue) {
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (textValue !== undefined && textValue !== null) e.textContent = textValue;
+  return e;
+}
+
+function clearChildren(node) {
+  while (node.firstChild) node.removeChild(node.firstChild);
+}
+
+function renderPanel(id) {
+  clearChildren(panel);
+  const n = NODES[id];
+  if (!n) {
+    const p = el('p', 'panel-empty', 'Кликни на любой узел слева, чтобы посмотреть что за файл, когда он загружается и с чем связан.');
+    panel.appendChild(p);
+    return;
+  }
+
+  panel.appendChild(el('p', 'panel-kicker', n.layer));
+  panel.appendChild(el('h3', 'panel-title', n.label));
+  panel.appendChild(el('div', 'panel-path', n.path));
+  panel.appendChild(el('p', 'panel-purpose', n.purpose));
+
+  // Row: when loaded
+  const row1 = el('div', 'panel-row');
+  row1.appendChild(el('div', 'panel-row-label', 'Когда грузится'));
+  row1.appendChild(el('div', 'panel-row-value', n.whenLoaded));
+  panel.appendChild(row1);
+
+  // Row: who writes
+  const row2 = el('div', 'panel-row');
+  row2.appendChild(el('div', 'panel-row-label', 'Кто пишет'));
+  row2.appendChild(el('div', 'panel-row-value', n.writtenBy));
+  panel.appendChild(row2);
+
+  // Connections
+  const connWrap = el('div', 'panel-connections');
+  connWrap.appendChild(el('p', 'panel-connections-title', 'Связано с'));
+  if (n.connections && n.connections.length) {
+    n.connections.forEach(cid => {
+      const target = NODES[cid];
+      const chip = el('span', 'panel-connection', target ? target.label : cid);
+      chip.setAttribute('role', 'button');
+      chip.setAttribute('tabindex', '0');
+      chip.addEventListener('click', () => selectNode(cid));
+      chip.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectNode(cid); }
+      });
+      connWrap.appendChild(chip);
+    });
+  } else {
+    connWrap.appendChild(el('span', 'panel-empty-connections', 'независимый узел'));
+  }
+  panel.appendChild(connWrap);
+}
+
+function selectNode(id) {
+  nodeEls.forEach(node => node.classList.toggle('active', node.dataset.id === id));
+  renderPanel(id);
+}
+
+nodeEls.forEach(node => {
+  node.addEventListener('click', () => selectNode(node.dataset.id));
+  node.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectNode(node.dataset.id); }
+  });
+  node.setAttribute('tabindex', '0');
+  node.setAttribute('role', 'button');
+  const info = NODES[node.dataset.id];
+  if (info) node.setAttribute('aria-label', info.label);
+});
+
+function setMode(mode) {
+  canvas.classList.remove('mode-default', 'mode-lifecycle', 'mode-loadtime');
+  canvas.classList.add('mode-' + mode);
+  modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+
+  const exp = MODE_EXPLAINERS[mode];
+  clearChildren(explainer);
+  explainer.appendChild(el('p', 'mode-explainer-title', exp.title));
+  explainer.appendChild(el('p', null, exp.body));
+}
+
+modeBtns.forEach(btn => {
+  btn.addEventListener('click', () => setMode(btn.dataset.mode));
+});
+
+setMode('default');
+</script>
+
+</body>
+</html>
