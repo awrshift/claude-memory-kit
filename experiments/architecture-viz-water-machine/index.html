@@ -1029,6 +1029,49 @@
   }
 
   /* ───── Scene 4: mitosis ───── */
+  .mitosis-mechanism {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
+    padding-bottom: 36px;
+    border-bottom: 1px dotted var(--ink-15);
+  }
+  @media (max-width: 900px) { .mitosis-mechanism { grid-template-columns: 1fr; } }
+
+  .mech-step {
+    padding: 20px 22px;
+    background: var(--paper-warm);
+    border: 1px solid var(--ink-15);
+    border-radius: 4px;
+  }
+  .mech-step-label {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 10px;
+  }
+  .mech-step p {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-80);
+  }
+  .mech-step code {
+    font-family: var(--f-mono);
+    font-size: 11.5px;
+    background: var(--ink-08);
+    padding: 1px 5px;
+    border-radius: 2px;
+    color: var(--ink);
+  }
+  .mech-step em {
+    font-style: italic;
+    color: var(--ink);
+  }
+
   .mitosis-container {
     position: relative;
   }
@@ -2580,20 +2623,36 @@
 <section class="scene" id="scene-4">
   <div class="scene-header">
     <p class="scene-kicker"><span class="num">6</span>База знаний сама наводит порядок</p>
-    <h2>Когда один гайд<br>разрастается до трёх.</h2>
+    <h2>Когда один playbook<br>разрастается до трёх.</h2>
     <p>
-      Сосуды со временем наполняются. Ваш дизайн-гайд, например, переполняется десятками новых правил и исключений — и внутри появляются три самостоятельные темы. Агент замечает это первым, сам предлагает разделение по смыслу. Вам остаётся только подтвердить. Это не админская задача, а «привести шкаф в порядок» одним кликом.
+      Сосуды со временем наполняются. Ваш <strong>playbook для дизайна</strong> (playbooks/design.md), например, переполняется десятками новых правил и исключений — и внутри появляются три самостоятельные темы. Агент замечает это первым, сам предлагает разделение по смыслу. Вам остаётся только подтвердить голосом. Это не админская задача, а «привести шкаф в порядок» одним словом «да».
     </p>
+  </div>
+
+  <!-- Mechanism explanation -->
+  <div class="mitosis-mechanism">
+    <div class="mech-step">
+      <span class="mech-step-label">1 · Когда замечает</span>
+      <p>Во время <code>/memory-lint</code> (или <code>/close-day</code>-аудита) агент проверяет размер каждого playbook-а. Если файл вырос выше ~500-800 строк <em>и</em> внутри читаются 2-4 несвязанные темы — это сигнал к разделу.</p>
+    </div>
+    <div class="mech-step">
+      <span class="mech-step-label">2 · Как определяет темы</span>
+      <p>Агент читает playbook и группирует секции по смыслу. Секции, которые почти не ссылаются друг на друга — это независимые темы. Обычно их 2-4 (не всегда три!).</p>
+    </div>
+    <div class="mech-step">
+      <span class="mech-step-label">3 · Что делает после «да»</span>
+      <p>Создаёт N новых файлов <code>playbooks/design-цвет.md</code>, <code>design-типографика.md</code>, <code>design-анимация.md</code>, переносит секции по темам. Исходный <code>playbooks/design.md</code> остаётся как оглавление со ссылками на дочерние.</p>
+    </div>
   </div>
 
   <div class="mitosis-container" data-state="pending" id="mitosisStage">
     <div class="mitosis-meta">
-      <span class="meta-label">Гайд</span>
-      <span class="meta-value">дизайн-система</span>
+      <span class="meta-label">Playbook</span>
+      <span class="meta-value">playbooks/design.md</span>
       <span class="meta-sep">·</span>
-      <span class="meta-value">30+ страниц</span>
+      <span class="meta-value">847 строк / ~30 страниц</span>
       <span class="meta-sep">·</span>
-      <span class="meta-value status">пора навести порядок</span>
+      <span class="meta-value status">агент предлагает разделить</span>
     </div>
 
     <figure class="mitosis-stage">
@@ -2686,7 +2745,7 @@
       <div class="proposal-box split-only" style="display:none;">
         <p class="proposal-title">Готово.</p>
         <p class="proposal-body">
-          Гайд аккуратно разложен на три раздела по смыслу. Агент теперь грузит только нужный кусок — меньше шума, точнее ответы. Сам гайд остался как <em>оглавление</em>: ни одна мысль не потеряна.
+          Playbook аккуратно разложен на три раздела по смыслу. Агент теперь грузит только нужный кусок — меньше шума, точнее ответы. Исходный <code>playbooks/design.md</code> остался как <em>оглавление</em> со ссылками: ни одна мысль не потеряна.
         </p>
       </div>
       <div class="mitosis-buttons">
