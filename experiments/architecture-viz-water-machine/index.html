@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memory Kit · Как агент помнит и думает</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F7F3EA;
+    --paper-warm: #F1EADA;
+    --ink: #16181C;
+    --ink-80: rgba(22, 24, 28, 0.82);
+    --ink-60: rgba(22, 24, 28, 0.58);
+    --ink-40: rgba(22, 24, 28, 0.36);
+    --ink-15: rgba(22, 24, 28, 0.15);
+    --ink-08: rgba(22, 24, 28, 0.08);
+
+    --water-fresh-top: rgba(107, 154, 175, 0.35);
+    --water-fresh-bottom: rgba(91, 143, 168, 0.60);
+    --water-fresh-solid: #5B8FA8;
+
+    --water-amber-top: rgba(228, 170, 93, 0.35);
+    --water-amber-bottom: rgba(212, 149, 74, 0.65);
+    --water-amber-solid: #D4954A;
+
+    --water-crystal-top: rgba(215, 228, 232, 0.60);
+    --water-crystal-bottom: rgba(191, 210, 215, 0.85);
+    --water-crystal-solid: #BFD2D7;
+
+    --alarm: #D65F3E;
+    --sage: #7A9377;
+    --sediment: #3D3630;
+    --brass: #BD9B5D;
+    --brass-light: #E4CE9A;
+
+    --f-serif: 'Instrument Serif', 'Playfair Display', Georgia, serif;
+    --f-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --f-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+    --cap: min(1240px, 92vw);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--f-sans);
+    color: var(--ink);
+    background: var(--paper);
+    font-weight: 400;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(circle at 20% 15%, rgba(189, 155, 93, 0.08), transparent 40%),
+      radial-gradient(circle at 85% 75%, rgba(91, 143, 168, 0.06), transparent 45%);
+  }
+
+  main, header, footer { position: relative; z-index: 1; }
+
+  /* ───── Hero ───── */
+  .hero {
+    padding: clamp(48px, 9vw, 112px) 0 clamp(32px, 5vw, 64px);
+    max-width: var(--cap);
+    margin: 0 auto;
+    padding-left: max(24px, 4vw);
+    padding-right: max(24px, 4vw);
+  }
+
+  .kicker {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .kicker::before {
+    content: '';
+    width: 28px;
+    height: 1px;
+    background: var(--ink-60);
+  }
+
+  h1 {
+    font-family: var(--f-serif);
+    font-weight: 400;
+    font-size: clamp(44px, 7vw, 92px);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    max-width: 14ch;
+    margin-bottom: 28px;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--water-fresh-solid);
+  }
+
+  .lede {
+    font-family: var(--f-serif);
+    font-weight: 400;
+    font-size: clamp(19px, 1.85vw, 24px);
+    line-height: 1.45;
+    max-width: 58ch;
+    color: var(--ink-80);
+  }
+
+  .hero-meta {
+    margin-top: 48px;
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--ink-60);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .hero-meta span + span::before {
+    content: '·';
+    margin-right: 32px;
+    color: var(--ink-40);
+  }
+
+  /* ───── Scene ───── */
+  .scene {
+    max-width: var(--cap);
+    margin: 0 auto;
+    padding: clamp(64px, 10vw, 140px) max(24px, 4vw);
+    border-top: 1px solid var(--ink-15);
+  }
+
+  .scene-header {
+    max-width: 58ch;
+    margin-bottom: 64px;
+  }
+
+  .scene-kicker {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 20px;
+  }
+  .scene-kicker .num {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    text-align: center;
+    line-height: 20px;
+    margin-right: 12px;
+    font-size: 10px;
+  }
+
+  h2 {
+    font-family: var(--f-serif);
+    font-weight: 400;
+    font-size: clamp(34px, 4.5vw, 56px);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    margin-bottom: 24px;
+  }
+
+  .scene-header p {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-80);
+  }
+
+  /* ───── Main stage: machine + legend ───── */
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+    gap: clamp(32px, 6vw, 80px);
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .stage { grid-template-columns: 1fr; }
+  }
+
+  .machine-frame {
+    position: relative;
+    background: var(--paper-warm);
+    border: 1px solid var(--ink-15);
+    border-radius: 4px;
+    padding: 24px;
+    aspect-ratio: 670 / 900;
+    overflow: hidden;
+  }
+  .machine-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 24px,
+      rgba(22,24,28,0.025) 24px,
+      rgba(22,24,28,0.025) 25px
+    );
+  }
+  .machine {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Layer interactivity */
+  .layer-group {
+    cursor: pointer;
+    transition: opacity 260ms ease;
+  }
+  .layer-group.dimmed { opacity: 0.25; }
+  .layer-group.active .layer-outline {
+    stroke-width: 2;
+    stroke: var(--alarm);
+  }
+
+  /* Water animations */
+  @keyframes water-rise {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+  }
+  .water-body { animation: water-rise 5s ease-in-out infinite; transform-origin: center; }
+  .water-body.delay-1 { animation-delay: 0.4s; }
+  .water-body.delay-2 { animation-delay: 0.9s; }
+  .water-body.delay-3 { animation-delay: 1.4s; }
+
+  @keyframes wave-shift {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-40px); }
+  }
+  .wave { animation: wave-shift 6s linear infinite; }
+  .wave.slow { animation-duration: 10s; }
+
+  /* Manometer */
+  @keyframes needle-breathe {
+    0%, 100% { transform: rotate(-45deg); }
+    50% { transform: rotate(-30deg); }
+  }
+  .manometer-needle {
+    transform-origin: 0 0;
+    animation: needle-breathe 7s ease-in-out infinite;
+  }
+
+  /* Gear */
+  @keyframes gear-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .gear { transform-origin: center; animation: gear-spin 22s linear infinite; }
+  .gear.reverse { animation-direction: reverse; animation-duration: 28s; }
+
+  /* Drops traveling in pipes */
+  @keyframes drop-fall {
+    0% { transform: translateY(-20px); opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { transform: translateY(60px); opacity: 0; }
+  }
+  .drop { animation: drop-fall 3.5s ease-in infinite; transform-origin: center; }
+  .drop.d2 { animation-delay: 1.1s; }
+  .drop.d3 { animation-delay: 2.2s; }
+
+  /* Overflow escape (naive vessel) */
+  @keyframes overflow-escape {
+    0%   { transform: translateY(8px); opacity: 0; }
+    20%  { opacity: 0.75; }
+    100% { transform: translateY(-28px); opacity: 0; }
+  }
+  .overflow-drop { animation: overflow-escape 2.4s ease-out infinite; transform-origin: center; transform-box: fill-box; }
+  .overflow-drop.od2 { animation-delay: 0.7s; }
+  .overflow-drop.od3 { animation-delay: 1.4s; }
+
+  /* ───── Legend ───── */
+  .legend {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: sticky;
+    top: 40px;
+  }
+  .legend-item {
+    padding: 16px 0;
+    border-top: 1px solid var(--ink-15);
+    cursor: pointer;
+    transition: padding-left 200ms ease;
+  }
+  .legend-item:last-child { border-bottom: 1px solid var(--ink-15); }
+  .legend-item:hover { padding-left: 8px; }
+  .legend-item.active {
+    padding-left: 12px;
+    border-left: 2px solid var(--alarm);
+  }
+
+  .legend-label {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 2px;
+  }
+  .legend-gloss {
+    font-family: var(--f-serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-60);
+    margin-bottom: 8px;
+  }
+  .legend-label .num {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    color: var(--ink-40);
+    letter-spacing: 0.1em;
+  }
+  .legend-label .name {
+    font-family: var(--f-serif);
+    font-size: 22px;
+    line-height: 1.1;
+  }
+  .legend-label .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    margin-left: auto;
+    border: 1px solid var(--ink-40);
+  }
+  .swatch.fresh { background: var(--water-fresh-solid); }
+  .swatch.amber { background: var(--water-amber-solid); }
+  .swatch.crystal { background: var(--water-crystal-solid); }
+  .swatch.sediment { background: var(--sediment); }
+
+  .legend-desc {
+    font-size: 13.5px;
+    color: var(--ink-60);
+    line-height: 1.5;
+    max-width: 36ch;
+  }
+  .legend-desc code {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    background: var(--ink-08);
+    padding: 1px 5px;
+    border-radius: 2px;
+    color: var(--ink-80);
+  }
+
+  /* ───── Scene 2: comparison ───── */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: stretch;
+  }
+  @media (max-width: 800px) {
+    .compare { grid-template-columns: 1fr; }
+  }
+
+  .compare-card {
+    background: var(--paper-warm);
+    border: 1px solid var(--ink-15);
+    border-radius: 4px;
+    padding: 32px;
+    position: relative;
+    min-height: 460px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .compare-card h3 {
+    font-family: var(--f-serif);
+    font-size: 28px;
+    font-weight: 400;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .compare-card .caption {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 24px;
+  }
+  .compare-card .diagram {
+    flex: 1;
+    min-height: 280px;
+    margin: 16px 0 20px;
+  }
+  .compare-card p {
+    font-size: 14px;
+    color: var(--ink-80);
+    line-height: 1.55;
+    max-width: 36ch;
+  }
+
+  .naive .pressure-label,
+  .layered .pressure-label {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--ink-60);
+    letter-spacing: 0.1em;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .pressure-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--ink-08);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  .pressure-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, var(--sage) 0%, var(--water-amber-solid) 60%, var(--alarm) 90%);
+    transform-origin: left;
+    transition: transform 800ms cubic-bezier(.4,0,.2,1);
+  }
+  .naive .pressure-bar::after { transform: scaleX(0.94); }
+  .layered .pressure-bar::after { transform: scaleX(0.28); }
+
+  .toggle-btn {
+    margin-top: 48px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 22px;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--f-sans);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 40px;
+    transition: background 200ms ease, color 200ms ease, transform 200ms ease;
+  }
+  .toggle-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .toggle-btn .arrow { transition: transform 300ms ease; }
+  .toggle-btn[data-state="peak"] .arrow { transform: rotate(180deg); }
+
+  /* ───── Scene 3: promotion journey ───── */
+  .journey {
+    position: relative;
+    padding: 60px 0 40px;
+  }
+  .journey-track {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: center;
+    gap: 24px;
+  }
+  @media (max-width: 720px) {
+    .journey-track { grid-template-columns: 1fr; gap: 32px; }
+  }
+
+  .station {
+    position: relative;
+    text-align: center;
+  }
+  .station svg {
+    width: 100%;
+    max-width: 140px;
+    height: auto;
+    margin-bottom: 18px;
+  }
+  .station .station-label {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 6px;
+  }
+  .station .station-name {
+    font-family: var(--f-serif);
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .station .station-file {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--ink-40);
+  }
+  .journey-connector {
+    position: absolute;
+    top: 50px;
+    left: 12.5%;
+    right: 12.5%;
+    height: 1px;
+    background: var(--ink-15);
+    z-index: -1;
+  }
+  @media (max-width: 720px) { .journey-connector { display: none; } }
+
+  .threshold {
+    margin-top: 60px;
+    padding: 24px 28px;
+    background: var(--paper-warm);
+    border-left: 3px solid var(--water-fresh-solid);
+    max-width: 720px;
+  }
+  .threshold h4 {
+    font-family: var(--f-serif);
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .threshold p {
+    font-size: 14.5px;
+    color: var(--ink-80);
+    line-height: 1.6;
+  }
+  .threshold code {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    background: var(--ink-08);
+    padding: 1px 6px;
+    border-radius: 2px;
+  }
+
+  /* ───── Scene 4 (placeholder / hint) ───── */
+  .next-hint {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    padding: 48px;
+    background: var(--paper-warm);
+    border: 1px dashed var(--ink-40);
+    border-radius: 4px;
+    margin-top: 40px;
+  }
+  @media (max-width: 800px) {
+    .next-hint { grid-template-columns: 1fr; padding: 28px; }
+  }
+  .next-hint h3 {
+    font-family: var(--f-serif);
+    font-size: 26px;
+    font-weight: 400;
+    margin-bottom: 12px;
+  }
+  .next-hint p {
+    font-size: 14.5px;
+    color: var(--ink-80);
+    line-height: 1.6;
+  }
+  .next-hint ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 16px;
+  }
+  .next-hint ul li {
+    font-size: 13.5px;
+    color: var(--ink-80);
+    padding: 8px 0;
+    border-bottom: 1px dotted var(--ink-15);
+    display: flex;
+    gap: 12px;
+  }
+  .next-hint ul li::before {
+    content: '→';
+    color: var(--water-fresh-solid);
+    font-family: var(--f-mono);
+  }
+
+  /* ───── Footer ───── */
+  footer {
+    max-width: var(--cap);
+    margin: 0 auto;
+    padding: 80px max(24px, 4vw) 60px;
+    border-top: 1px solid var(--ink-15);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 32px;
+    flex-wrap: wrap;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+  }
+  footer .mark {
+    font-family: var(--f-serif);
+    font-size: 18px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+  }
+
+  /* ───── Scene 1: trigger resonance ───── */
+  .resonance-demo {
+    margin-top: 48px;
+    padding-top: 36px;
+    border-top: 1px solid var(--ink-15);
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) 2fr;
+    gap: clamp(24px, 4vw, 56px);
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .resonance-demo { grid-template-columns: 1fr; }
+  }
+  .resonance-kicker {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 12px;
+  }
+  .resonance-label {
+    font-family: var(--f-serif);
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink-80);
+    max-width: 36ch;
+  }
+  .resonance-chips {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-content: flex-start;
+  }
+  .resonance-chip {
+    padding: 11px 18px;
+    border-radius: 22px;
+    border: 1px solid var(--ink-15);
+    background: var(--paper-warm);
+    font-family: var(--f-serif);
+    font-size: 15px;
+    font-style: italic;
+    color: var(--ink-80);
+    cursor: pointer;
+    transition: background 200ms ease, border-color 200ms ease, color 200ms ease, transform 200ms ease;
+  }
+  .resonance-chip:hover:not(.reset-chip) {
+    border-color: var(--alarm);
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
+  .resonance-chip.active {
+    border-color: var(--alarm);
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 0 2px 10px -4px rgba(214, 95, 62, 0.3);
+  }
+  .resonance-chip.reset-chip {
+    border-style: dashed;
+    font-style: normal;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    background: transparent;
+  }
+  .resonance-chip.reset-chip:hover {
+    color: var(--ink);
+    border-color: var(--ink-40);
+  }
+
+  /* Vessel resonance — soft glow + subtle pulse */
+  @keyframes vessel-glow {
+    0%, 100% {
+      filter: drop-shadow(0 0 0 rgba(214, 95, 62, 0));
+    }
+    50% {
+      filter: drop-shadow(0 0 14px rgba(214, 95, 62, 0.55));
+    }
+  }
+  [data-vessel].resonating {
+    animation: vessel-glow 1.8s ease-in-out infinite;
+  }
+  [data-vessel].resonating .layer-outline {
+    stroke: var(--alarm);
+    stroke-width: 1.8;
+  }
+  /* Dim non-resonating vessels when any is active */
+  .resonance-active [data-vessel]:not(.resonating) {
+    opacity: 0.32;
+    transition: opacity 280ms ease;
+  }
+  .resonance-active [data-vessel] {
+    transition: opacity 280ms ease;
+  }
+  /* Make transition bidirectional */
+  [data-vessel] {
+    transition: opacity 280ms ease, filter 400ms ease;
+  }
+
+  /* ───── Scene 4: mitosis ───── */
+  .mitosis-container {
+    position: relative;
+  }
+  .mitosis-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-60);
+  }
+  .mitosis-meta .meta-label {
+    text-transform: uppercase;
+    color: var(--ink-40);
+    letter-spacing: 0.2em;
+    margin-right: 4px;
+  }
+  .mitosis-meta .meta-value { color: var(--ink); }
+  .mitosis-meta .meta-value.status { color: var(--alarm); }
+  .mitosis-meta .meta-sep { color: var(--ink-40); }
+
+  .mitosis-stage {
+    background: var(--paper-warm);
+    border: 1px solid var(--ink-15);
+    border-radius: 4px;
+    padding: 20px;
+    aspect-ratio: 900 / 400;
+    overflow: hidden;
+  }
+  .mitosis-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Alarm ring pulsing while pending */
+  @keyframes alarm-ring-pulse {
+    0%, 100% { opacity: 0.35; transform: scale(1); }
+    50%      { opacity: 0.75; transform: scale(1.03); }
+  }
+  .mitosis-container[data-state="pending"] .alarm-ring {
+    animation: alarm-ring-pulse 2.2s ease-in-out infinite;
+    transform-origin: 450px 200px;
+  }
+
+  /* Cluster emergence — slight drift while pending */
+  @keyframes cluster-drift-a {
+    0%, 100% { transform: translate(0, 0); }
+    50%      { transform: translate(-4px, 2px); }
+  }
+  @keyframes cluster-drift-b {
+    0%, 100% { transform: translate(0, 0); }
+    50%      { transform: translate(3px, -2px); }
+  }
+  @keyframes cluster-drift-c {
+    0%, 100% { transform: translate(0, 0); }
+    50%      { transform: translate(2px, 3px); }
+  }
+  .mitosis-container[data-state="pending"] .cluster.c1 { animation: cluster-drift-a 4.5s ease-in-out infinite; transform-origin: 330px 200px; transform-box: fill-box; }
+  .mitosis-container[data-state="pending"] .cluster.c2 { animation: cluster-drift-b 5.2s ease-in-out infinite; transform-origin: 450px 200px; transform-box: fill-box; }
+  .mitosis-container[data-state="pending"] .cluster.c3 { animation: cluster-drift-c 4.8s ease-in-out infinite; transform-origin: 570px 200px; transform-box: fill-box; }
+
+  /* State transitions */
+  .mitosis-parent, .mitosis-children {
+    transition: opacity 1.2s cubic-bezier(.4, 0, .2, 1),
+                transform 1.4s cubic-bezier(.34, 1.2, .64, 1);
+  }
+
+  /* PENDING state */
+  .mitosis-container[data-state="pending"] .mitosis-parent { opacity: 1; transform: scale(1); }
+  .mitosis-container[data-state="pending"] .mitosis-children { opacity: 0; pointer-events: none; }
+
+  /* Children start bunched at center */
+  .mitosis-container[data-state="pending"] .child-1 { transform: translate(450px, 200px); opacity: 0; }
+  .mitosis-container[data-state="pending"] .child-2 { transform: translate(450px, 200px); opacity: 0; }
+  .mitosis-container[data-state="pending"] .child-3 { transform: translate(450px, 200px); opacity: 0; }
+  .mitosis-container[data-state="pending"] .parent-index { opacity: 0; }
+
+  /* SPLIT state */
+  .mitosis-container[data-state="split"] .mitosis-parent { opacity: 0; transform: scale(0.85); pointer-events: none; }
+  .mitosis-container[data-state="split"] .mitosis-children { opacity: 1; }
+  .mitosis-container[data-state="split"] .child-1 { transform: translate(170px, 200px); opacity: 1; }
+  .mitosis-container[data-state="split"] .child-2 { transform: translate(450px, 200px); opacity: 1; }
+  .mitosis-container[data-state="split"] .child-3 { transform: translate(730px, 200px); opacity: 1; }
+  .mitosis-container[data-state="split"] .parent-index { opacity: 1; transition-delay: 1.2s; }
+
+  .child {
+    transition: transform 1.4s cubic-bezier(.34, 1.2, .64, 1), opacity 0.8s ease;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  .child-1 { transition-delay: 0.1s; }
+  .child-2 { transition-delay: 0.25s; }
+  .child-3 { transition-delay: 0.4s; }
+  .parent-index { transition: opacity 0.8s ease; }
+
+  .mitosis-controls {
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  @media (max-width: 800px) {
+    .mitosis-controls { grid-template-columns: 1fr; }
+  }
+
+  .proposal-box {
+    padding: 22px 26px;
+    background: var(--paper-warm);
+    border-left: 2px solid var(--water-fresh-solid);
+    border-radius: 0 3px 3px 0;
+  }
+  .mitosis-container[data-state="split"] .proposal-box.split-only {
+    border-left-color: var(--sage);
+  }
+  .proposal-title {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 8px;
+  }
+  .proposal-body {
+    font-family: var(--f-serif);
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink-80);
+  }
+  .proposal-body em {
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  .mitosis-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-self: stretch;
+    justify-content: flex-start;
+  }
+  .mitosis-btn {
+    padding: 14px 22px;
+    border-radius: 40px;
+    font-family: var(--f-sans);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: background 200ms ease, color 200ms ease, border-color 200ms ease, transform 200ms ease;
+  }
+  .mitosis-btn.approve {
+    background: var(--ink);
+    color: var(--paper);
+    border: 1px solid var(--ink);
+  }
+  .mitosis-btn.approve:hover {
+    background: #2a2d33;
+    transform: translateY(-1px);
+  }
+  .mitosis-btn.reject {
+    background: transparent;
+    color: var(--ink-60);
+    border: 1px solid var(--ink-15);
+  }
+  .mitosis-btn.reject:hover {
+    color: var(--ink);
+    border-color: var(--ink-40);
+  }
+  .mitosis-btn.reset {
+    background: transparent;
+    color: var(--ink-60);
+    border: 1px dashed var(--ink-15);
+  }
+  .mitosis-btn.reset:hover { color: var(--ink); border-color: var(--ink-40); }
+
+  /* ───── Scene 0: playable failure ───── */
+  .playable-failure {
+    display: grid;
+    grid-template-columns: minmax(240px, 1.1fr) minmax(0, 1.4fr) minmax(240px, 1fr);
+    gap: clamp(20px, 3.5vw, 48px);
+    align-items: start;
+  }
+  @media (max-width: 980px) {
+    .playable-failure { grid-template-columns: 1fr; }
+    .state-readout { position: static !important; }
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .controls-label {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 10px;
+  }
+  .dump-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 16px;
+    background: var(--paper-warm);
+    border: 1px solid var(--ink-15);
+    border-radius: 3px;
+    font-family: var(--f-sans);
+    font-size: 13.5px;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+  }
+  .dump-btn:hover:not(:disabled) {
+    background: var(--paper);
+    border-color: var(--ink-40);
+    transform: translateX(2px);
+  }
+  .dump-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: transparent;
+    text-decoration: line-through;
+    text-decoration-color: var(--ink-40);
+  }
+  .dump-btn .hint {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--ink-60);
+    flex-shrink: 0;
+  }
+  .reset-btn {
+    margin-top: 8px;
+    background: transparent;
+    border: none;
+    border-top: 1px dotted var(--ink-15);
+    padding: 16px 4px 4px;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    cursor: pointer;
+    text-align: left;
+    transition: color 180ms;
+  }
+  .reset-btn:hover { color: var(--ink); }
+
+  .failure-vessel-frame {
+    background: var(--paper-warm);
+    border: 1px solid var(--ink-15);
+    border-radius: 4px;
+    padding: 20px;
+    aspect-ratio: 400 / 500;
+    overflow: visible;
+  }
+  .failure-vessel {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .state-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 28px;
+    background: var(--paper-warm);
+    border: 1px solid var(--ink-15);
+    border-radius: 4px;
+    position: sticky;
+    top: 40px;
+  }
+  .readout-item { display: flex; flex-direction: column; }
+  .readout-label {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 8px;
+  }
+  .readout-value {
+    font-family: var(--f-serif);
+    font-size: 44px;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+  .readout-value .unit {
+    font-size: 18px;
+    color: var(--ink-60);
+    margin-left: 4px;
+    font-family: var(--f-mono);
+  }
+  .fill-bar-container {
+    height: 6px;
+    background: var(--ink-08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .fill-bar-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--sage) 0%, var(--water-amber-solid) 60%, var(--alarm) 95%);
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform 500ms cubic-bezier(.4,0,.2,1);
+  }
+  .risk-gauge {
+    width: 100%;
+    max-width: 160px;
+    height: auto;
+    margin-top: 8px;
+  }
+  .status-msg {
+    font-family: var(--f-serif);
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--ink-80);
+    min-height: 3.4em;
+    transition: color 240ms ease;
+  }
+  .status-msg.warning { color: var(--water-amber-solid); }
+  .status-msg.critical { color: var(--alarm); }
+
+  .failure-verdict {
+    margin-top: 56px;
+    padding: 36px 40px;
+    background: var(--paper-warm);
+    border-left: 3px solid var(--alarm);
+    border-radius: 0 4px 4px 0;
+    opacity: 0.25;
+    transform: translateY(6px);
+    transition: opacity 500ms ease, transform 500ms ease;
+    pointer-events: none;
+    max-width: 760px;
+  }
+  .failure-verdict.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .failure-verdict h3 {
+    font-family: var(--f-serif);
+    font-size: 30px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    margin-bottom: 14px;
+  }
+  .failure-verdict p {
+    color: var(--ink-80);
+    font-size: 15.5px;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .failure-verdict p:last-of-type { margin-bottom: 24px; }
+  .failure-verdict .next-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    background: var(--ink);
+    color: var(--paper);
+    text-decoration: none;
+    border-radius: 40px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 200ms ease, transform 200ms ease;
+  }
+  .failure-verdict .next-cta:hover {
+    background: #2a2d33;
+    transform: translateY(-1px);
+  }
+
+  .crack-group { opacity: 0; transition: opacity 500ms ease; }
+  .crack-group.visible { opacity: 1; }
+
+  .escape-drop { opacity: 0; }
+  .escape-drop.visible {
+    animation: overflow-escape 1.8s ease-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+    opacity: 1;
+  }
+  .escape-drop.visible.ed2 { animation-delay: 0.5s; }
+  .escape-drop.visible.ed3 { animation-delay: 1.0s; }
+
+  /* Scroll-reveal: scenes fade in as they enter viewport */
+  .scene {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 700ms cubic-bezier(.25, 1, .5, 1), transform 700ms cubic-bezier(.25, 1, .5, 1);
+  }
+  .scene.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  /* Closing "what's next" section */
+  .closing {
+    max-width: var(--cap);
+    margin: 0 auto;
+    padding: clamp(80px, 12vw, 160px) max(24px, 4vw) clamp(48px, 8vw, 96px);
+    border-top: 1px solid var(--ink-15);
+  }
+  .closing-kicker {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 20px;
+  }
+  .closing h2 {
+    font-family: var(--f-serif);
+    font-weight: 400;
+    font-size: clamp(32px, 4vw, 52px);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    margin-bottom: 28px;
+    max-width: 20ch;
+  }
+  .closing-lede {
+    font-family: var(--f-serif);
+    font-size: 18px;
+    line-height: 1.55;
+    max-width: 54ch;
+    color: var(--ink-80);
+    margin-bottom: 40px;
+  }
+  .closing-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 640px;
+  }
+  .closing-action {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--ink-15);
+    text-decoration: none;
+    color: var(--ink);
+    transition: padding-left 240ms ease;
+  }
+  .closing-action:first-of-type { border-top: 1px solid var(--ink-15); }
+  .closing-action:hover { padding-left: 12px; }
+  .closing-action .arrow {
+    font-family: var(--f-mono);
+    font-size: 14px;
+    color: var(--alarm);
+    flex-shrink: 0;
+  }
+  .closing-action .label-wrap { flex: 1; }
+  .closing-action .action-title {
+    font-family: var(--f-serif);
+    font-size: 22px;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .closing-action .action-desc {
+    font-size: 13.5px;
+    color: var(--ink-60);
+    line-height: 1.45;
+  }
+  /* Above-the-fold scenes should be visible immediately, no fade-in */
+  .no-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Accessibility: respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .water-body, .wave, .manometer-needle, .gear, .drop, .overflow-drop, .escape-drop,
+    .alarm-ring, .cluster {
+      animation: none !important;
+    }
+    .scene {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<main>
+
+<header class="hero">
+  <p class="kicker">Memory Kit · архитектура v0.1 (метафорический прототип)</p>
+  <h1>Как агент <em>помнит</em><br>и думает.</h1>
+  <p class="lede">
+    У вас есть ИИ-ассистент. Вы хотите дать ему весь контекст проекта — бренд, клиентов, прошлые кампании, правила. Он тонет. Тот же ассистент на следующий день всё забывает. Эта страница объясняет, почему так — и что делает Memory Kit, чтобы собрать из этого работающую систему памяти.
+  </p>
+  <div class="hero-meta">
+    <span>Для маркетологов</span>
+    <span>Без кода</span>
+    <span>7 минут чтения</span>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCENE 0: PLAYABLE FAILURE (the pain you recognize) -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+<section class="scene" id="scene-0">
+  <div class="scene-header">
+    <p class="scene-kicker"><span class="num">1</span>Попробуйте сами</p>
+    <h2>Одна колба —<br>весь диалог с агентом.</h2>
+    <p>
+      Нажимайте кнопки слева — каждая загружает кусок контекста клиента в чат. Справа манометр показывает риск потери контекста. Посмотрите, что случится.
+    </p>
+  </div>
+
+  <div class="playable-failure">
+
+    <!-- LEFT: controls -->
+    <div class="controls">
+      <p class="controls-label">Добавить в чат</p>
+      <button class="dump-btn" data-weight="18" type="button">
+        <span>Бренд-гайд клиента</span>
+        <span class="hint">+18%</span>
+      </button>
+      <button class="dump-btn" data-weight="22" type="button">
+        <span>Архив кампаний, 50 страниц</span>
+        <span class="hint">+22%</span>
+      </button>
+      <button class="dump-btn" data-weight="14" type="button">
+        <span>SEO-стратегия квартала</span>
+        <span class="hint">+14%</span>
+      </button>
+      <button class="dump-btn" data-weight="12" type="button">
+        <span>Tone of voice, утверждённый</span>
+        <span class="hint">+12%</span>
+      </button>
+      <button class="dump-btn" data-weight="20" type="button">
+        <span>Прошлые брифы и обсуждения</span>
+        <span class="hint">+20%</span>
+      </button>
+      <button class="dump-btn" data-weight="16" type="button">
+        <span>Гайд по LinkedIn-каналу</span>
+        <span class="hint">+16%</span>
+      </button>
+      <button class="reset-btn" type="button">↺ Сбросить колбу</button>
+    </div>
+
+    <!-- CENTER: the vessel -->
+    <figure class="failure-vessel-frame">
+      <svg class="failure-vessel" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg" aria-label="Single vessel filling test">
+        <defs>
+          <linearGradient id="wF0" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#6B9AAF" stop-opacity="0.35"/>
+            <stop offset="1" stop-color="#5B8FA8" stop-opacity="0.75"/>
+          </linearGradient>
+          <clipPath id="vesselClip">
+            <path d="M 80 60 L 80 430 Q 80 460 110 460 L 290 460 Q 320 460 320 430 L 320 60 Z"/>
+          </clipPath>
+        </defs>
+
+        <!-- Vessel neck + body outline -->
+        <path d="M 95 48 L 305 48 L 305 60 L 320 60 L 320 430 Q 320 460 290 460 L 110 460 Q 80 460 80 430 L 80 60 L 95 60 Z"
+              fill="#FCF9F0" stroke="#16181C" stroke-width="1.5"/>
+
+        <!-- Water (clipped to vessel) — starts empty, rect dimensions set by JS -->
+        <g clip-path="url(#vesselClip)">
+          <rect id="failureWaterRect" x="82" y="460" width="236" height="0" fill="url(#wF0)"/>
+          <path id="failureSurface" d="M 82 460 Q 140 460 200 460 Q 260 460 318 460" fill="none" stroke="#5B8FA8" stroke-width="1" opacity="0.5"/>
+        </g>
+
+        <!-- Crack lines (invisible until threshold) -->
+        <g class="crack-group" stroke="#16181C" stroke-width="1" fill="none" stroke-linecap="round">
+          <path d="M 80 130 L 96 148 L 88 172 L 102 194 L 94 220"/>
+          <path d="M 320 200 L 308 218 L 322 242 L 312 268"/>
+          <path d="M 80 340 L 98 358 L 86 380 L 102 404"/>
+          <path d="M 320 360 L 306 382"/>
+        </g>
+
+        <!-- Escape drops above neck (invisible until threshold) -->
+        <circle class="escape-drop" cx="130" cy="40" r="2.6" fill="#5B8FA8"/>
+        <circle class="escape-drop ed2" cx="200" cy="36" r="3" fill="#5B8FA8"/>
+        <circle class="escape-drop ed3" cx="270" cy="40" r="2.4" fill="#5B8FA8"/>
+
+        <!-- Volume tick marks on left side of vessel -->
+        <g stroke="#16181C" stroke-width="0.6" opacity="0.25">
+          <line x1="80" y1="120" x2="74" y2="120"/>
+          <line x1="80" y1="180" x2="74" y2="180"/>
+          <line x1="80" y1="240" x2="74" y2="240"/>
+          <line x1="80" y1="300" x2="74" y2="300"/>
+          <line x1="80" y1="360" x2="74" y2="360"/>
+          <line x1="80" y1="420" x2="74" y2="420"/>
+        </g>
+        <text x="66" y="124" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.35">100</text>
+        <text x="66" y="244" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.35">60</text>
+        <text x="66" y="364" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.35">20</text>
+      </svg>
+    </figure>
+
+    <!-- RIGHT: readout panel -->
+    <aside class="state-readout">
+      <div class="readout-item">
+        <p class="readout-label">Объём памяти в чате</p>
+        <p class="readout-value"><span id="fillPct">0</span><span class="unit">%</span></p>
+        <div class="fill-bar-container">
+          <div class="fill-bar-fill" id="fillBar"></div>
+        </div>
+      </div>
+
+      <div class="readout-item">
+        <p class="readout-label">Риск потери контекста</p>
+        <svg class="risk-gauge" viewBox="-55 -55 110 70" xmlns="http://www.w3.org/2000/svg">
+          <!-- Gauge arc -->
+          <path d="M -48 0 A 48 48 0 0 1 48 0" fill="none" stroke="#16181C" stroke-width="0.8" opacity="0.25"/>
+          <!-- Zones: green / amber / red -->
+          <path d="M -48 0 A 48 48 0 0 1 -17 -45" fill="none" stroke="#7A9377" stroke-width="4.5" opacity="0.7"/>
+          <path d="M -17 -45 A 48 48 0 0 1 17 -45" fill="none" stroke="#D4954A" stroke-width="4.5" opacity="0.7"/>
+          <path d="M 17 -45 A 48 48 0 0 1 48 0" fill="none" stroke="#D65F3E" stroke-width="4.5" opacity="0.8"/>
+          <!-- Needle -->
+          <line id="failureNeedle" x1="0" y1="0" x2="-42" y2="0" stroke="#16181C" stroke-width="2.2" stroke-linecap="round" style="transform-origin: 0 0; transition: transform 550ms cubic-bezier(.34,1.2,.64,1);"/>
+          <circle r="3.5" fill="#16181C"/>
+          <circle r="1.5" fill="#FCF9F0"/>
+          <!-- Labels under gauge -->
+          <text x="-40" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="7" fill="#7A9377" opacity="0.8">ok</text>
+          <text x="0" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="7" fill="#D4954A" opacity="0.8">warn</text>
+          <text x="40" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="7" fill="#D65F3E" opacity="0.9">fail</text>
+        </svg>
+      </div>
+
+      <div class="readout-item">
+        <p id="statusMsg" class="status-msg">Стабильно. Начните добавлять контекст — колба пустая.</p>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Verdict banner — appears at 100% -->
+  <div class="failure-verdict" id="failureVerdict">
+    <h3>Память закончилась.</h3>
+    <p>
+      Именно это происходит, когда вы скидываете всю работу в один чат. Старое вытесняется новым — агент забывает первую страницу брифа, путает факты, ломает тон. Одна общая память не масштабируется.
+    </p>
+    <p>
+      Ответ — не делать колбу больше, а построить <em>машину</em> из разных сосудов. Каждая информация живёт на своём уровне и поднимается наверх только когда нужна.
+    </p>
+    <a class="next-cta" href="#scene-1">Показать машину →</a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCENE 1: THE MACHINE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+<section class="scene" id="scene-1">
+  <div class="scene-header">
+    <p class="scene-kicker"><span class="num">2</span>Машина памяти</p>
+    <h2>Представьте себе прибор.</h2>
+    <p>
+      Стеклянная колба сверху, под ней — ряды сосудов разных форм, внизу массивный резервуар, ещё ниже — осадок. По трубам течёт вода. Есть манометр, шестерни, насос. Каждый сосуд хранит свою воду, свой тип информации. Всё вместе — то, что агент помнит и чем думает.
+    </p>
+  </div>
+
+  <div class="stage">
+
+    <!-- ───── THE MACHINE SVG ───── -->
+    <figure class="machine-frame">
+      <svg class="machine" viewBox="-50 0 670 900" xmlns="http://www.w3.org/2000/svg" aria-label="Machine diagram of agent memory">
+
+        <defs>
+          <linearGradient id="wFresh" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#6B9AAF" stop-opacity="0.3"/>
+            <stop offset="1" stop-color="#5B8FA8" stop-opacity="0.7"/>
+          </linearGradient>
+          <linearGradient id="wAmber" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#E4AA5D" stop-opacity="0.3"/>
+            <stop offset="1" stop-color="#D4954A" stop-opacity="0.7"/>
+          </linearGradient>
+          <linearGradient id="wGold" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#C89862" stop-opacity="0.4"/>
+            <stop offset="1" stop-color="#A07B42" stop-opacity="0.8"/>
+          </linearGradient>
+          <linearGradient id="wCrystal" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#D7E4E8" stop-opacity="0.55"/>
+            <stop offset="1" stop-color="#BFD2D7" stop-opacity="0.85"/>
+          </linearGradient>
+          <linearGradient id="brassGrad" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stop-color="#E4CE9A"/>
+            <stop offset="0.5" stop-color="#BD9B5D"/>
+            <stop offset="1" stop-color="#A3854A"/>
+          </linearGradient>
+          <pattern id="wavePattern" x="0" y="0" width="40" height="4" patternUnits="userSpaceOnUse">
+            <path d="M 0 2 Q 10 0, 20 2 T 40 2" fill="none" stroke="#FFFFFF" stroke-width="0.6" opacity="0.45"/>
+          </pattern>
+        </defs>
+
+        <!-- Outer frame of machine -->
+        <rect x="60" y="30" width="500" height="840" fill="none" stroke="#16181C" stroke-width="1.4" rx="3"/>
+        <!-- Tick marks along left frame -->
+        <g stroke="#16181C" stroke-width="0.8" opacity="0.35">
+          <line x1="50" y1="80" x2="60" y2="80"/>
+          <line x1="55" y1="140" x2="60" y2="140"/>
+          <line x1="55" y1="200" x2="60" y2="200"/>
+          <line x1="50" y1="260" x2="60" y2="260"/>
+          <line x1="55" y1="320" x2="60" y2="320"/>
+          <line x1="55" y1="380" x2="60" y2="380"/>
+          <line x1="50" y1="440" x2="60" y2="440"/>
+          <line x1="55" y1="500" x2="60" y2="500"/>
+          <line x1="55" y1="560" x2="60" y2="560"/>
+          <line x1="50" y1="620" x2="60" y2="620"/>
+          <line x1="55" y1="680" x2="60" y2="680"/>
+          <line x1="55" y1="740" x2="60" y2="740"/>
+          <line x1="50" y1="800" x2="60" y2="800"/>
+        </g>
+
+        <!-- Title plate at top -->
+        <g transform="translate(310, 55)" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="2" fill="#16181C" opacity="0.6">
+          <text>MEMORY APPARATUS · v0.1</text>
+        </g>
+
+        <!-- ═════ LAYER 1: HOT PATH (glass dome) ═════ -->
+        <g class="layer-group" data-layer="hot">
+          <!-- Glass dome shape -->
+          <path class="layer-outline"
+                d="M 100 90 L 100 190 Q 100 206 116 206 L 434 206 Q 450 206 450 190 L 450 90 Q 275 76 100 90 Z"
+                fill="#FCF9F0" stroke="#16181C" stroke-width="1.2"/>
+
+          <!-- Water inside hot path -->
+          <g class="water-body">
+            <path d="M 102 140 L 102 188 Q 102 204 118 204 L 432 204 Q 448 204 448 188 L 448 140
+                     Q 440 132 410 138 Q 380 144 340 136 Q 300 128 260 140 Q 220 152 180 136 Q 140 128 102 140 Z"
+                  fill="url(#wFresh)"/>
+            <path class="wave" d="M 102 142 Q 140 134 180 140 T 260 140 T 340 140 T 420 140 T 500 140 T 580 140"
+                  fill="none" stroke="#5B8FA8" stroke-width="0.8" opacity="0.35"/>
+          </g>
+
+          <!-- Label -->
+          <text x="48" y="130" text-anchor="end" font-family="Instrument Serif, serif" font-size="13" font-style="italic" fill="#16181C">Hot Path</text>
+          <text x="48" y="148" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.55">
+            <tspan x="48" dy="0">CLAUDE.md</tspan>
+            <tspan x="48" dy="11">MEMORY.md</tspan>
+          </text>
+
+          <!-- Manometer -->
+          <g transform="translate(480, 146)">
+            <circle r="36" fill="#FCF9F0" stroke="#16181C" stroke-width="1.2"/>
+            <circle r="32" fill="none" stroke="#16181C" stroke-width="0.4" opacity="0.3"/>
+            <!-- Tick marks -->
+            <g stroke="#16181C" stroke-width="0.8">
+              <line x1="0" y1="-32" x2="0" y2="-28"/>
+              <line x1="22" y1="-22" x2="19" y2="-19"/>
+              <line x1="32" y1="0" x2="28" y2="0"/>
+              <line x1="-22" y1="-22" x2="-19" y2="-19"/>
+              <line x1="-32" y1="0" x2="-28" y2="0"/>
+            </g>
+            <!-- Red zone arc -->
+            <path d="M 22 -22 A 32 32 0 0 1 32 0" fill="none" stroke="#D65F3E" stroke-width="2.5" opacity="0.7"/>
+            <!-- Needle -->
+            <line class="manometer-needle" x1="0" y1="0" x2="28" y2="0" stroke="#D65F3E" stroke-width="2" stroke-linecap="round"/>
+            <circle r="2.5" fill="#16181C"/>
+            <text y="54" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.7">
+              в норме
+            </text>
+          </g>
+        </g>
+
+        <!-- ═════ PIPE + PUMP ═════ -->
+        <!-- Pipe down from hot path -->
+        <rect x="298" y="206" width="24" height="42" fill="#EAE0C6" stroke="#16181C" stroke-width="1"/>
+        <!-- Drops traveling down -->
+        <circle class="drop" cx="310" cy="210" r="2.5" fill="#5B8FA8"/>
+        <circle class="drop d2" cx="310" cy="210" r="2.5" fill="#5B8FA8"/>
+        <circle class="drop d3" cx="310" cy="210" r="2.5" fill="#5B8FA8"/>
+
+        <!-- Pump / gear (session-start hook) -->
+        <g transform="translate(310, 270)">
+          <circle r="26" fill="#FCF9F0" stroke="#16181C" stroke-width="1.2"/>
+          <g class="gear">
+            <!-- 8 teeth -->
+            <g fill="url(#brassGrad)" stroke="#16181C" stroke-width="0.8">
+              <rect x="-3" y="-26" width="6" height="6"/>
+              <rect x="-3" y="20" width="6" height="6"/>
+              <rect x="-26" y="-3" width="6" height="6"/>
+              <rect x="20" y="-3" width="6" height="6"/>
+              <rect x="-21" y="-21" width="6" height="6" transform="rotate(45)"/>
+              <rect x="15" y="-21" width="6" height="6" transform="rotate(45)"/>
+              <rect x="15" y="15" width="6" height="6" transform="rotate(45)"/>
+              <rect x="-21" y="15" width="6" height="6" transform="rotate(45)"/>
+            </g>
+            <circle r="18" fill="#F1EADA" stroke="#16181C" stroke-width="0.8"/>
+            <circle r="5" fill="#16181C"/>
+            <circle r="2" fill="#F1EADA"/>
+          </g>
+          <text y="48" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.7">
+            session-start
+          </text>
+        </g>
+
+        <!-- Horizontal distribution pipe -->
+        <line x1="310" y1="298" x2="310" y2="328" stroke="#16181C" stroke-width="1"/>
+        <rect x="130" y="328" width="360" height="10" fill="#EAE0C6" stroke="#16181C" stroke-width="1"/>
+
+        <!-- Side label "насос" -->
+        <text x="260" y="275" text-anchor="end" font-family="Instrument Serif, serif" font-size="11" font-style="italic" fill="#16181C" opacity="0.55">
+          насос
+        </text>
+
+        <!-- ═════ LAYER 2a: RULES (3 small vessels) ═════ -->
+        <g class="layer-group" data-layer="rules">
+
+          <!-- Triple drop from horizontal pipe into vessels -->
+          <line x1="180" y1="338" x2="180" y2="360" stroke="#16181C" stroke-width="1"/>
+          <line x1="310" y1="338" x2="310" y2="360" stroke="#16181C" stroke-width="1"/>
+          <line x1="440" y1="338" x2="440" y2="360" stroke="#16181C" stroke-width="1"/>
+
+          <!-- Vessel 1 (flask shape) -->
+          <g data-vessel="rules-design" transform="translate(145, 360)">
+            <path class="layer-outline"
+                  d="M 0 0 L 0 20 L 10 30 L 10 80 Q 10 90 20 90 L 50 90 Q 60 90 60 80 L 60 30 L 70 20 L 70 0 Z"
+                  fill="#FCF9F0" stroke="#16181C" stroke-width="1.2"/>
+            <g class="water-body">
+              <path d="M 10 45 L 10 80 Q 10 90 20 90 L 50 90 Q 60 90 60 80 L 60 45 Q 35 40 10 45 Z" fill="url(#wAmber)"/>
+            </g>
+          </g>
+          <!-- Vessel 2 -->
+          <g data-vessel="rules-seo" transform="translate(275, 360)">
+            <path class="layer-outline"
+                  d="M 0 0 L 0 20 L 10 30 L 10 80 Q 10 90 20 90 L 50 90 Q 60 90 60 80 L 60 30 L 70 20 L 70 0 Z"
+                  fill="#FCF9F0" stroke="#16181C" stroke-width="1.2"/>
+            <g class="water-body delay-1">
+              <path d="M 10 40 L 10 80 Q 10 90 20 90 L 50 90 Q 60 90 60 80 L 60 40 Q 35 34 10 40 Z" fill="url(#wAmber)"/>
+            </g>
+          </g>
+          <!-- Vessel 3 -->
+          <g data-vessel="rules-voice" transform="translate(405, 360)">
+            <path class="layer-outline"
+                  d="M 0 0 L 0 20 L 10 30 L 10 80 Q 10 90 20 90 L 50 90 Q 60 90 60 80 L 60 30 L 70 20 L 70 0 Z"
+                  fill="#FCF9F0" stroke="#16181C" stroke-width="1.2"/>
+            <g class="water-body delay-2">
+              <path d="M 10 50 L 10 80 Q 10 90 20 90 L 50 90 Q 60 90 60 80 L 60 50 Q 35 44 10 50 Z" fill="url(#wAmber)"/>
+            </g>
+          </g>
+
+          <!-- Side label -->
+          <text x="48" y="395" text-anchor="end" font-family="Instrument Serif, serif" font-size="13" font-style="italic" fill="#16181C">Rules</text>
+          <text x="48" y="415" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.55">
+            <tspan x="48" dy="0">.claude/</tspan>
+            <tspan x="48" dy="11">rules/*.md</tspan>
+          </text>
+
+          <!-- Vessel tiny labels below -->
+          <g font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45" text-anchor="middle">
+            <text x="180" y="465">grep / CI</text>
+            <text x="310" y="465">enforceable</text>
+            <text x="440" y="465">mechanical</text>
+          </g>
+        </g>
+
+        <!-- Connector to layer 2b -->
+        <rect x="130" y="480" width="360" height="8" fill="#EAE0C6" stroke="#16181C" stroke-width="1"/>
+        <line x1="180" y1="488" x2="180" y2="510" stroke="#16181C" stroke-width="1"/>
+        <line x1="310" y1="488" x2="310" y2="510" stroke="#16181C" stroke-width="1"/>
+        <line x1="440" y1="488" x2="440" y2="510" stroke="#16181C" stroke-width="1"/>
+
+        <!-- ═════ LAYER 2b: PLAYBOOKS (richer amber) ═════ -->
+        <g class="layer-group" data-layer="playbooks">
+          <!-- Vessel 1 -->
+          <g data-vessel="pb-designer" transform="translate(140, 510)">
+            <path class="layer-outline"
+                  d="M 0 0 L 0 18 Q 0 26 8 28 L 8 78 Q 8 92 22 92 L 58 92 Q 72 92 72 78 L 72 28 Q 80 26 80 18 L 80 0 Z"
+                  fill="#FCF9F0" stroke="#16181C" stroke-width="1.2"/>
+            <g class="water-body delay-1">
+              <path d="M 8 35 L 8 78 Q 8 92 22 92 L 58 92 Q 72 92 72 78 L 72 35 Q 40 28 8 35 Z" fill="url(#wGold)"/>
+            </g>
+          </g>
+          <!-- Vessel 2 -->
+          <g data-vessel="pb-editor" transform="translate(270, 510)">
+            <path class="layer-outline"
+                  d="M 0 0 L 0 18 Q 0 26 8 28 L 8 78 Q 8 92 22 92 L 58 92 Q 72 92 72 78 L 72 28 Q 80 26 80 18 L 80 0 Z"
+                  fill="#FCF9F0" stroke="#16181C" stroke-width="1.2"/>
+            <g class="water-body delay-2">
+              <path d="M 8 30 L 8 78 Q 8 92 22 92 L 58 92 Q 72 92 72 78 L 72 30 Q 40 22 8 30 Z" fill="url(#wGold)"/>
+            </g>
+          </g>
+          <!-- Vessel 3 -->
+          <g data-vessel="pb-marketer" transform="translate(400, 510)">
+            <path class="layer-outline"
+                  d="M 0 0 L 0 18 Q 0 26 8 28 L 8 78 Q 8 92 22 92 L 58 92 Q 72 92 72 78 L 72 28 Q 80 26 80 18 L 80 0 Z"
+                  fill="#FCF9F0" stroke="#16181C" stroke-width="1.2"/>
+            <g class="water-body delay-3">
+              <path d="M 8 40 L 8 78 Q 8 92 22 92 L 58 92 Q 72 92 72 78 L 72 40 Q 40 33 8 40 Z" fill="url(#wGold)"/>
+            </g>
+          </g>
+
+          <text x="48" y="545" text-anchor="end" font-family="Instrument Serif, serif" font-size="13" font-style="italic" fill="#16181C">Playbooks</text>
+          <text x="48" y="565" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.55">knowledge/</text>
+
+          <g font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45" text-anchor="middle">
+            <text x="180" y="622">designer</text>
+            <text x="310" y="622">editor</text>
+            <text x="440" y="622">marketer</text>
+          </g>
+        </g>
+
+        <!-- Connector pipe to reservoir -->
+        <line x1="180" y1="602" x2="180" y2="640" stroke="#16181C" stroke-width="1"/>
+        <line x1="310" y1="602" x2="310" y2="640" stroke="#16181C" stroke-width="1"/>
+        <line x1="440" y1="602" x2="440" y2="640" stroke="#16181C" stroke-width="1"/>
+
+        <!-- ═════ LAYER 3: SSOT RESERVOIR ═════ -->
+        <g class="layer-group" data-layer="ssot">
+          <path class="layer-outline"
+                d="M 120 640 L 120 740 Q 120 760 140 760 L 480 760 Q 500 760 500 740 L 500 640 Z"
+                fill="#FCF9F0" stroke="#16181C" stroke-width="1.2"/>
+          <g class="water-body">
+            <path d="M 120 680 L 120 740 Q 120 760 140 760 L 480 760 Q 500 760 500 740 L 500 680
+                     Q 460 672 420 680 Q 380 688 340 678 Q 300 668 260 678 Q 220 688 180 678 Q 140 670 120 680 Z"
+                  fill="url(#wCrystal)"/>
+            <!-- Crystal facets hint -->
+            <g opacity="0.55" stroke="#16181C" stroke-width="0.4" fill="none">
+              <polygon points="200,720 216,702 232,720 216,738"/>
+              <polygon points="320,710 336,694 352,710 336,726"/>
+              <polygon points="420,725 434,710 448,725 434,740"/>
+            </g>
+          </g>
+
+          <text x="48" y="695" text-anchor="end" font-family="Instrument Serif, serif" font-size="13" font-style="italic" fill="#16181C">Deep Memory</text>
+          <text x="48" y="715" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.55">
+            <tspan x="48" dy="0">knowledge/</tspan>
+            <tspan x="48" dy="11">context/</tspan>
+          </text>
+        </g>
+
+        <!-- ═════ LAYER 4: ARCHIVE SEDIMENT ═════ -->
+        <g class="layer-group" data-layer="archive">
+          <path class="layer-outline"
+                d="M 120 790 L 500 790 L 500 860 L 120 860 Z"
+                fill="#3D3630" opacity="0.75" stroke="#16181C" stroke-width="1.2"/>
+          <!-- Sediment particles -->
+          <g fill="#16181C" opacity="0.4">
+            <circle cx="160" cy="810" r="1.5"/>
+            <circle cx="190" cy="820" r="1"/>
+            <circle cx="220" cy="815" r="1.2"/>
+            <circle cx="250" cy="830" r="1"/>
+            <circle cx="280" cy="812" r="1.8"/>
+            <circle cx="320" cy="825" r="1"/>
+            <circle cx="355" cy="818" r="1.3"/>
+            <circle cx="390" cy="835" r="1"/>
+            <circle cx="425" cy="822" r="1.5"/>
+            <circle cx="460" cy="815" r="1"/>
+            <circle cx="175" cy="845" r="1.2"/>
+            <circle cx="305" cy="848" r="1"/>
+            <circle cx="445" cy="845" r="1.3"/>
+          </g>
+          <g fill="#FCF9F0" opacity="0.65" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="2">
+            <text x="310" y="832" text-anchor="middle">ARCHIVE · GREP ONLY</text>
+          </g>
+
+          <text x="48" y="828" text-anchor="end" font-family="Instrument Serif, serif" font-size="13" font-style="italic" fill="#16181C">Sediment</text>
+        </g>
+
+      </svg>
+    </figure>
+
+    <!-- ───── LEGEND ───── -->
+    <aside class="legend">
+      <div class="legend-item" data-target="hot">
+        <div class="legend-label">
+          <span class="num">L1</span>
+          <span class="name">Hot Path</span>
+          <span class="swatch fresh"></span>
+        </div>
+        <p class="legend-gloss">Рабочая память</p>
+        <p class="legend-desc">
+          Верхняя колба. Всегда с агентом: идентичность проекта и свежие заметки. Маленькая, но активная.
+        </p>
+      </div>
+
+      <div class="legend-item" data-target="rules">
+        <div class="legend-label">
+          <span class="num">L2a</span>
+          <span class="name">Rules</span>
+          <span class="swatch amber"></span>
+        </div>
+        <p class="legend-gloss">Короткие правила</p>
+        <p class="legend-desc">
+          Жёсткие запреты. «Не пиши так», «не используй это». Поднимаются только когда агент коснулся темы.
+        </p>
+      </div>
+
+      <div class="legend-item" data-target="playbooks">
+        <div class="legend-label">
+          <span class="num">L2b</span>
+          <span class="name">Playbooks</span>
+          <span class="swatch amber"></span>
+        </div>
+        <p class="legend-gloss">Роль-гайды</p>
+        <p class="legend-desc">
+          Как думает дизайнер, редактор, маркетолог. Не запреты, а советы — как сделать хорошо. Каждая роль в своём сосуде.
+        </p>
+      </div>
+
+      <div class="legend-item" data-target="ssot">
+        <div class="legend-label">
+          <span class="num">L3</span>
+          <span class="name">Deep Memory</span>
+          <span class="swatch crystal"></span>
+        </div>
+        <p class="legend-gloss">Глубокая память</p>
+        <p class="legend-desc">
+          Большой резервуар. Позиционирование, история решений, канонические правила — то, что проверено временем.
+        </p>
+      </div>
+
+      <div class="legend-item" data-target="archive">
+        <div class="legend-label">
+          <span class="num">L4</span>
+          <span class="name">Sediment</span>
+          <span class="swatch sediment"></span>
+        </div>
+        <p class="legend-gloss">Архив</p>
+        <p class="legend-desc">
+          Осадок. Прошлые сессии, устаревшие варианты. Автоматически не поднимается — только если явно спросить.
+        </p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ───── Resonance demo — trigger routing ───── -->
+  <div class="resonance-demo">
+    <div class="resonance-intro">
+      <p class="resonance-kicker">Маршрут запроса</p>
+      <p class="resonance-label">
+        Выберите запрос маркетолога — агент слышит ключевое слово, и в машине «отзываются» только нужные сосуды. Остальные спокойно стоят. В этом идея экономии контекста.
+      </p>
+    </div>
+    <div class="resonance-chips">
+      <button class="resonance-chip" data-targets="rules-design,pb-designer" type="button">«помоги с типографикой»</button>
+      <button class="resonance-chip" data-targets="rules-seo,pb-marketer" type="button">«собери SEO-стратегию»</button>
+      <button class="resonance-chip" data-targets="rules-voice,pb-editor" type="button">«проверь tone of voice»</button>
+      <button class="resonance-chip reset-chip" data-targets="" type="button">× сбросить</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCENE 3: PROMOTION JOURNEY -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+<section class="scene" id="scene-3">
+  <div class="scene-header">
+    <p class="scene-kicker"><span class="num">3</span>Жизненный путь капли</p>
+    <h2>Как случайное наблюдение<br>становится правилом.</h2>
+    <p>
+      Свежее наблюдение (жидкость) — это разовая правка в брифе. Повторённый урок (густой янтарь) — частый фидбек, который арт-директор проговаривает на каждом ревью. Проверенное правило (кристалл) — утверждённый закон бренда. На кристалл агент опирается железобетонно.
+    </p>
+  </div>
+
+  <div class="journey">
+    <div class="journey-connector"></div>
+    <div class="journey-track">
+
+      <!-- Station 1: Fresh drop -->
+      <div class="station">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="60" cy="60" r="36" fill="#FCF9F0" stroke="#16181C" stroke-width="1"/>
+          <path d="M 60 32 Q 78 58 60 78 Q 42 58 60 32 Z" fill="url(#wFreshJ)"/>
+          <defs>
+            <linearGradient id="wFreshJ" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#6B9AAF" stop-opacity="0.45"/>
+              <stop offset="1" stop-color="#5B8FA8" stop-opacity="0.85"/>
+            </linearGradient>
+            <linearGradient id="wAmberJ" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#E4AA5D" stop-opacity="0.5"/>
+              <stop offset="1" stop-color="#D4954A" stop-opacity="0.9"/>
+            </linearGradient>
+            <linearGradient id="wGoldJ" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#C89862" stop-opacity="0.6"/>
+              <stop offset="1" stop-color="#A07B42" stop-opacity="0.95"/>
+            </linearGradient>
+            <linearGradient id="wCrystalJ" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#D7E4E8" stop-opacity="0.75"/>
+              <stop offset="1" stop-color="#BFD2D7" stop-opacity="0.95"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="station-label">Фаза 1</div>
+        <div class="station-name">Жидкость</div>
+        <div class="station-file">daily/*.md</div>
+        <p style="font-size:13px;color:var(--ink-60);line-height:1.5;margin-top:10px;max-width:22ch;margin-left:auto;margin-right:auto;">
+          Наблюдение из сессии. Течёт легко, может испариться.
+        </p>
+      </div>
+
+      <!-- Station 2: Amber -->
+      <div class="station">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="60" cy="60" r="36" fill="#FCF9F0" stroke="#16181C" stroke-width="1"/>
+          <path d="M 38 45 L 82 45 L 78 78 Q 78 84 72 84 L 48 84 Q 42 84 42 78 Z" fill="url(#wAmberJ)" stroke="#16181C" stroke-width="0.6"/>
+        </svg>
+        <div class="station-label">Фаза 2</div>
+        <div class="station-name">Янтарь</div>
+        <div class="station-file">experiences/*.md</div>
+        <p style="font-size:13px;color:var(--ink-60);line-height:1.5;margin-top:10px;max-width:22ch;margin-left:auto;margin-right:auto;">
+          Структурированный урок. Ещё в радаре, ждёт подтверждения.
+        </p>
+      </div>
+
+      <!-- Station 3: Gold Playbook -->
+      <div class="station">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="60" cy="60" r="36" fill="#FCF9F0" stroke="#16181C" stroke-width="1"/>
+          <g>
+            <rect x="38" y="40" width="44" height="50" fill="url(#wGoldJ)" stroke="#16181C" stroke-width="0.8"/>
+            <line x1="46" y1="52" x2="74" y2="52" stroke="#FCF9F0" stroke-width="0.6" opacity="0.6"/>
+            <line x1="46" y1="60" x2="74" y2="60" stroke="#FCF9F0" stroke-width="0.6" opacity="0.6"/>
+            <line x1="46" y1="68" x2="66" y2="68" stroke="#FCF9F0" stroke-width="0.6" opacity="0.6"/>
+          </g>
+        </svg>
+        <div class="station-label">Фаза 3</div>
+        <div class="station-name">Гайд</div>
+        <div class="station-file">роль-специфичный</div>
+        <p style="font-size:13px;color:var(--ink-60);line-height:1.5;margin-top:10px;max-width:22ch;margin-left:auto;margin-right:auto;">
+          Канон роли. Вы подтвердили. Поднимается, когда о нём спросят.
+        </p>
+      </div>
+
+      <!-- Station 4: Crystal -->
+      <div class="station">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="60" cy="60" r="36" fill="#FCF9F0" stroke="#16181C" stroke-width="1"/>
+          <g>
+            <polygon points="60,28 82,60 60,92 38,60" fill="url(#wCrystalJ)" stroke="#16181C" stroke-width="0.8"/>
+            <line x1="60" y1="28" x2="60" y2="92" stroke="#16181C" stroke-width="0.4" opacity="0.3"/>
+            <line x1="38" y1="60" x2="82" y2="60" stroke="#16181C" stroke-width="0.4" opacity="0.3"/>
+          </g>
+        </svg>
+        <div class="station-label">Фаза 4</div>
+        <div class="station-name">Кристалл</div>
+        <div class="station-file">закон бренда</div>
+        <p style="font-size:13px;color:var(--ink-60);line-height:1.5;margin-top:10px;max-width:22ch;margin-left:auto;margin-right:auto;">
+          Канон бренда. Больше 6 месяцев без противоречий. На него агент ссылается как на закон.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="threshold">
+      <h4>Как наблюдение поднимается по лестнице</h4>
+      <p>
+        <strong>Упомянуто один раз</strong> — остаётся в заметках сессии. Кандидат, не более. &nbsp;
+        <strong>Оформлено как урок</strong> — попадает в структурированную базу, можно найти поиском. &nbsp;
+        <strong>Повторилось три раза</strong> в разных сессиях — агент сам предлагает закрепить. &nbsp;
+        <strong>Вы подтвердили</strong> — переходит в канон роли. &nbsp;
+        <strong>Шесть месяцев стабильно</strong> — становится законом бренда.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCENE 4: MITOSIS (the split) -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+<section class="scene" id="scene-4">
+  <div class="scene-header">
+    <p class="scene-kicker"><span class="num">4</span>База знаний сама наводит порядок</p>
+    <h2>Когда один гайд<br>разрастается до трёх.</h2>
+    <p>
+      Сосуды со временем наполняются. Ваш дизайн-гайд, например, переполняется десятками новых правил и исключений — и внутри появляются три самостоятельные темы. Агент замечает это первым, сам предлагает разделение по смыслу. Вам остаётся только подтвердить. Это не админская задача, а «привести шкаф в порядок» одним кликом.
+    </p>
+  </div>
+
+  <div class="mitosis-container" data-state="pending" id="mitosisStage">
+    <div class="mitosis-meta">
+      <span class="meta-label">Гайд</span>
+      <span class="meta-value">дизайн-система</span>
+      <span class="meta-sep">·</span>
+      <span class="meta-value">30+ страниц</span>
+      <span class="meta-sep">·</span>
+      <span class="meta-value status">пора навести порядок</span>
+    </div>
+
+    <figure class="mitosis-stage">
+      <svg viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg" class="mitosis-svg" aria-label="Vessel mitosis animation">
+        <defs>
+          <radialGradient id="wMito1" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stop-color="#C48A45" stop-opacity="0.3"/>
+            <stop offset="1" stop-color="#A07B42" stop-opacity="0.7"/>
+          </radialGradient>
+          <radialGradient id="wCluster1" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stop-color="#B87B9A" stop-opacity="0.55"/>
+            <stop offset="1" stop-color="#9E7189" stop-opacity="0.25"/>
+          </radialGradient>
+          <radialGradient id="wCluster2" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stop-color="#86A88C" stop-opacity="0.55"/>
+            <stop offset="1" stop-color="#6E8F73" stop-opacity="0.25"/>
+          </radialGradient>
+          <radialGradient id="wCluster3" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stop-color="#E0AE60" stop-opacity="0.55"/>
+            <stop offset="1" stop-color="#C48A45" stop-opacity="0.25"/>
+          </radialGradient>
+        </defs>
+
+        <!-- PARENT VESSEL (state: pending) -->
+        <g class="mitosis-parent">
+          <!-- Alarm ring (pulsing) -->
+          <ellipse class="alarm-ring" cx="450" cy="200" rx="258" ry="138" fill="none" stroke="#D65F3E" stroke-width="1.5" opacity="0"/>
+
+          <!-- Vessel outline -->
+          <ellipse class="parent-shell" cx="450" cy="200" rx="250" ry="130" fill="#FCF9F0" stroke="#16181C" stroke-width="1.4"/>
+
+          <!-- Water fill (full) -->
+          <ellipse class="parent-water" cx="450" cy="200" rx="246" ry="126" fill="url(#wMito1)"/>
+
+          <!-- Three emerging color clusters (chromosomes) -->
+          <g class="clusters">
+            <ellipse class="cluster c1" cx="330" cy="200" rx="90" ry="70" fill="url(#wCluster1)"/>
+            <ellipse class="cluster c2" cx="450" cy="200" rx="90" ry="70" fill="url(#wCluster2)"/>
+            <ellipse class="cluster c3" cx="570" cy="200" rx="90" ry="70" fill="url(#wCluster3)"/>
+          </g>
+
+          <!-- Cluster labels (visible when hovering over clusters) -->
+          <g class="cluster-labels" font-family="Instrument Serif, serif" font-size="14" font-style="italic" fill="#16181C" text-anchor="middle">
+            <text x="330" y="205">типографика</text>
+            <text x="450" y="205">цвет</text>
+            <text x="570" y="205">анимация</text>
+          </g>
+        </g>
+
+        <!-- CHILDREN (state: split) -->
+        <g class="mitosis-children">
+          <!-- Child 1 — left -->
+          <g class="child child-1" transform="translate(170, 200)">
+            <ellipse rx="110" ry="95" fill="#FCF9F0" stroke="#16181C" stroke-width="1.3"/>
+            <ellipse rx="106" ry="91" fill="url(#wCluster1)"/>
+            <text x="0" y="2" text-anchor="middle" font-family="Instrument Serif, serif" font-size="22" font-style="italic" fill="#16181C">типографика</text>
+            <text x="0" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#16181C" opacity="0.55">раздел 1 из 3</text>
+          </g>
+          <!-- Child 2 — center -->
+          <g class="child child-2" transform="translate(450, 200)">
+            <ellipse rx="110" ry="95" fill="#FCF9F0" stroke="#16181C" stroke-width="1.3"/>
+            <ellipse rx="106" ry="91" fill="url(#wCluster2)"/>
+            <text x="0" y="2" text-anchor="middle" font-family="Instrument Serif, serif" font-size="22" font-style="italic" fill="#16181C">цвет</text>
+            <text x="0" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#16181C" opacity="0.55">раздел 2 из 3</text>
+          </g>
+          <!-- Child 3 — right -->
+          <g class="child child-3" transform="translate(730, 200)">
+            <ellipse rx="110" ry="95" fill="#FCF9F0" stroke="#16181C" stroke-width="1.3"/>
+            <ellipse rx="106" ry="91" fill="url(#wCluster3)"/>
+            <text x="0" y="2" text-anchor="middle" font-family="Instrument Serif, serif" font-size="22" font-style="italic" fill="#16181C">анимация</text>
+            <text x="0" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#16181C" opacity="0.55">раздел 3 из 3</text>
+          </g>
+          <!-- Parent becomes faint index pointer at top -->
+          <g class="parent-index">
+            <line x1="170" y1="80" x2="730" y2="80" stroke="#16181C" stroke-width="0.8" opacity="0.25" stroke-dasharray="4 4"/>
+            <text x="450" y="64" text-anchor="middle" font-family="Instrument Serif, serif" font-size="13" font-style="italic" fill="#16181C" opacity="0.55">Дизайн-гайд</text>
+            <text x="450" y="78" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.4">теперь оглавление: 3 раздела</text>
+          </g>
+        </g>
+      </svg>
+    </figure>
+
+    <div class="mitosis-controls">
+      <div class="proposal-box pending-only">
+        <p class="proposal-title">Агент заметил:</p>
+        <p class="proposal-body">
+          «В этом гайде три самостоятельные темы — <em>типографика</em>, <em>цвет</em>, <em>анимация</em>. Они почти не ссылаются друг на друга. Разделить по темам? Каждая станет подниматься только когда о ней спросят.»
+        </p>
+      </div>
+      <div class="proposal-box split-only" style="display:none;">
+        <p class="proposal-title">Готово.</p>
+        <p class="proposal-body">
+          Гайд аккуратно разложен на три раздела по смыслу. Агент теперь грузит только нужный кусок — меньше шума, точнее ответы. Сам гайд остался как <em>оглавление</em>: ни одна мысль не потеряна.
+        </p>
+      </div>
+      <div class="mitosis-buttons">
+        <button class="mitosis-btn approve pending-only" type="button" id="mitosisApprove">
+          Разделить по темам
+        </button>
+        <button class="mitosis-btn reject pending-only" type="button" id="mitosisReject">
+          Пока не надо
+        </button>
+        <button class="mitosis-btn reset split-only" type="button" id="mitosisReset" style="display:none;">
+          ↺ Вернуть как было
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CLOSING — what's next -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+<section class="closing">
+  <p class="closing-kicker">— Что дальше</p>
+  <h2>Хотите собрать такую память для своего агента?</h2>
+  <p class="closing-lede">
+    Memory Kit — это открытый набор файлов и скриптов, который превращает Claude Code в агента с постоянной памятью. Никакой базы данных, только Markdown и несколько Python-хуков. Работает на существующей подписке, без API-расходов.
+  </p>
+  <div class="closing-actions">
+    <a class="closing-action" href="https://github.com/awrshift/claude-memory-kit" target="_blank" rel="noopener">
+      <span class="arrow">→</span>
+      <span class="label-wrap">
+        <span class="action-title">Открыть Memory Kit на GitHub</span>
+        <span class="action-desc">Исходники, инструкция по установке, примеры. MIT, бесплатно.</span>
+      </span>
+    </a>
+    <a class="closing-action" href="../../ARCHITECTURE.md">
+      <span class="arrow">→</span>
+      <span class="label-wrap">
+        <span class="action-title">Прочитать полную архитектуру</span>
+        <span class="action-desc">ARCHITECTURE.md — текстовая версия всего, что показано выше, плюс детали реализации.</span>
+      </span>
+    </a>
+    <a class="closing-action" href="../../README.md">
+      <span class="arrow">→</span>
+      <span class="label-wrap">
+        <span class="action-title">Вернуться к README</span>
+        <span class="action-desc">Быстрый старт за 3 команды — git clone, cd, claude.</span>
+      </span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="mark">Memory Kit · prototype v0.1</div>
+  <div>Водная метафора · тестовая сборка · 2026-04-24</div>
+  <div>awrshift / claude-memory-kit</div>
+</footer>
+
+<script>
+  // ───── Scene 1: layer hover/click linkage ─────
+  const legendItems = document.querySelectorAll('.legend-item');
+  const layerGroups = document.querySelectorAll('.layer-group');
+
+  function highlightLayer(target) {
+    layerGroups.forEach(g => {
+      if (g.dataset.layer === target) {
+        g.classList.add('active');
+        g.classList.remove('dimmed');
+      } else {
+        g.classList.remove('active');
+        g.classList.add('dimmed');
+      }
+    });
+    legendItems.forEach(li => {
+      li.classList.toggle('active', li.dataset.target === target);
+    });
+  }
+
+  function clearHighlight() {
+    layerGroups.forEach(g => { g.classList.remove('active'); g.classList.remove('dimmed'); });
+    legendItems.forEach(li => li.classList.remove('active'));
+  }
+
+  legendItems.forEach(li => {
+    li.addEventListener('mouseenter', () => highlightLayer(li.dataset.target));
+    li.addEventListener('mouseleave', clearHighlight);
+    li.addEventListener('click', () => {
+      const current = li.classList.contains('active');
+      clearHighlight();
+      if (!current) highlightLayer(li.dataset.target);
+    });
+  });
+
+  layerGroups.forEach(g => {
+    g.addEventListener('mouseenter', () => highlightLayer(g.dataset.layer));
+    g.addEventListener('mouseleave', clearHighlight);
+  });
+
+  // ───── Scene 0: playable failure ─────
+  (function initFailureScene() {
+    const waterRect = document.getElementById('failureWaterRect');
+    const waterSurface = document.getElementById('failureSurface');
+    const needle = document.getElementById('failureNeedle');
+    const fillBar = document.getElementById('fillBar');
+    const fillPctEl = document.getElementById('fillPct');
+    const statusMsg = document.getElementById('statusMsg');
+    const verdict = document.getElementById('failureVerdict');
+    const crackGroup = document.querySelector('.crack-group');
+    const escapeDrops = document.querySelectorAll('.escape-drop');
+    const dumpBtns = document.querySelectorAll('.dump-btn');
+    const resetBtn = document.querySelector('.reset-btn');
+    if (!waterRect) return; // scene not present
+
+    const VESSEL_TOP = 60;
+    const VESSEL_BOTTOM = 460;
+    const VESSEL_HEIGHT = VESSEL_BOTTOM - VESSEL_TOP;
+
+    function render(fillPct) {
+      const pct = Math.min(100, Math.max(0, fillPct));
+      const waterH = VESSEL_HEIGHT * pct / 100;
+      const waterY = VESSEL_BOTTOM - waterH;
+      waterRect.setAttribute('y', waterY);
+      waterRect.setAttribute('height', waterH);
+      // Surface wave
+      const y = waterY;
+      waterSurface.setAttribute('d',
+        `M 82 ${y.toFixed(1)} Q 140 ${(y - 4).toFixed(1)} 200 ${(y + 1).toFixed(1)} Q 260 ${(y - 2).toFixed(1)} 318 ${(y + 1).toFixed(1)}`
+      );
+
+      // Needle: 0% → rotate 0° (points left), 100% → rotate 180° (points right)
+      needle.style.transform = `rotate(${pct * 1.8}deg)`;
+
+      // Fill bar
+      fillBar.style.transform = `scaleX(${pct / 100})`;
+      fillPctEl.textContent = Math.round(pct);
+
+      // Status message
+      statusMsg.classList.remove('warning', 'critical');
+      let msg;
+      if (pct === 0)       msg = 'Стабильно. Начните добавлять контекст — колба пустая.';
+      else if (pct < 40)   msg = 'Агент помнит всё. Пока запас есть.';
+      else if (pct < 70)   { msg = 'Подходим к пределу. Агент начинает путать мелкие детали.'; statusMsg.classList.add('warning'); }
+      else if (pct < 95)   { msg = 'Критично. Первые фрагменты вытесняются новыми — старое теряется.'; statusMsg.classList.add('critical'); }
+      else                 { msg = 'Колба лопнула. Агент забыл начало разговора. Ответы теряют точность.'; statusMsg.classList.add('critical'); }
+      statusMsg.textContent = msg;
+
+      // Cracks + escape at 85%+
+      if (pct >= 85) {
+        crackGroup.classList.add('visible');
+        escapeDrops.forEach(d => d.classList.add('visible'));
+      } else {
+        crackGroup.classList.remove('visible');
+        escapeDrops.forEach(d => d.classList.remove('visible'));
+      }
+
+      // Verdict at 100%
+      verdict.classList.toggle('visible', pct >= 100);
+    }
+
+    let fill = 0;
+    dumpBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (fill >= 100) return;
+        const w = parseInt(btn.dataset.weight, 10);
+        fill = Math.min(100, fill + w);
+        btn.disabled = true;
+        render(fill);
+      });
+    });
+    resetBtn.addEventListener('click', () => {
+      fill = 0;
+      dumpBtns.forEach(b => b.disabled = false);
+      render(fill);
+    });
+    render(0);
+  })();
+
+  // ───── Scroll reveal (light IntersectionObserver) ─────
+  (function initScrollReveal() {
+    if (!('IntersectionObserver' in window)) {
+      document.querySelectorAll('.scene').forEach(s => s.classList.add('in-view'));
+      return;
+    }
+    // Scene 0 (playable failure) is first scene — reveal it immediately if above fold on load
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in-view');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+    document.querySelectorAll('.scene').forEach(s => io.observe(s));
+  })();
+
+  // ───── Scene 1: trigger resonance chips ─────
+  (function initResonance() {
+    const chips = document.querySelectorAll('.resonance-chip');
+    const machine = document.querySelector('.machine');
+    if (!chips.length || !machine) return;
+
+    function clear() {
+      document.querySelectorAll('[data-vessel].resonating').forEach(el => el.classList.remove('resonating'));
+      chips.forEach(c => c.classList.remove('active'));
+      machine.classList.remove('resonance-active');
+    }
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const targets = (chip.dataset.targets || '').split(',').filter(Boolean);
+        clear();
+        if (!targets.length) return; // reset chip
+        chip.classList.add('active');
+        machine.classList.add('resonance-active');
+        targets.forEach(t => {
+          const el = document.querySelector(`[data-vessel="${t}"]`);
+          if (el) el.classList.add('resonating');
+        });
+      });
+    });
+  })();
+
+  // ───── Scene 4: mitosis ─────
+  (function initMitosis() {
+    const stage = document.getElementById('mitosisStage');
+    if (!stage) return;
+    const approveBtn = document.getElementById('mitosisApprove');
+    const rejectBtn = document.getElementById('mitosisReject');
+    const resetBtn = document.getElementById('mitosisReset');
+    const pendingEls = stage.querySelectorAll('.pending-only');
+    const splitEls = stage.querySelectorAll('.split-only');
+
+    function setState(next) {
+      stage.dataset.state = next;
+      pendingEls.forEach(el => el.style.display = next === 'pending' ? '' : 'none');
+      splitEls.forEach(el => el.style.display = next === 'split' ? '' : 'none');
+    }
+
+    approveBtn.addEventListener('click', () => setState('split'));
+    rejectBtn.addEventListener('click', () => {
+      rejectBtn.disabled = true;
+      rejectBtn.textContent = 'Ок, агент вернётся к этому позже';
+    });
+    resetBtn.addEventListener('click', () => {
+      rejectBtn.disabled = false;
+      rejectBtn.textContent = 'Пока не надо';
+      setState('pending');
+    });
+  })();
+
+</script>
+
+</body>
+</html>

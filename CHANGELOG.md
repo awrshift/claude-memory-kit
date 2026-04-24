@@ -1,5 +1,33 @@
 # Changelog
 
+## [2026-04-24] — experiments/architecture-viz-water-machine v1.0
+
+### Added
+
+- **`experiments/architecture-viz-water-machine/`** — interactive HTML visualization of Memory Kit architecture for non-technical audiences (marketers, CMOs). Single self-contained HTML file, no build step, pure CSS/SVG animations + vanilla JS.
+
+  **Metaphor:** mechanical apparatus with glass vessels and water flow. Three fluid phases map to the promotion pipeline — liquid observation → amber structured lesson → crystal canonical rule. Pressure gauge explains why context window limits require layered memory.
+
+  **Four pedagogical scenes (SCQA arc per Gemini 3.1 Pro consultation):**
+  1. **Playable failure** — user clicks buttons to dump context into one vessel, watches the manometer climb to red, sees cracks + overflow drops at 100% fill. Recognizes the pain before seeing the solution.
+  2. **The machine** — full apparatus reveal with Hot Path / Rules / Playbooks / Deep Memory / Sediment layers. Interactive legend hover + trigger-resonance chips («помоги с типографикой» → specific vessels glow terracotta, others dim).
+  3. **Promotion journey** — 4-station phase transition (liquid → amber → playbook → crystal). Agency-grounded copy: разовая правка → фидбек арт-директора → закон бренда.
+  4. **Mitosis** — vessel splitting. Agent proposes split, user approves, biological split animation into 3 specialized children. Reframed as «агент сам наводит порядок» (Gemini critique: avoid selling admin chore).
+
+  **Collaboration:** 3 Gemini 3.1 Pro consultations (pre-build pattern harvest, mid-build landing check, final adversarial gate) — all critiques applied or documented. Key adopted: SCQA ordering (problem first, solution second), business-language manometer, mitosis as autopilot not approval-pyramid, agency-reality grounding for promotion phases.
+
+  **Verification:** Playwright-driven. 18 active CSS animations inventoried via `getAnimations()`. Transform-matrix deltas verified against declared periods. Click-flow tested for vessel fill, chip resonance, mitosis approve/reject/reset. Mobile layout at 480px verified.
+
+  **Palette (separate from Avoid Content):** paper `#F7F3EA`, ink `#16181C`, fresh water `#5B8FA8`, amber `#D4954A`, crystal `#BFD2D7`, alarm `#D65F3E`, sage `#7A9377`, sediment `#3D3630`, brass `#BD9B5D`.
+
+  **Typography:** Instrument Serif (display) · Inter (body) · JetBrains Mono (labels).
+
+  **Files:** `index.html` (single file, ~1850 lines) + `README.md` (prototype documentation).
+
+  **Open:** `open experiments/architecture-viz-water-machine/index.html` or serve via `python3 -m http.server` for full interaction. Russian-language copy targeting CMOs at 50-200 emp agencies.
+
+---
+
 ## [3.2.2] — 2026-04-23
 
 ### Fixed
