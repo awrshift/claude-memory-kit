@@ -1970,7 +1970,7 @@
         <line x1="310" y1="488" x2="310" y2="510" stroke="#16181C" stroke-width="1"/>
         <line x1="440" y1="488" x2="440" y2="510" stroke="#16181C" stroke-width="1"/>
 
-        <!-- ═════ LAYER 2b: PLAYBOOKS (richer amber) ═════ -->
+        <!-- ═════ LAYER 2b: REFERENCE SKILLS (richer amber) — was playbooks pre-2026-04-24 ═════ -->
         <g class="layer-group" data-layer="playbooks">
           <!-- Vessel 1 -->
           <g data-vessel="pb-designer" transform="translate(140, 510)">
@@ -2000,9 +2000,9 @@
             </g>
           </g>
 
-          <text x="48" y="545" text-anchor="end" font-family="Instrument Serif, serif" font-size="14" font-style="italic" fill="#16181C">Гайды по ролям</text>
-          <text x="48" y="563" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45">Playbooks</text>
-          <text x="48" y="577" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.35">playbooks/</text>
+          <text x="48" y="545" text-anchor="end" font-family="Instrument Serif, serif" font-size="14" font-style="italic" fill="#16181C">Ролевые справочники</text>
+          <text x="48" y="563" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45">Reference skills</text>
+          <text x="48" y="577" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.35">.claude/skills/</text>
 
           <g font-family="Instrument Serif, serif" font-style="italic" font-size="11" fill="#16181C" opacity="0.6" text-anchor="middle">
             <text x="180" y="622">дизайнер</text>
@@ -2132,12 +2132,12 @@
       <div class="legend-item" data-target="playbooks">
         <div class="legend-label">
           <span class="num">L2b</span>
-          <span class="name">Playbooks</span>
+          <span class="name">Reference skills</span>
           <span class="swatch amber"></span>
         </div>
-        <p class="legend-gloss">Роль-гайды</p>
+        <p class="legend-gloss">Ролевые справочники</p>
         <p class="legend-desc">
-          Как думает дизайнер, редактор, маркетолог. Не запреты, а советы — как сделать хорошо. Каждая роль в своём сосуде.
+          Как думает дизайнер, редактор, маркетолог. Не запреты, а советы — как сделать хорошо. Каждая роль в своём сосуде. Anthropic-native skills (`user-invocable: false`) — авто-подгружаются на совпадение `description`.
         </p>
       </div>
 
@@ -2219,11 +2219,11 @@
         <p class="operator-title">Закрыть день</p>
       </div>
       <p class="operator-desc">
-        В конце дня агент собирает все сессии в дневник <strong>и проводит аудит</strong>: сравнивает свежие паттерны с короткой памятью и playbook-ами, предлагает промоушен голосом. Вы говорите «да/нет», агент пишет сам. Файлы вручную не открываете никогда.
+        В конце дня агент собирает все сессии в дневник <strong>и проводит аудит</strong>: сравнивает свежие паттерны с короткой памятью и ролевыми справочниками (reference skills), предлагает промоушен голосом. Вы говорите «да/нет», агент пишет сам. Файлы вручную не открываете никогда.
       </p>
       <div class="operator-io">
-        <div class="operator-io-row"><span class="io-label">читает</span><span class="io-value">сессии дня + MEMORY.md + playbooks</span></div>
-        <div class="operator-io-row"><span class="io-label">пишет в</span><span class="io-value">daily + MEMORY + playbooks (по согласию)</span></div>
+        <div class="operator-io-row"><span class="io-label">читает</span><span class="io-value">сессии дня + MEMORY.md + reference skills</span></div>
+        <div class="operator-io-row"><span class="io-label">пишет в</span><span class="io-value">daily + MEMORY + reference skills (по согласию)</span></div>
       </div>
     </div>
 
@@ -2363,7 +2363,7 @@
       <!-- Shared brain — horizontal bar with sub-layers -->
       <rect x="80" y="20" width="740" height="70" rx="4" fill="#FCF9F0" stroke="#16181C" stroke-width="1.2"/>
       <text x="450" y="44" text-anchor="middle" font-family="Instrument Serif, serif" font-style="italic" font-size="16" fill="#16181C">Общая память агента</text>
-      <text x="450" y="60" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" letter-spacing="1.5" fill="#16181C" opacity="0.45">CLAUDE.md · rules · playbooks · concepts · archive</text>
+      <text x="450" y="60" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" letter-spacing="1.5" fill="#16181C" opacity="0.45">CLAUDE.md · rules · reference skills · concepts · archive</text>
       <!-- Mini sub-layer indicators inside brain -->
       <g opacity="0.3" stroke="#16181C" stroke-width="0.6" fill="none">
         <line x1="230" y1="72" x2="230" y2="84"/>
@@ -2559,7 +2559,7 @@
         </p>
       </div>
 
-      <!-- Station 3: Gold Playbook -->
+      <!-- Station 3: Gold Reference Skill -->
       <div class="station">
         <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
           <circle cx="60" cy="60" r="36" fill="#FCF9F0" stroke="#16181C" stroke-width="1"/>
@@ -2571,10 +2571,10 @@
           </g>
         </svg>
         <div class="station-label">Фаза 3</div>
-        <div class="station-name">Гайд</div>
-        <div class="station-file">playbooks/design.md</div>
+        <div class="station-name">Справочник</div>
+        <div class="station-file">.claude/skills/design-guidance/SKILL.md</div>
         <p style="font-size:13px;color:var(--ink-60);line-height:1.5;margin-top:10px;max-width:22ch;margin-left:auto;margin-right:auto;">
-          Канон роли. Агент записал после вашего «да» на `/close-day`-аудите. Поднимается, когда агент работает в этой роли.
+          Канон роли. Агент записал после вашего «да» на `/close-day`-аудите. Поднимается, когда агент работает в этой роли (auto-load via description).
         </p>
       </div>
 
@@ -2607,7 +2607,7 @@
         <strong>Повторилось в той же сессии</strong> — агент записывает в короткую память (MEMORY.md) как помеченную датой строку.
       </p>
       <p>
-        <strong>На `/close-day` агент замечает повтор через сессии или дни</strong> — сравнивает свежее с MEMORY.md и playbook-ами, сам предлагает голосом: «вижу это в третий раз за неделю — добавить в playbook дизайна?» Вы говорите «да», агент пишет patch в файл сам. Файлы вы не открываете — только говорите.
+        <strong>На `/close-day` агент замечает повтор через сессии или дни</strong> — сравнивает свежее с MEMORY.md и ролевыми справочниками (reference skills), сам предлагает голосом: «вижу это в третий раз за неделю — добавить в design-guidance?» Вы говорите «да», агент пишет patch в файл сам. Файлы вы не открываете — только говорите.
       </p>
       <p>
         <strong>Полгода стабильно без противоречий</strong> — на следующем `/close-day` агент предлагает перевести паттерн в жёсткие правила (<code>.claude/rules/</code>). После подтверждения — это закон бренда, на который агент ссылается железобетонно.
@@ -2623,9 +2623,9 @@
 <section class="scene" id="scene-4">
   <div class="scene-header">
     <p class="scene-kicker"><span class="num">6</span>База знаний сама наводит порядок</p>
-    <h2>Когда один playbook<br>разрастается до трёх.</h2>
+    <h2>Когда один справочник<br>разрастается до трёх.</h2>
     <p>
-      Сосуды со временем наполняются. Ваш <strong>playbook для дизайна</strong> (playbooks/design.md), например, переполняется десятками новых правил и исключений — и внутри появляются три самостоятельные темы. Агент замечает это первым, сам предлагает разделение по смыслу. Вам остаётся только подтвердить голосом. Это не админская задача, а «привести шкаф в порядок» одним словом «да».
+      Сосуды со временем наполняются. Ваш <strong>ролевой справочник дизайнера</strong> (`.claude/skills/design-guidance/SKILL.md`), например, переполняется десятками новых правил и исключений — и внутри появляются три самостоятельные темы. Агент замечает это первым, сам предлагает разделение по смыслу. Вам остаётся только подтвердить голосом. Это не админская задача, а «привести шкаф в порядок» одним словом «да».
     </p>
   </div>
 
@@ -2633,22 +2633,22 @@
   <div class="mitosis-mechanism">
     <div class="mech-step">
       <span class="mech-step-label">1 · Когда замечает</span>
-      <p>Во время <code>/memory-lint</code> (или <code>/close-day</code>-аудита) агент проверяет размер каждого playbook-а. Если файл вырос выше ~500-800 строк <em>и</em> внутри читаются 2-4 несвязанные темы — это сигнал к разделу.</p>
+      <p>Во время <code>/memory-audit</code> (или <code>/close-day</code>-аудита) агент проверяет размер каждого reference skill (было <code>playbook</code> до 2026-04-24). Если файл вырос выше ~500 строк (Anthropic-рекомендация для SKILL.md) <em>и</em> внутри читаются 2-4 несвязанные темы — это сигнал к разделу.</p>
     </div>
     <div class="mech-step">
       <span class="mech-step-label">2 · Как определяет темы</span>
-      <p>Агент читает playbook и группирует секции по смыслу. Секции, которые почти не ссылаются друг на друга — это независимые темы. Обычно их 2-4 (не всегда три!).</p>
+      <p>Агент читает reference skill и группирует секции по смыслу. Секции, которые почти не ссылаются друг на друга — это независимые темы. Обычно их 2-4 (не всегда три!).</p>
     </div>
     <div class="mech-step">
       <span class="mech-step-label">3 · Что делает после «да»</span>
-      <p>Создаёт N новых файлов <code>playbooks/design-цвет.md</code>, <code>design-типографика.md</code>, <code>design-анимация.md</code>, переносит секции по темам. Исходный <code>playbooks/design.md</code> остаётся как оглавление со ссылками на дочерние.</p>
+      <p>Создаёт N новых директорий с SKILL.md: <code>.claude/skills/design-type-guidance/</code>, <code>design-color-guidance/</code>, <code>design-motion-guidance/</code>, переносит секции по темам. Исходный <code>.claude/skills/design-guidance/SKILL.md</code> остаётся как оглавление (index-skill) со ссылками на дочерние.</p>
     </div>
   </div>
 
   <div class="mitosis-container" data-state="pending" id="mitosisStage">
     <div class="mitosis-meta">
-      <span class="meta-label">Playbook</span>
-      <span class="meta-value">playbooks/design.md</span>
+      <span class="meta-label">Reference skill</span>
+      <span class="meta-value">.claude/skills/design-guidance/SKILL.md</span>
       <span class="meta-sep">·</span>
       <span class="meta-value">847 строк / ~30 страниц</span>
       <span class="meta-sep">·</span>
@@ -2745,7 +2745,7 @@
       <div class="proposal-box split-only" style="display:none;">
         <p class="proposal-title">Готово.</p>
         <p class="proposal-body">
-          Playbook аккуратно разложен на три раздела по смыслу. Агент теперь грузит только нужный кусок — меньше шума, точнее ответы. Исходный <code>playbooks/design.md</code> остался как <em>оглавление</em> со ссылками: ни одна мысль не потеряна.
+          Reference skill аккуратно разложен на три раздела по смыслу. Агент теперь грузит только нужный кусок — меньше шума, точнее ответы. Исходный <code>.claude/skills/design-guidance/SKILL.md</code> остался как <em>index-skill</em> со ссылками: ни одна мысль не потеряна.
         </p>
       </div>
       <div class="mitosis-buttons">
@@ -2801,9 +2801,12 @@
 </section>
 
 <footer>
-  <div class="mark">Memory Kit · prototype v0.1</div>
-  <div>Водная метафора · тестовая сборка · 2026-04-24</div>
+  <div class="mark">Memory Kit · viz v1.4 · prototype</div>
+  <div>Водная метафора · 2026-04-24 · terminology: playbooks → reference skills</div>
   <div>awrshift / claude-memory-kit</div>
+  <div style="margin-top:10px;font-size:11px;opacity:0.55;max-width:560px;line-height:1.5;">
+    v1.4 (2026-04-24): ролевые справочники теперь живут в <code>.claude/skills/&lt;role&gt;-guidance/SKILL.md</code> с <code>user-invocable: false</code> — Anthropic-native reference skills auto-loaded via description match. До v1.3 этот слой назывался <code>playbooks/</code>; переход описан в <code>CHANGELOG.md</code> sibling-репо <code>claude-memory-kit-v4</code>.
+  </div>
 </footer>
 
 <script>
