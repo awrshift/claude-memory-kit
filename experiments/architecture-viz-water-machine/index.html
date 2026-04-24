@@ -202,7 +202,7 @@
     border: 1px solid var(--ink-15);
     border-radius: 4px;
     padding: 24px;
-    aspect-ratio: 670 / 900;
+    aspect-ratio: 670 / 1000;
     overflow: hidden;
   }
   .machine-frame::before {
@@ -613,6 +613,94 @@
     letter-spacing: 0;
     text-transform: none;
     color: var(--ink);
+  }
+
+  /* ───── Scene 3: operators grid ───── */
+  .operators-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+  @media (max-width: 900px) {
+    .operators-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .operators-grid { grid-template-columns: 1fr; }
+  }
+
+  .operator-card {
+    background: var(--paper-warm);
+    border: 1px solid var(--ink-15);
+    border-radius: 4px;
+    padding: 26px 24px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: border-color 240ms ease, transform 240ms ease;
+  }
+  .operator-card:hover {
+    border-color: var(--ink-40);
+    transform: translateY(-2px);
+  }
+  .operator-icon {
+    width: 52px;
+    height: 52px;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .operator-name {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--ink-60);
+    margin-bottom: 2px;
+  }
+  .operator-title {
+    font-family: var(--f-serif);
+    font-size: 24px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    font-style: italic;
+    margin-bottom: 6px;
+  }
+  .operator-desc {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink-80);
+    flex: 1;
+  }
+  .operator-io {
+    padding-top: 14px;
+    border-top: 1px solid var(--ink-15);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .operator-io-row {
+    display: flex;
+    gap: 8px;
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+  .operator-io-row .io-label {
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-40);
+    width: 58px;
+    flex-shrink: 0;
+  }
+  .operator-io-row .io-value {
+    color: var(--ink-80);
+  }
+
+  /* Mark cards that auto-fire (not user-triggered) */
+  .operator-card.auto {
+    background: transparent;
+    border-style: dashed;
+  }
+  .operator-card.auto .operator-name {
+    color: var(--alarm);
   }
 
   /* ───── Scene 1: trigger resonance ───── */
@@ -1391,7 +1479,7 @@
 
     <!-- ───── THE MACHINE SVG ───── -->
     <figure class="machine-frame">
-      <svg class="machine" viewBox="-50 0 670 900" xmlns="http://www.w3.org/2000/svg" aria-label="Machine diagram of agent memory">
+      <svg class="machine" viewBox="-50 -100 670 1000" xmlns="http://www.w3.org/2000/svg" aria-label="Machine diagram of agent memory">
 
         <defs>
           <linearGradient id="wFresh" x1="0" x2="0" y1="0" y2="1">
@@ -1439,10 +1527,41 @@
           <line x1="50" y1="800" x2="60" y2="800"/>
         </g>
 
-        <!-- Title plate at top -->
-        <g transform="translate(310, 55)" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="2" fill="#16181C" opacity="0.6">
-          <text>MEMORY APPARATUS · v0.1</text>
+        <!-- ═════ SESSION ENTRY — NSP + BACKLOG above machine ═════ -->
+        <!-- NSP planke (left, 60% width) -->
+        <g class="layer-group nsp-planke" data-layer="nsp">
+          <path d="M 100 -70 L 360 -70 L 360 -25 Q 360 -15 350 -15 L 110 -15 Q 100 -15 100 -25 Z"
+                fill="#FCF9F0" stroke="#16181C" stroke-width="1" opacity="0.9"/>
+          <path d="M 345 -70 L 360 -70 L 360 -55 Z" fill="#EAE0C6" stroke="#16181C" stroke-width="0.7"/>
+          <text x="112" y="-53" font-family="JetBrains Mono, monospace" font-size="7" letter-spacing="2" fill="#16181C" opacity="0.55">ЗАПИСКА ОТ ВЧЕРА</text>
+          <text x="112" y="-36" font-family="Instrument Serif, serif" font-style="italic" font-size="11" fill="#16181C">«Закончили на митозе дизайн-гайда.</text>
+          <text x="112" y="-23" font-family="Instrument Serif, serif" font-style="italic" font-size="11" fill="#16181C">Сегодня: проверить SEO-пачку.»</text>
+          <!-- Side label for NSP -->
+          <text x="48" y="-45" text-anchor="end" font-family="Instrument Serif, serif" font-size="12" font-style="italic" fill="#16181C" opacity="0.85">Переход</text>
+          <text x="48" y="-29" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45">NSP</text>
+          <text x="48" y="-17" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.35">context/NSP.md</text>
         </g>
+
+        <!-- Backlog shelf (right, 30% width) -->
+        <g class="layer-group backlog-shelf" data-layer="backlog">
+          <path d="M 380 -70 L 520 -70 L 520 -25 Q 520 -15 510 -15 L 390 -15 Q 380 -15 380 -25 Z"
+                fill="#FCF9F0" stroke="#16181C" stroke-width="1" opacity="0.9"/>
+          <text x="392" y="-53" font-family="JetBrains Mono, monospace" font-size="7" letter-spacing="2" fill="#16181C" opacity="0.55">ПЛАН НА СЕГОДНЯ</text>
+          <!-- Checklist items -->
+          <g font-family="Instrument Serif, serif" font-style="italic" font-size="10" fill="#16181C">
+            <text x="404" y="-38">SEO-пачка</text>
+            <text x="392" y="-38" fill="#7A9377">✓</text>
+            <text x="404" y="-26">review home</text>
+            <rect x="390" y="-34" width="8" height="8" fill="none" stroke="#16181C" stroke-width="0.7"/>
+            <text x="404" y="-14">обновить гайд</text>
+            <rect x="390" y="-22" width="8" height="8" fill="none" stroke="#16181C" stroke-width="0.7"/>
+          </g>
+        </g>
+
+        <!-- Dashed arrow from NSP + backlog zone down into Hot Path -->
+        <line x1="310" y1="-15" x2="310" y2="45" stroke="#16181C" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.4"/>
+        <polygon points="310,60 306,52 314,52" fill="#16181C" opacity="0.4"/>
+        <text x="330" y="15" font-family="Instrument Serif, serif" font-style="italic" font-size="10" fill="#16181C" opacity="0.5">утренний запуск подтягивает</text>
 
         <!-- ═════ LAYER 1: HOT PATH (glass dome) ═════ -->
         <g class="layer-group" data-layer="hot">
@@ -1461,11 +1580,9 @@
           </g>
 
           <!-- Label -->
-          <text x="48" y="130" text-anchor="end" font-family="Instrument Serif, serif" font-size="13" font-style="italic" fill="#16181C">Hot Path</text>
-          <text x="48" y="148" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.55">
-            <tspan x="48" dy="0">CLAUDE.md</tspan>
-            <tspan x="48" dy="11">MEMORY.md</tspan>
-          </text>
+          <text x="48" y="124" text-anchor="end" font-family="Instrument Serif, serif" font-size="14" font-style="italic" fill="#16181C">Рабочая память</text>
+          <text x="48" y="142" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45">Hot Path</text>
+          <text x="48" y="156" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.35">CLAUDE.md · MEMORY.md</text>
 
           <!-- Manometer -->
           <g transform="translate(480, 146)">
@@ -1518,7 +1635,7 @@
             <circle r="2" fill="#F1EADA"/>
           </g>
           <text y="48" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.7">
-            session-start
+            утренний запуск
           </text>
         </g>
 
@@ -1568,17 +1685,15 @@
           </g>
 
           <!-- Side label -->
-          <text x="48" y="395" text-anchor="end" font-family="Instrument Serif, serif" font-size="13" font-style="italic" fill="#16181C">Rules</text>
-          <text x="48" y="415" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.55">
-            <tspan x="48" dy="0">.claude/</tspan>
-            <tspan x="48" dy="11">rules/*.md</tspan>
-          </text>
+          <text x="48" y="392" text-anchor="end" font-family="Instrument Serif, serif" font-size="14" font-style="italic" fill="#16181C">Правила</text>
+          <text x="48" y="410" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45">Rules</text>
+          <text x="48" y="424" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.35">.claude/rules/</text>
 
           <!-- Vessel tiny labels below -->
-          <g font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45" text-anchor="middle">
-            <text x="180" y="465">grep / CI</text>
-            <text x="310" y="465">enforceable</text>
-            <text x="440" y="465">mechanical</text>
+          <g font-family="Instrument Serif, serif" font-style="italic" font-size="11" fill="#16181C" opacity="0.6" text-anchor="middle">
+            <text x="180" y="465">стиль письма</text>
+            <text x="310" y="465">запреты</text>
+            <text x="440" y="465">факты</text>
           </g>
         </g>
 
@@ -1618,13 +1733,14 @@
             </g>
           </g>
 
-          <text x="48" y="545" text-anchor="end" font-family="Instrument Serif, serif" font-size="13" font-style="italic" fill="#16181C">Playbooks</text>
-          <text x="48" y="565" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.55">knowledge/</text>
+          <text x="48" y="545" text-anchor="end" font-family="Instrument Serif, serif" font-size="14" font-style="italic" fill="#16181C">Гайды по ролям</text>
+          <text x="48" y="563" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45">Playbooks</text>
+          <text x="48" y="577" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.35">playbooks/</text>
 
-          <g font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45" text-anchor="middle">
-            <text x="180" y="622">designer</text>
-            <text x="310" y="622">editor</text>
-            <text x="440" y="622">marketer</text>
+          <g font-family="Instrument Serif, serif" font-style="italic" font-size="11" fill="#16181C" opacity="0.6" text-anchor="middle">
+            <text x="180" y="622">дизайнер</text>
+            <text x="310" y="622">редактор</text>
+            <text x="440" y="622">маркетолог</text>
           </g>
         </g>
 
@@ -1650,11 +1766,9 @@
             </g>
           </g>
 
-          <text x="48" y="695" text-anchor="end" font-family="Instrument Serif, serif" font-size="13" font-style="italic" fill="#16181C">Deep Memory</text>
-          <text x="48" y="715" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="8" fill="#16181C" opacity="0.55">
-            <tspan x="48" dy="0">knowledge/</tspan>
-            <tspan x="48" dy="11">context/</tspan>
-          </text>
+          <text x="48" y="690" text-anchor="end" font-family="Instrument Serif, serif" font-size="14" font-style="italic" fill="#16181C">Глубокая память</text>
+          <text x="48" y="708" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45">Concepts</text>
+          <text x="48" y="722" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.35">knowledge/concepts/</text>
         </g>
 
         <!-- ═════ LAYER 4: ARCHIVE SEDIMENT ═════ -->
@@ -1679,10 +1793,12 @@
             <circle cx="445" cy="845" r="1.3"/>
           </g>
           <g fill="#FCF9F0" opacity="0.65" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="2">
-            <text x="310" y="832" text-anchor="middle">ARCHIVE · GREP ONLY</text>
+            <text x="310" y="832" text-anchor="middle">АРХИВ · НАЙТИ ПОИСКОМ</text>
           </g>
 
-          <text x="48" y="828" text-anchor="end" font-family="Instrument Serif, serif" font-size="13" font-style="italic" fill="#16181C">Sediment</text>
+          <text x="48" y="822" text-anchor="end" font-family="Instrument Serif, serif" font-size="14" font-style="italic" fill="#16181C">Архив</text>
+          <text x="48" y="840" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.45">Sediment</text>
+          <text x="48" y="854" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="7" fill="#16181C" opacity="0.35">daily/</text>
         </g>
 
       </svg>
@@ -1690,6 +1806,30 @@
 
     <!-- ───── LEGEND ───── -->
     <aside class="legend">
+      <div class="legend-item" data-target="nsp">
+        <div class="legend-label">
+          <span class="num">⟡</span>
+          <span class="name">Переход</span>
+          <span class="swatch" style="background:#FCF9F0;border:1px dashed var(--ink-40)"></span>
+        </div>
+        <p class="legend-gloss">NSP — записка от вчерашнего себя</p>
+        <p class="legend-desc">
+          Один абзац перед машиной: где вчера остановились, что делать сегодня. Агент читает её первой — не нужно каждый раз вводить в курс.
+        </p>
+      </div>
+
+      <div class="legend-item" data-target="backlog">
+        <div class="legend-label">
+          <span class="num">⟡</span>
+          <span class="name">План на сегодня</span>
+          <span class="swatch" style="background:#FCF9F0;border:1px solid var(--ink-40)"></span>
+        </div>
+        <p class="legend-gloss">Backlog — список задач</p>
+        <p class="legend-desc">
+          Живой чек-лист текущего проекта. Галочки, новые пункты, приоритеты. Агент видит его сразу — знает, над чем вы сейчас работаете.
+        </p>
+      </div>
+
       <div class="legend-item" data-target="hot">
         <div class="legend-label">
           <span class="num">L1</span>
@@ -1771,12 +1911,159 @@
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCENE OPERATORS: how you control the machine -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+<section class="scene" id="scene-operators">
+  <div class="scene-header">
+    <p class="scene-kicker"><span class="num">3</span>Как управлять машиной</p>
+    <h2>Шесть рычагов.</h2>
+    <p>
+      Память — это здание. Но здание работает только если есть, кому его использовать. В Memory Kit роль «операторов» играют команды и один хук. Их всего шесть, и каждый делает ровно одну вещь.
+    </p>
+  </div>
+
+  <div class="operators-grid">
+
+    <!-- Operator 1: /close-day -->
+    <div class="operator-card">
+      <svg class="operator-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <rect x="18" y="6" width="24" height="16" rx="2" fill="none" stroke="#16181C" stroke-width="1.3"/>
+        <line x1="30" y1="22" x2="30" y2="46" stroke="#16181C" stroke-width="1.3"/>
+        <polygon points="30,52 24,44 36,44" fill="#16181C"/>
+        <line x1="24" y1="12" x2="36" y2="12" stroke="#BD9B5D" stroke-width="2"/>
+        <line x1="24" y1="17" x2="36" y2="17" stroke="#BD9B5D" stroke-width="1.5" opacity="0.6"/>
+      </svg>
+      <div>
+        <p class="operator-name">/close-day</p>
+        <p class="operator-title">Закрыть день</p>
+      </div>
+      <p class="operator-desc">
+        В конце рабочего дня собирает все заметки, решения и обсуждения сессии в один дневник. Одна команда.
+      </p>
+      <div class="operator-io">
+        <div class="operator-io-row"><span class="io-label">читает</span><span class="io-value">сегодняшняя сессия</span></div>
+        <div class="operator-io-row"><span class="io-label">пишет в</span><span class="io-value">daily/сегодня.md</span></div>
+      </div>
+    </div>
+
+    <!-- Operator 2: /memory-compile -->
+    <div class="operator-card">
+      <svg class="operator-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 12 10 L 48 10 L 38 28 L 38 46 Q 38 50 34 50 L 26 50 Q 22 50 22 46 L 22 28 Z" fill="none" stroke="#16181C" stroke-width="1.3"/>
+        <path d="M 22 34 L 38 34" stroke="#16181C" stroke-width="0.8" opacity="0.5"/>
+        <path d="M 24 40 Q 30 38 36 40 Q 30 42 24 40 Z" fill="#BD9B5D" opacity="0.55"/>
+        <circle cx="30" cy="45" r="1.5" fill="#BD9B5D"/>
+      </svg>
+      <div>
+        <p class="operator-name">/memory-compile</p>
+        <p class="operator-title">Собрать гайды</p>
+      </div>
+      <p class="operator-desc">
+        Раз в неделю-месяц берёт накопленные дневники и пересобирает их в структурированные тематические гайды.
+      </p>
+      <div class="operator-io">
+        <div class="operator-io-row"><span class="io-label">читает</span><span class="io-value">daily/*</span></div>
+        <div class="operator-io-row"><span class="io-label">пишет в</span><span class="io-value">knowledge/concepts/</span></div>
+      </div>
+    </div>
+
+    <!-- Operator 3: /memory-query -->
+    <div class="operator-card">
+      <svg class="operator-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="26" cy="26" r="14" fill="none" stroke="#16181C" stroke-width="1.5"/>
+        <circle cx="26" cy="26" r="6" fill="none" stroke="#16181C" stroke-width="0.8" opacity="0.4"/>
+        <line x1="36" y1="36" x2="50" y2="50" stroke="#16181C" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="22" cy="22" r="2" fill="#BD9B5D"/>
+      </svg>
+      <div>
+        <p class="operator-name">/memory-query</p>
+        <p class="operator-title">Спросить у памяти</p>
+      </div>
+      <p class="operator-desc">
+        Естественный язык поверх всей памяти. «Что мы решили про SEO для агентств?» — ответ со ссылками на источники.
+      </p>
+      <div class="operator-io">
+        <div class="operator-io-row"><span class="io-label">читает</span><span class="io-value">всю память</span></div>
+        <div class="operator-io-row"><span class="io-label">возвр.</span><span class="io-value">ответ + ссылки</span></div>
+      </div>
+    </div>
+
+    <!-- Operator 4: /memory-lint -->
+    <div class="operator-card">
+      <svg class="operator-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 8 32 L 18 32 L 22 22 L 28 42 L 34 18 L 40 32 L 52 32" fill="none" stroke="#16181C" stroke-width="1.5" stroke-linejoin="round"/>
+        <circle cx="22" cy="22" r="2" fill="#D65F3E" opacity="0.7"/>
+        <circle cx="34" cy="18" r="2" fill="#7A9377" opacity="0.7"/>
+      </svg>
+      <div>
+        <p class="operator-name">/memory-lint</p>
+        <p class="operator-title">Проверить здоровье</p>
+      </div>
+      <p class="operator-desc">
+        Шесть проверок структуры: дубликаты, битые ссылки, просроченные записи. Когда кажется, что база «поплыла» — запускаете.
+      </p>
+      <div class="operator-io">
+        <div class="operator-io-row"><span class="io-label">читает</span><span class="io-value">структуру</span></div>
+        <div class="operator-io-row"><span class="io-label">возвр.</span><span class="io-value">отчёт из 6 тестов</span></div>
+      </div>
+    </div>
+
+    <!-- Operator 5: /tour -->
+    <div class="operator-card">
+      <svg class="operator-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 22 40 L 22 14 L 30 10 L 38 14 L 38 40" fill="none" stroke="#16181C" stroke-width="1.3"/>
+        <line x1="22" y1="20" x2="38" y2="20" stroke="#16181C" stroke-width="0.6" opacity="0.5"/>
+        <line x1="22" y1="28" x2="38" y2="28" stroke="#16181C" stroke-width="0.6" opacity="0.5"/>
+        <path d="M 18 40 L 42 40 L 42 48 L 18 48 Z" fill="none" stroke="#16181C" stroke-width="1.1"/>
+        <circle cx="30" cy="14" r="2.5" fill="#D4954A" opacity="0.8"/>
+        <path d="M 30 16 Q 28 18 28 20 Q 28 22 30 20 Q 32 22 32 20 Q 32 18 30 16 Z" fill="#D4954A" opacity="0.5"/>
+      </svg>
+      <div>
+        <p class="operator-name">/tour</p>
+        <p class="operator-title">Экскурсия по системе</p>
+      </div>
+      <p class="operator-desc">
+        Агент водит вас по вашим же файлам, объясняет, где что. Когда новый человек заходит в проект — это его первая команда.
+      </p>
+      <div class="operator-io">
+        <div class="operator-io-row"><span class="io-label">читает</span><span class="io-value">всю систему</span></div>
+        <div class="operator-io-row"><span class="io-label">возвр.</span><span class="io-value">интерактивный обход</span></div>
+      </div>
+    </div>
+
+    <!-- Operator 6: session-start hook (auto) -->
+    <div class="operator-card auto">
+      <svg class="operator-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <rect x="22" y="30" width="16" height="24" rx="1" fill="none" stroke="#16181C" stroke-width="1.3"/>
+        <polygon points="30,6 24,16 36,16" fill="#D65F3E" opacity="0.9"/>
+        <line x1="30" y1="16" x2="30" y2="30" stroke="#D65F3E" stroke-width="2"/>
+        <circle cx="30" cy="42" r="3" fill="#BD9B5D"/>
+        <line x1="22" y1="50" x2="38" y2="50" stroke="#16181C" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.5"/>
+      </svg>
+      <div>
+        <p class="operator-name">хук · срабатывает сам</p>
+        <p class="operator-title">Утренний запуск</p>
+      </div>
+      <p class="operator-desc">
+        Не команда, а автоматический механизм. При старте каждой сессии подтягивает NSP, горячую память и свежие дневники в рабочую камеру. Вы ничего не делаете.
+      </p>
+      <div class="operator-io">
+        <div class="operator-io-row"><span class="io-label">читает</span><span class="io-value">NSP + MEMORY.md + dailies</span></div>
+        <div class="operator-io-row"><span class="io-label">пишет в</span><span class="io-value">контекст агента</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
 <!-- SCENE 3: PROMOTION JOURNEY -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
 <section class="scene" id="scene-3">
   <div class="scene-header">
-    <p class="scene-kicker"><span class="num">3</span>Жизненный путь капли</p>
+    <p class="scene-kicker"><span class="num">4</span>Жизненный путь капли</p>
     <h2>Как случайное наблюдение<br>становится правилом.</h2>
     <p>
       Свежее наблюдение (жидкость) — это разовая правка в брифе. Повторённый урок (густой янтарь) — частый фидбек, который арт-директор проговаривает на каждом ревью. Проверенное правило (кристалл) — утверждённый закон бренда. На кристалл агент опирается железобетонно.
@@ -1891,7 +2178,7 @@
 
 <section class="scene" id="scene-4">
   <div class="scene-header">
-    <p class="scene-kicker"><span class="num">4</span>База знаний сама наводит порядок</p>
+    <p class="scene-kicker"><span class="num">5</span>База знаний сама наводит порядок</p>
     <h2>Когда один гайд<br>разрастается до трёх.</h2>
     <p>
       Сосуды со временем наполняются. Ваш дизайн-гайд, например, переполняется десятками новых правил и исключений — и внутри появляются три самостоятельные темы. Агент замечает это первым, сам предлагает разделение по смыслу. Вам остаётся только подтвердить. Это не админская задача, а «привести шкаф в порядок» одним кликом.
