@@ -562,7 +562,9 @@
     font-size: 14.5px;
     color: var(--ink-80);
     line-height: 1.6;
+    margin-bottom: 10px;
   }
+  .threshold p:last-child { margin-bottom: 0; }
   .threshold code {
     font-family: var(--f-mono);
     font-size: 12px;
@@ -809,6 +811,35 @@
   }
 
   /* ───── Scene 3: operators grid ───── */
+  .session-note {
+    margin-bottom: 28px;
+    padding: 18px 24px;
+    background: var(--paper-warm);
+    border-left: 2px solid var(--water-fresh-solid);
+    border-radius: 0 3px 3px 0;
+    max-width: 820px;
+    font-family: var(--f-serif);
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--ink-80);
+  }
+  .session-note strong {
+    font-family: var(--f-serif);
+    font-style: italic;
+    color: var(--ink);
+    font-weight: 400;
+  }
+  .session-note-label {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 8px;
+    font-style: normal;
+  }
+
   .operators-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2124,10 +2155,15 @@
     </p>
   </div>
 
+  <div class="session-note">
+    <span class="session-note-label">Что такое сессия для агента</span>
+    Сессия — это <strong>одно контекстное окно</strong>, обычно 300-500 тысяч токенов из миллиона. Когда окно заполняется, агент сам просит начать свежую сессию (сохранит всё важное в NSP + MEMORY перед этим). За день сессий может быть 3-5-10 — зависит от интенсивности работы. <strong>`/close-day` закрывает ВСЕ сессии дня</strong>, не одну.
+  </div>
+
   <div class="operators-grid">
 
     <!-- Operator 1: /close-day -->
-    <div class="operator-card">
+    <div class="operator-card close-day-card">
       <svg class="operator-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
         <rect x="18" y="6" width="24" height="16" rx="2" fill="none" stroke="#16181C" stroke-width="1.3"/>
         <line x1="30" y1="22" x2="30" y2="46" stroke="#16181C" stroke-width="1.3"/>
@@ -2140,11 +2176,11 @@
         <p class="operator-title">Закрыть день</p>
       </div>
       <p class="operator-desc">
-        В конце рабочего дня собирает все заметки, решения и обсуждения сессии в один дневник. Одна команда.
+        В конце дня агент собирает все сессии в дневник <strong>и проводит аудит</strong>: сравнивает свежие паттерны с короткой памятью и playbook-ами, предлагает промоушен голосом. Вы говорите «да/нет», агент пишет сам. Файлы вручную не открываете никогда.
       </p>
       <div class="operator-io">
-        <div class="operator-io-row"><span class="io-label">читает</span><span class="io-value">сегодняшняя сессия</span></div>
-        <div class="operator-io-row"><span class="io-label">пишет в</span><span class="io-value">daily/сегодня.md</span></div>
+        <div class="operator-io-row"><span class="io-label">читает</span><span class="io-value">сессии дня + MEMORY.md + playbooks</span></div>
+        <div class="operator-io-row"><span class="io-label">пишет в</span><span class="io-value">daily + MEMORY + playbooks (по согласию)</span></div>
       </div>
     </div>
 
@@ -2495,7 +2531,7 @@
         <div class="station-name">Гайд</div>
         <div class="station-file">playbooks/design.md</div>
         <p style="font-size:13px;color:var(--ink-60);line-height:1.5;margin-top:10px;max-width:22ch;margin-left:auto;margin-right:auto;">
-          Канон роли. Вручную добавили в нужный playbook (дизайн, редактор, маркетолог, своя роль). Поднимается, когда агент работает в этой роли.
+          Канон роли. Агент записал после вашего «да» на `/close-day`-аудите. Поднимается, когда агент работает в этой роли.
         </p>
       </div>
 
@@ -2522,10 +2558,16 @@
     <div class="threshold">
       <h4>Как наблюдение поднимается по лестнице</h4>
       <p>
-        <strong>Упомянуто один раз</strong> — остаётся в дневнике сессии. Кандидат, не более. &nbsp;
-        <strong>Паттерн повторился</strong> — агент записывает его в короткую память (MEMORY.md) как помеченную датой строку. &nbsp;
-        <strong>Стало устойчивым</strong> — вы редактируете соответствующий гайд роли (playbook) вручную. &nbsp;
-        <strong>Шесть месяцев стабильно</strong> — становится законом бренда, на который агент ссылается железобетонно.
+        <strong>Упомянуто один раз</strong> — остаётся в дневнике сессии. Кандидат, не более.
+      </p>
+      <p>
+        <strong>Повторилось в той же сессии</strong> — агент записывает в короткую память (MEMORY.md) как помеченную датой строку.
+      </p>
+      <p>
+        <strong>На `/close-day` агент замечает повтор через сессии или дни</strong> — сравнивает свежее с MEMORY.md и playbook-ами, сам предлагает голосом: «вижу это в третий раз за неделю — добавить в playbook дизайна?» Вы говорите «да», агент пишет patch в файл сам. Файлы вы не открываете — только говорите.
+      </p>
+      <p>
+        <strong>Полгода стабильно без противоречий</strong> — на следующем `/close-day` агент предлагает перевести паттерн в жёсткие правила (<code>.claude/rules/</code>). После подтверждения — это закон бренда, на который агент ссылается железобетонно.
       </p>
     </div>
   </div>
