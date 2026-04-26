@@ -4,7 +4,7 @@ All notable changes to Memory Kit are documented here. Breaking changes marked *
 
 ## [4.0.0] — 2026-04-26 — Promoted from alpha; replaces v3.2.2 in main repo
 
-After two weeks of dogfooding the v4.0.0-alpha branch on a real production project (`avoid-content-site`, 798 sessions), v4 is promoted to stable. v3.2.2 stays accessible via the `v3.2.2` git tag for anyone who still needs it; the `main` branch now reflects v4 architecture.
+After two weeks of dogfooding the v4.0.0-alpha branch on real production work, v4 is promoted to stable. v3.2.2 stays accessible via the `v3.2.2` git tag for anyone who still needs it; the `main` branch now reflects v4 architecture.
 
 ### Verified working
 
