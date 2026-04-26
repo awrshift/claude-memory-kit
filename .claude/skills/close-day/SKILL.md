@@ -1,76 +1,121 @@
 ---
 name: close-day
-description: "End-of-day synthesis — scan all documentation changes made today, extract key learnings, decisions, and patterns, produce a daily article in daily/YYYY-MM-DD.md. Use when user says '/close-day', 'close the day', 'end of day', 'wrap up', 'daily summary', or indicates they are done working for the day."
+description: End-of-day audit ritual — synthesize sessions into daily log, audit patterns against MEMORY.md and reference skills, propose promotions verbally, write approved patches
 ---
 
-# /close-day — End-of-Day Synthesis
+# /close-day — The audit ritual
 
-Synthesize all documentation changes from today into a single daily article. This replaces auto-flush background processing with a deliberate, high-quality, in-context synthesis.
+You are closing the user's working day. This is NOT just «dump today into a file». This is the **audit moment** where you inspect what the day produced, compare it to accumulated memory, and propose what should grow into the user's reference skills (`.claude/skills/<role>-guidance/SKILL.md`).
 
-## When to Use
+## Your goal in two phases
 
-- User says `/close-day` or "close the day" or "wrap up"
-- User indicates they're done working for the day
-- Last session of the day, user wants to capture everything
+### Phase 1: SYNTHESIZE
 
-## Flow
+Create `daily/YYYY-MM-DD.md` (today's date in ISO format). Include:
 
-### Step 1: Discover today's changes
+- **Session count and approximate total duration.** How many times did the user start a fresh session today? Rough total time.
+- **Projects worked on.** Which `projects/<name>/` were active today.
+- **Key decisions made.** What did the user decide today that will shape future work?
+- **Artifacts produced.** Code shipped, copy drafted, design finalized, research completed.
+- **Open threads.** What's left unfinished and should be picked up next session.
+- **Notable moments.** Things the user reacted strongly to (positive or negative). These are high-signal for the audit.
 
-```bash
-# Files modified today
-find .claude/memory projects/ context/ knowledge/ -name "*.md" -mtime 0 2>/dev/null
+Format: concise, structured markdown. This file is the chronological record. Target 200-500 words.
 
-# Uncommitted changes
-git diff --name-only
+Also update `context/next-session-prompt.md` (NSP) with the immediate-action handoff: «Завтра: продолжить X. Открытые вопросы: Y, Z.»
 
-# Today's commits
-git log --since="today 00:00" --name-only --format=""
+### Phase 2: AUDIT
+
+Now the ritual. Read:
+
+1. **Today's daily log** (just written)
+2. **`MEMORY.md`** — date-tagged patterns from prior sessions
+3. **Relevant reference skills** — `.claude/skills/<role>-guidance/SKILL.md` for whichever roles were active today (design-guidance if design work, editorial-guidance if copy work, etc.)
+
+Compare. Look for three kinds of signals:
+
+#### Signal A: Cross-session repetition
+A pattern you noticed today matches a date-tagged entry in `MEMORY.md` from earlier days. Example: today user rejected "em-dash in short copy" — and MEMORY.md shows they rejected the same thing Tuesday and last Friday.
+
+**What to do:** Propose adding to the relevant reference skill.
+
+> «Заметил: ты три раза на этой неделе отклонил тексты с em-dash в коротких фразах. Похоже на устойчивое правило. Добавить в `editorial-guidance` как "em-dash запрещён в UI-копии ≤20 слов"? Могу сразу написать — подтверди.»
+
+#### Signal B: New strong preference
+User expressed a clear preference today, even once, but it was emphatic. Example: «ненавижу когда превью размытые — никогда так не делай».
+
+**What to do:** Propose adding to the relevant reference skill (often `founder-profile`) with "observed once but emphatic" note.
+
+> «Ты чётко сказал что размытые превью недопустимы. Даже хотя это первый раз за наш проект — стоит ли зафиксировать сейчас в `founder-profile`, чтобы я не забыл? Или подождать повтора?»
+
+#### Signal C: Contradiction with existing canon
+Today you did something that contradicts an existing reference-skill entry. Example: `design-guidance` says "warm palette default" but today user insisted on cold palette for a specific page.
+
+**What to do:** Surface the tension. Don't silently update — ask.
+
+> «Сегодня мы делали страницу X в холодной палитре. В `design-guidance` у нас "warm palette default for editorial pages". Это исключение или нужно обновить правило?»
+
+#### Signal D: Potential reference-skill split
+If during audit you notice a reference skill has grown very large (> 500 lines, Anthropic's guidance for SKILL.md) or contains multiple clearly independent topics, mention it. Don't do the split here — that's `/memory-audit`'s job. Just flag.
+
+> «Кстати, `design-guidance` выросла до 720 строк и внутри вижу три темы: типографика, цвет, анимация. Стоит запустить `/memory-audit` чтобы предложить разделение?»
+
+### Phase 3: EXECUTE APPROVED PATCHES
+
+For each signal user approved verbally:
+
+1. **Write the patch.** Open the reference-skill SKILL.md file, add the new entry at the right section, or update MEMORY.md, or modify NSP — whatever was proposed.
+2. **Confirm briefly to user.** «Записал.»
+3. **Commit mentally to what you DIDN'T approve.** If user said «не сейчас», DON'T write it. Keep it in next session's awareness so you can propose again if pattern recurs.
+
+### What you do NOT do
+
+- **Don't ask user to open any file.** Never say «открой design-guidance и добавь...». Say «я запишу — подтверди?».
+- **Don't promote to `.claude/rules/` unilaterally.** That requires 6+ months of stability. You can PROPOSE it on a future `/close-day` after enough history, but not today.
+- **Don't write patches without explicit verbal approval.** «да», «угу», «хорошо», «го», «запиши» all count. Silence or ambiguity does not — ask again.
+- **Don't surface more than 3-4 candidates per `/close-day`.** Pick the most signal-rich. Overwhelming the user with proposals kills the ritual.
+- **Don't repeat proposals user already rejected.** If on last week's `/close-day` user said «не сейчас» to adding X — don't propose X again unless there's new evidence (another repetition, related pattern, etc.).
+
+## Session definition (context for your audit)
+
+A «session» is **one Claude context window**. As you accumulate context (~300-500k tokens of 1M), you ask user to save state and start fresh. A day can have 3-10 sessions.
+
+When synthesizing today's daily log, include ALL sessions of the day, not just the current one. You may need to read prior NSP states or session-start hook snapshots to know what earlier sessions contained. If uncertain, ask user: «сколько раз мы сегодня перезапускались? Что было в утренней сессии?».
+
+## Output format
+
+When the user types `/close-day`, respond in this shape:
+
+```
+Синтезирую день...
+[brief note: X сессий, проекты Y, Z, основные решения]
+
+daily/2026-04-24.md записан.
+NSP обновлён.
+
+Аудит:
+
+1. [Signal description]
+   Предложение: [what to add where]
+   Добавить? [да/нет]
+
+2. [Signal description]
+   ...
+
+(Ждёт ответа пользователя по каждому пункту)
 ```
 
-### Step 2: Extract changes from each file
+After user confirms each, execute patches and confirm briefly.
 
-| File type | How to extract today's changes |
-|-----------|-------------------------------|
-| `MEMORY.md` | Grep for today's date tag `[YYYY-MM-DD]` |
-| `knowledge/concepts/*.md` | Check `updated:` frontmatter — if today, read for new content |
-| `context/next-session-prompt.md` | Read session summaries with today's date |
-| `projects/*/BACKLOG.md` | Check git diff for task status changes |
-| `.claude/rules/*.md` | Read full file if modified (rules change rarely) |
+## Edge cases
 
-### Step 3: Synthesize daily article
+- **User says «отмена» or «не сейчас» partway through** — acknowledge, stop the ritual, nothing is lost. Today's daily + NSP is already saved. Audit candidates can be revisited next time.
+- **Nothing notable happened today** — the audit may surface zero candidates. That's fine. Just synthesize the daily and confirm: «Короткий день, паттернов для промоушена не вижу. Завершено.»
+- **User wants to preview patches before approving** — show the exact text you'd write, so they can adjust wording via speech. «Собирался записать "X". Устраивает формулировка?».
+- **Current session still has active work** — if user types /close-day while mid-task, clarify: «Хочешь закрыть день сейчас, с учётом незаконченных задач? Или доделать и потом?».
 
-Create `daily/YYYY-MM-DD.md`:
+## Why this ritual exists
 
-```markdown
-# Daily: YYYY-MM-DD
+Memory Kit's invariant: **user only talks, agent writes**. Prior versions tried to automate promotion detection with background scripts — unreliable + violated the invariant by implicitly pushing users to edit files. `/close-day` replaces that with an agent-in-the-loop ritual: the agent has full conversational context at end of day, can spot patterns a script would miss, and does the writing itself.
 
-## Projects Worked On
-- **[project]** — [1-2 sentence summary]
-
-## Key Decisions
-- [Decision with rationale]
-
-## Patterns Learned
-- [New patterns added to MEMORY.md or knowledge/]
-
-## Files Modified
-- [Key files changed, grouped by project]
-
-## Tomorrow
-- [Pending work, blockers, first action]
-```
-
-### Step 4: Report
-
-1. Show user a 3-5 line summary
-2. Report file path and size
-3. Flag any MEMORY.md entries without today's date tag
-
-## Rules
-
-1. **Synthesis, not extraction.** You have full context — write quality summaries.
-2. **One article per day.** If file exists, APPEND new section with timestamp.
-3. **Don't duplicate.** Daily = index + narrative. Details stay in source files.
-4. **Date tags are the contract.** Every MEMORY.md entry must have `[YYYY-MM-DD]`.
-5. **Skip if nothing happened.** Don't create empty articles.
+The user's job is to **notice what they notice** during the day's work. Yours is to **catch it and structure it**.

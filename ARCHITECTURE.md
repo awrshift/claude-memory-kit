@@ -1,253 +1,252 @@
-![Claude Memory Kit — The OS layer for Claude Code](.github/assets/og-banner.png)
+# Memory Kit v4 — Architecture
 
-# Claude Memory Kit
+> Full architecture with rationale. Read after CLAUDE.md for depth.
 
-**The OS layer for Claude Code. Not just memory — the entire context management lifecycle.**
+## The core invariant
 
-[![Version](https://img.shields.io/github/v/release/awrshift/claude-memory-kit?label=version&color=brightgreen)](https://github.com/awrshift/claude-memory-kit/releases)
-[![Last Commit](https://img.shields.io/github/last-commit/awrshift/claude-memory-kit?label=last%20update&color=blue)](https://github.com/awrshift/claude-memory-kit/commits/main)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-6366f1)](https://docs.anthropic.com/en/docs/claude-code/overview)
-[![Python 3](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
-[![Stars](https://img.shields.io/github/stars/awrshift/claude-memory-kit?style=social)](https://github.com/awrshift/claude-memory-kit/stargazers)
+**User only talks. Agent captures, proposes, writes.** This is the one rule that makes everything else consistent.
 
-## The Problem
+If an architectural decision violates this invariant (e.g., «user should periodically review memory files and edit them»), it's wrong by definition.
 
-Every new Claude session starts from zero. Your project structure, last week's decisions, yesterday's bug fix — all gone. You waste the first 10 minutes re-explaining what Claude already knew, then lost.
+## Layer map (what lives where)
 
-**Claude Memory Kit fixes this in a 5-minute setup. Zero API cost. Runs on your existing Claude subscription.**
+v4 aligns tightly with Anthropic-canonical Claude Code primitives. Every layer maps to a native concept documented at `code.claude.com/docs`.
 
-## Quick Start
-
-```bash
-git clone https://github.com/awrshift/claude-memory-kit.git my-project
-cd my-project
-claude
+```
+╔══════════════════════════════════════════════════════════════╗
+║  SESSION ENTRY (loaded automatically)                        ║
+║  ──────────────────────────────────────────────────────────  ║
+║  context/next-session-prompt.md                              ║
+║      ↓ "where we left off, what's next"                      ║
+║  projects/<active>/BACKLOG.md                                ║
+║      ↓ "today's task queue"                                  ║
+╠══════════════════════════════════════════════════════════════╣
+║  HOT PATH (always in context)                                ║
+║  ──────────────────────────────────────────────────────────  ║
+║  CLAUDE.md                  — agent identity (this)          ║
+║  .claude/memory/MEMORY.md   — date-tagged patterns           ║
+║  knowledge/index.md         — deep-memory catalog            ║
+║  (+ every skill's `description` — body loads on invoke)      ║
+╠══════════════════════════════════════════════════════════════╣
+║  ON-TRIGGER (loaded when relevant)                           ║
+║  ──────────────────────────────────────────────────────────  ║
+║  .claude/rules/*.md             — short enforceable rules    ║
+║                                   (unconditional or path-    ║
+║                                   scoped via `paths:`)       ║
+║  .claude/skills/<role>-guidance/                             ║
+║    SKILL.md                     — reference skills           ║
+║                                   (user-invocable: false;    ║
+║                                   role wisdom auto-loaded    ║
+║                                   on description match)      ║
+║  .claude/skills/<task>/SKILL.md — task skills (user-         ║
+║                                   invocable; /close-day,     ║
+║                                   /deploy, etc.)             ║
+║  knowledge/concepts/*.md        — deep reference articles    ║
+║  projects/<active>/*.md         — client materials (PDFs,    ║
+║                                   briefs, references)        ║
+╠══════════════════════════════════════════════════════════════╣
+║  CHRONOLOGICAL (grep-on-demand, not auto-loaded)             ║
+║  ──────────────────────────────────────────────────────────  ║
+║  daily/YYYY-MM-DD.md      — session logs by date             ║
+╠══════════════════════════════════════════════════════════════╣
+║  OPERATORS (invoked by user speech)                          ║
+║  ──────────────────────────────────────────────────────────  ║
+║  /close-day     end-of-day AUDIT ritual                      ║
+║  /memory-compile  daily → knowledge/concepts                 ║
+║  /memory-query    natural-language search                    ║
+║  /memory-lint     structural health checks                   ║
+║  /memory-audit    oversized reference skill detection        ║
+║  /tour            interactive walkthrough                    ║
+╚══════════════════════════════════════════════════════════════╝
 ```
 
-Claude handles the rest — asks your name, project name, and preferred language, then sets everything up.
+## What each layer is FOR (and is NOT)
 
-> [!TIP]
-> After setup, type `/tour` — Claude walks you through the system using your actual project files.
+### CLAUDE.md — agent identity
+**Is:** stable DNA of the project. Who the agent is, what tone, what's forbidden, how it thinks.
+**Is not:** daily notes. Doesn't change often. Target ≤ 200 lines (Anthropic guidance).
 
----
+### .claude/memory/MEMORY.md — hot cache
+**Is:** date-tagged patterns that have already been noticed 2+ times. Short strings. Cross-session accumulator. First 200 lines / 25KB auto-loaded (Anthropic auto-memory contract).
+**Is not:** full logs (those live in daily/). Not detailed articles.
 
-## What's Inside
+### .claude/rules/*.md — rules
+**Is:** mechanical constraints. «Не используй X», «Всегда проверяй Y». Short. Enforceable by grep/linter in principle. Can be `paths:`-scoped to apply only when working with matching files.
+**Is not:** advice. Not judgment heuristics. Not role-specific wisdom (those are reference skills).
 
-Eleven components. Five hooks (context injection + safety nets). Five pipeline scripts (compile, lint, query, flush, config). Three slash commands (`/memory-compile`, `/memory-lint`, `/memory-query`) and two skills (`/close-day`, `/tour`). One system.
+### .claude/skills/<role>-guidance/SKILL.md — reference skills (role wisdom)
+**Is:** how a senior specialist in that role thinks. Judgment heuristics. Tacit knowledge. `user-invocable: false` + rich `description` → Claude auto-loads whenever the conversation matches the description.
 
-![](.github/assets/01-agent-anatomy-mindmap.png)
+**Example** (`design-guidance`):
+> «Тёплые тона (sand, burgundy) читаются editorial. Холодные (cool grey, cobalt) — SaaS. На новых страницах всегда пробуем тёплую палитру первой.»
 
-| Component | File | What it does |
-|-----------|------|-------------|
-| **Brain** | `CLAUDE.md` | Agent identity, behavior rules, session workflow |
-| **Hot Memory** | `.claude/memory/MEMORY.md` | Fast-access patterns, target ~200 lines, loaded every session |
-| **Deep Memory** | `knowledge/` | Wiki articles with `[[wikilinks]]` — concepts, connections, meetings (project root, not .claude/) |
-| **Hooks** | `.claude/hooks/` | 5 hooks: `session-start.py` (context injection) + `pre-compact.sh`, `periodic-save.sh`, `session-end.sh`, `protect-tests.sh` (safety nets) |
-| **Rules** | `.claude/rules/` | Your domain-specific conventions, auto-loaded |
-| **Skills** | `.claude/skills/` | `/close-day` (end-of-day synthesis), `/tour` (guided walkthrough) |
-| **Commands** | `.claude/commands/` | `/memory-compile`, `/memory-lint`, `/memory-query` |
-| **Projects** | `projects/X/BACKLOG.md` | Per-project task queue, decisions, status |
-| **Context Hub** | `context/next-session-prompt.md` | "Pick up exactly here" between sessions |
-| **Daily Logs** | `daily/` | Session summaries — `/close-day` creates these at end of day |
-| **Experiments** | `experiments/` | Sandbox for research before committing to a path |
+**Is not:** raw facts or reference data (those are concepts). Not enforceable rules (those are `.claude/rules/`). Not user-invocable workflows (those are task skills).
 
-Everything is plain Markdown. No database. No external services. If anything breaks, `git checkout` fixes it.
+**This layer replaces the earlier draft's `playbooks/` directory.** Both serve the same purpose — role-based tacit wisdom. v4 uses reference skills because they are the native Anthropic primitive, which gives us auto-invocation via `description` matching for free (no custom routing tables) and lets Claude manage context budget automatically.
 
----
+### .claude/skills/<task>/SKILL.md — task skills
+**Is:** repeatable workflow the user (or agent) invokes with `/task-name`. Operators like `/close-day`, `/memory-audit`, `/tour`.
+**Is not:** knowledge. If it's a "read and apply," that's a reference skill; if it's "do these steps," that's a task skill.
 
-## How Context Loads — The Pyramid
+### knowledge/concepts/*.md — deep reference
+**Is:** facts + rationale, topic-oriented. «Наша типографическая шкала: 43 токена. Размеры, высоты строк, веса. Обоснование каждого.»
+**Is not:** tacit wisdom (that's reference skills). Not workflow methodology (that's a task skill or rule).
 
-Not everything loads at once. Light context loads every session. Heavy context loads only when needed.
+### projects/<name>/ — per-project scope
+**Is:** everything specific to one client or project. `BACKLOG.md` (tasks), any `*.md` or `*.pdf` user has uploaded as reference.
+**Is not:** shared knowledge. Don't put brand-system stuff here if it applies across projects.
 
-![](.github/assets/02-context-layers-pyramid.png)
+### daily/YYYY-MM-DD.md — session archive
+**Is:** agent-written synthesis of sessions (via `/close-day`). Chronological.
+**Is not:** manually curated. Not a wiki.
 
-| Tier | What loads | When |
-|------|-----------|------|
-| **L1 Auto** | CLAUDE.md + rules + MEMORY.md + SessionStart injection (wiki index + recent daily logs + top 3 concepts) | Every session — automatic |
-| **L2 Start** | `next-session-prompt.md` | Session start — agent reads it first |
-| **L3 Project** | `projects/X/BACKLOG.md` | When working on a specific project |
-| **L4 Wiki** | `knowledge/*.md` articles | On-demand — for deep questions |
-| **L5 Daily** | `daily/YYYY-MM-DD.md` | Synthesized by `/close-day` at end-of-day; raw source for `/memory-compile` when folding into wiki articles |
+## The promotion pipeline (pattern → law)
 
-**Why this matters:** Claude Code has a context window. If you load everything at once, you waste space on old data. The pyramid ensures Claude always has the right context at the right time — light and fast for routine work, deep and rich when it needs to remember something specific.
+Four phases. All agent-driven.
 
----
-
-## Session Lifecycle — What Happens Automatically
-
-Every session follows the same cycle. Hooks fire at key moments to make sure nothing gets lost.
-
-![](.github/assets/03-session-lifecycle-flow.png)
-
-**Start:**
-1. `session-start.py` injects context — session stats, wiki catalog, recent logs, top concepts (50K char budget)
-2. Agent reads `next-session-prompt.md` — finds its `<!-- PROJECT:name -->` block and knows what to do
-
-**During work:**
-3. Agent works on tasks (`BACKLOG.md`) and reads knowledge articles when needed
-4. Every 50 exchanges → `periodic-save.sh` **blocks** the agent until it saves progress
-5. Before context compression → `pre-compact.sh` **blocks** until memory files are updated
-
-**End:**
-6. Agent saves progress to structured files (MEMORY.md, next-session-prompt.md, BACKLOG.md)
-7. When done for the day → `/close-day` synthesizes all today's changes into `daily/YYYY-MM-DD.md`
-8. Optionally → `/memory-compile` transforms daily articles into structured wiki articles
-9. Next session starts with updated knowledge — **the cycle closes**
-
-You control the rhythm. Hooks protect you from data loss, `/close-day` captures the day.
-
----
-
-## Memory Pipeline — From Conversation to Knowledge
-
-This is the most powerful part of the system. Your conversations become structured, searchable knowledge — through deliberate synthesis, not background automation.
-
-![](.github/assets/04-memory-pipeline-flow.png)
-
-**The chain:**
-
-| Step | What happens | Tool | Cost |
-|------|-------------|------|------|
-| During session | Agent saves patterns to MEMORY.md, status to BACKLOG.md, handoff to next-session-prompt.md | Hooks (periodic-save, pre-compact) | Free |
-| End of day | `/close-day` scans all files modified today, synthesizes into daily article | `/close-day` skill (in-context) | Free |
-| When ready | `/memory-compile` transforms daily articles into wiki with YAML frontmatter and `[[wikilinks]]` | `compile.py` → Claude Sonnet | $0 (subscription) |
-| Index | Wiki catalog updated with new articles | `knowledge/index.md` | Free |
-| Next session | Updated catalog injected into context automatically | `session-start.py` | Free |
-
-**The result:** after a few weeks, you have a personal knowledge base that grows with every session. Every decision, every lesson, every pattern — indexed and searchable.
-
-**Why manual over auto?** Auto-flush (extracting knowledge from raw transcripts in the background) was unreliable in practice (~50% failure rate). In-session saves are higher quality because the agent has full project context. `/close-day` synthesizes these structured changes — deliberate quality over automated quantity.
-
-**Safety:** Hooks block the agent before data loss (pre-compact, periodic-save). `CLAUDE_INVOKED_BY` environment variable prevents infinite recursion if you enable optional auto-flush. Date tags `[YYYY-MM-DD]` in MEMORY.md let `/close-day` extract exactly today's changes.
-
----
-
-## What's New in v3.2
-
-- **`/close-day` skill** — end-of-day synthesis replaces auto-flush as the recommended daily article flow
-- **Date tags `[YYYY-MM-DD]`** — day-granularity enables precise extraction of today's changes
-- **Auto-flush now optional** — `session-end.sh` defaults to timestamp logging; flush.py available as opt-in
-- **In-session saves first** — hooks (periodic-save, pre-compact) ensure structured data is captured during work
-
-**Carried from v3.0:**
-- **SessionStart injection** — wiki index + recent daily logs auto-injected ([Karpathy](https://karpathy.ai/)/[Cole](https://github.com/coleam00) pattern)
-- **`/memory-compile`, `/memory-lint`, `/memory-query`** — slash commands for the knowledge pipeline
-- **BACKLOG.md** — single source of truth per project
-- **Recursion guard** — `CLAUDE_INVOKED_BY` prevents infinite hook loops
-
-See [CHANGELOG.md](CHANGELOG.md) for full version history.
-
----
-
-## Usage
-
-### Talk to Claude
-
-| What you say | What happens |
-|-------------|-------------|
-| `/tour` | Interactive guided walkthrough using your actual files |
-| `/memory-compile` | Compile daily logs into structured wiki articles |
-| `/memory-lint` | Run 6 health checks on the knowledge base |
-| `/memory-query "question"` | Ask the knowledge base a natural-language question |
-| "Let's work on [project]" | Agent reads that project's BACKLOG.md and resumes |
-| "Save context" | Agent saves patterns to memory and updates session prompt |
-| "Create an experiment about [question]" | Agent creates a sandbox folder for structured research |
-| "What do you remember about [topic]?" | Agent searches MEMORY.md and relevant wiki articles |
-
-### Safety nets (automatic)
-
-- **Before context compression** → agent is blocked until it saves (brief pause)
-- **Every ~50 exchanges** → agent checkpoints progress (brief pause)
-- **End of day** → `/close-day` synthesizes today's changes into `daily/` article
-- **Test file protection** → existing test files can't be modified (new tests allowed)
-
----
-
-## Installation
-
-### Requirements
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) CLI installed
-- Claude Pro/Max subscription OR API credits
-- Python 3.9+ (for memory pipeline scripts, optional)
-
-### macOS / Linux
-
-```bash
-git clone https://github.com/awrshift/claude-memory-kit.git my-project
-cd my-project
-claude
+```
+  Жидкость (Liquid)  ──→  Янтарь (Amber)    ──→  Reference skill    ──→  Crystal (rule)
+  daily/*.md              MEMORY.md                .claude/skills/           .claude/rules/
+                          (date-tagged)            <role>-guidance/          *.md
+                                                   SKILL.md                  (grep-enforceable)
 ```
 
-<details>
-<summary>Install on Windows (WSL2)</summary>
+### Phase 1 — Liquid (daily/)
+Observation mentioned in a session. Agent captures in today's daily log. Candidate, nothing more.
 
-Same commands as macOS/Linux, run inside WSL2:
+### Phase 2 — Amber (MEMORY.md)
+Pattern repeats within the session. Agent writes a date-tagged string to `MEMORY.md`. Tells user briefly: «записал». User does nothing.
 
-```bash
-git clone https://github.com/awrshift/claude-memory-kit.git my-project
-cd my-project
-claude
+### Phase 3 — Reference skill (via /close-day audit)
+On `/close-day`, agent:
+1. Synthesizes today into `daily/YYYY-MM-DD.md`
+2. Compares today + `MEMORY.md` against existing `.claude/skills/*-guidance/SKILL.md` files
+3. Surfaces repeats verbally: «заметил X три раза за неделю в разных сессиях, похоже на то, что уже в design-guidance в позиции Y — добавить?»
+4. User confirms «да». Agent writes the patch into the right SKILL.md body.
+
+This is the KEY moment. Not automatic detection, not manual editing. An agent-driven audit ritual.
+
+### Phase 4 — Crystal (.claude/rules/)
+After 6+ months of stable use without contradiction AND landmark impact, agent proposes promotion from a reference skill entry to a canonical rule on a later `/close-day`. User confirms. Agent writes the rule (with `paths:` frontmatter if it should be path-scoped). Rule is now auto-loaded by every matching session.
+
+## Why no automation for 3× detection?
+
+In earlier drafts we considered `experiences/` staging + `promote-patterns.py` background script to auto-detect 3× repetitions. Killed 2026-04-24 because:
+
+1. **Cross-session detection is unreliable.** Without persistent background process, agent can't reliably match semantics across session boundaries.
+2. **The automation solved a hypothetical problem.** After one day the scaffold had zero entries, and no case of «I wish I'd caught X earlier» had arisen.
+3. **The ritual is better.** `/close-day` audit runs agent-with-full-context at end of day. Cross-session patterns get noticed WITH intent, not via fragile signature matching.
+
+The kill reduced complexity + restored the «user only talks» invariant that an automated background detector would have threatened (users would start editing memory files if the script proposed them).
+
+## The audit ritual (mechanics of /close-day)
+
+```
+User types: /close-day
+    │
+    ▼
+Agent synthesizes today's sessions → daily/YYYY-MM-DD.md
+    │
+    ▼
+Agent reads MEMORY.md (date-tagged cross-session patterns)
+Agent reads today's daily
+Agent reads existing .claude/skills/*-guidance/SKILL.md files
+    │
+    ▼
+Agent audits: which today's patterns match or extend MEMORY.md?
+              Which look like fits for existing reference-skill slots?
+    │
+    ▼
+Agent surfaces 0-4 candidates to user verbally:
+  "заметил Y три раза за неделю — добавить в design-guidance?"
+  "X уже в design-guidance, но сегодня мы делали его по-другому — обновить?"
+  "этот паттерн противоречит editorial-guidance — что-то изменилось?"
+    │
+    ▼
+User responds verbally:
+  "да" → agent writes the patch (new entry, modification, etc.)
+  "нет" / "не сейчас" → agent acknowledges, doesn't write
+  "покажи снова" → agent shows proposed patch text
+    │
+    ▼
+Agent writes patches sequentially, confirms each completion
 ```
 
-Native PowerShell is untested — WSL2 recommended for hook compatibility.
+Key property: **user never opens a file during the entire ritual.** They talk, agent writes.
 
-</details>
+## Oversized reference-skill detection (/memory-audit)
 
----
+Separate operator for structural refactor. When a reference skill grows beyond ~500 lines (Anthropic's guidance for SKILL.md size) AND contains 2-4 semantically independent topics, it should split.
 
-## FAQ
+```
+User types: /memory-audit
+    │
+    ▼
+Script check_oversized_reference_skills() in scripts/lint.py:
+  scans .claude/skills/*-guidance/SKILL.md, flags files > 500 lines  [FREE check]
+    │
+    ▼
+For each flagged file, agent (in session) reads contents and
+groups sections by topic.  [LLM call, happens in live conversation]
+    │
+    ▼
+If 2-4 independent topical clusters → agent proposes split:
+  "design-guidance выросла до 847 строк. Внутри три темы:
+   типографика / цвет / анимация. Они редко ссылаются друг на
+   друга. Разделить?"
+    │
+    ▼
+User: "да" → agent creates .claude/skills/design-guidance-type/,
+             .claude/skills/design-guidance-color/, etc., moves
+             sections, turns original design-guidance into index
+             (with `user-invocable: false` and a description that
+             lists child skills)
+User: "нет" → defers. Agent remembers on next /memory-audit.
+```
 
-<details>
-<summary>Do I need to know how to code?</summary>
+## Multi-project architecture
 
-No. After setup, you talk to Claude in plain language. "Read the marketing plan and draft three emails" works just as well as technical commands.
+One agent, many projects. Shared layers (rules, concepts, reference skills, hot path) apply across all projects. Per-project layers (BACKLOG.md, client materials) are scoped.
 
-</details>
+```
+Shared (loaded always):
+  CLAUDE.md, MEMORY.md, knowledge/, .claude/skills/*-guidance/,
+  .claude/rules/, .claude/skills/<task>/
 
-<details>
-<summary>Is my data private?</summary>
+Project-scoped (loaded when user names the project):
+  projects/<active>/BACKLOG.md
+  projects/<active>/*.md    (client brief, brand guide, notes)
+  projects/<active>/*.pdf   (user-uploaded references)
+```
 
-Yes. Everything stays on your computer. Claude Code talks to Anthropic's API, which does not train on your data by default.
+Switch command (in conversation): «работаем над client-a» → agent unloads client-b materials, loads client-a. For project-scoped rules, use `paths: [projects/client-a/**]` frontmatter on the rule file.
 
-</details>
+## Hooks (automatic, no user action)
 
-<details>
-<summary>How much does it cost?</summary>
+- **session-start.py** — on every new Claude session, injects NSP + recent daily logs + knowledge index into agent context
+- **pre-compact.sh** — when context is about to compact, blocks until agent has saved state to MEMORY.md + NSP
+- **periodic-save.sh** — every ~50 exchanges, prompts agent to save new patterns
 
-The kit is free and open source. Claude Code needs a Claude Max/Pro subscription or API credits. The memory pipeline uses your existing subscription — no extra cost.
+Hooks are invisible to the user. They just make sure state survives.
 
-</details>
+## Naming discipline
 
-<details>
-<summary>Can I use this with an existing project?</summary>
+File names are in English for canonical compatibility (`.claude/skills/design-guidance/SKILL.md`, `.claude/skills/editorial-guidance/SKILL.md`). Agent references them in Russian conversation naturally: «design-guidance», «editorial-guidance» или «руководство по дизайну». No need to teach the user English filenames.
 
-Yes. During setup, choose "I have existing code" and point Claude to your codebase. It will analyze the structure and set up context around it.
+Per-project folders can use any naming: `projects/client-nestle/`, `projects/nachalo/`, `projects/mvp-launch/` — whatever the user prefers.
 
-</details>
+## What's NOT in the architecture (by design)
 
-<details>
-<summary>What happens if I mess up the memory files?</summary>
+- **`experiences/`** — over-engineered staging layer, deleted v4
+- **`promote-patterns.py`** — background detection script, replaced by /close-day ritual
+- **`playbooks/`** — draft-era separate directory for role wisdom; in v4 this lives in `.claude/skills/<role>-guidance/SKILL.md` with `user-invocable: false` (Anthropic-native)
+- **Custom trigger keyword tables in CLAUDE.md** — Claude auto-invokes skills from their `description`; no hand-maintained routing
+- **`wisdom/`**, **`lessons/`** — synonyms of existing layers, kept out
+- **Automatic rule generation** — rules are user-approved only, never auto-written
 
-Everything is plain text in git. Three recovery options:
-1. **Roll back:** `git checkout .claude/memory/`
-2. **Lint + auto-fix:** `python3 .claude/memory/scripts/lint.py --fix` — runs 6 structural checks, auto-adds missing backlinks
-3. **Full rebuild:** delete the wiki and run `python3 .claude/memory/scripts/compile.py --all` to regenerate from daily log history
+## Related
 
-</details>
-
-<details>
-<summary>Do I need Obsidian?</summary>
-
-No. The `knowledge/` wiki is plain Markdown with `[[wikilinks]]`. Works in VS Code, any text editor, or GitHub web view. Obsidian is optional — only needed for the visual graph view.
-
-</details>
-
-## Contributing
-
-Issues and PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+- `README.md` — human-facing value prop
+- `CLAUDE.md` — agent-facing session workflow
+- `CHANGELOG.md` — what changed from v3.2.2 → v4.0.0 (includes the playbook→reference-skill reclassification)
+- Anthropic docs: `code.claude.com/docs/en/skills`, `code.claude.com/docs/en/memory`, `code.claude.com/docs/en/best-practices`

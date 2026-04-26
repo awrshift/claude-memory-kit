@@ -1,66 +1,68 @@
-# Knowledge Index
+# Knowledge — Topical reference index
 
-> Master catalog — read this FIRST for any deep query.
-> Populated automatically by `python .claude/memory/scripts/compile.py` from `daily/` logs.
-> Also injected into every Claude Code session via the SessionStart hook (`additionalContext`).
+`knowledge/` is the **facts + rationale** layer. Topic-oriented articles that explain *what* and *why*, not *how a role should think* (that's the `<role>-guidance` reference skills under `.claude/skills/`).
 
-## Concepts
-
-_(empty — single-topic deep-dive articles)_
-
-## Connections
-
-_(empty — cross-concept relationship articles)_
-
-## Meetings
-
-_(empty — structured index articles of meeting transcripts)_
+**Agent writes these too.** Articles are compiled from `daily/*.md` via `/memory-compile` when enough observations have accumulated around a single topic.
 
 ---
 
-## Article Format
+## Structure
 
-All articles use YAML frontmatter + wikilinks:
-
-```markdown
----
-title: "Topic Name"
-tags: [tag1, tag2]
-project: project-name-or-global
-sources:
-  - "daily/YYYY-MM-DD.md"
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
----
-
-# Topic Name
-
-## Key Points
-- Bullet summary
-
-## Details
-Prose explanation.
-
-## Related Concepts
-- [[concepts/other-topic]] — how they connect
-
-## Sources
-- [[daily/YYYY-MM-DD]]
+```
+knowledge/
+├── index.md                    This catalog (auto-updated by /memory-compile)
+├── concepts/                   Topic articles — canonical reference
+│   └── <topic>.md              e.g. typography-scale.md, crawler-compatibility.md
+├── connections/                Cross-references between concepts
+└── meetings/                   Meeting synthesis (if applicable)
 ```
 
-Wikilinks use `[[subdir/slug]]` format (no `.md` extension — Obsidian-compatible, works in any markdown editor).
+---
 
-## Wiki Structure
+## When to write to `knowledge/concepts/`
 
-Memory Kit v3 uses 3 subdirectories (collapsed from 6 in v2):
+- A topic has been touched 5+ times across `daily/*.md` with accumulating detail
+- The facts are stable (not changing session-to-session)
+- The article would be read by a future self who forgot the rationale
 
-| Subdir | Purpose |
-|---|---|
-| `concepts/` | Single-topic deep-dive articles — one concept per file |
-| `connections/` | Cross-concept synthesis — links 2+ concepts |
-| `meetings/` | Structured meeting index articles |
+**Not** for:
+- Tacit role wisdom → `.claude/skills/<role>-guidance/SKILL.md` (reference skills)
+- Short cross-session patterns → `.claude/memory/MEMORY.md`
+- Mechanical constraints → `.claude/rules/*.md`
 
-Previous subdirs (`qa/`, `projects/`, `experiments/`) were removed in v3. Rationale:
-- `qa/` was empty in practice (compounding loop rarely fired manually)
-- `projects/` duplicated root-level `projects/X/BACKLOG.md`
-- `experiments/` duplicated root-level `experiments/NNN/EXPERIMENT.md`
+---
+
+## Article frontmatter
+
+Every article in `concepts/` starts with:
+
+```yaml
+---
+title: <topic>
+status: canonical | draft | archived
+compiled-from: [daily/2026-04-20.md, daily/2026-04-22.md, ...]
+updated: YYYY-MM-DD
+tags: [tag1, tag2]
+---
+```
+
+---
+
+## Index
+
+<!-- Agent maintains this list via /memory-compile. One line per concept. -->
+
+(empty — `/memory-compile` will populate when enough daily observations accumulate)
+
+---
+
+## Differences from adjacent layers
+
+| Layer | Answers | Scope | Example entry |
+|---|---|---|---|
+| `knowledge/concepts/` | «what is X, why is it the way it is» | Facts + rationale | «our typography scale: 43 paired sub-tokens, reasoning per level» |
+| `.claude/skills/<role>-guidance/SKILL.md` | «how should a <role> think about X» | Tacit judgment (reference skill, user-invocable: false) | «warm tones read editorial, cool tones read SaaS — default to warm» |
+| `.claude/memory/MEMORY.md` | «short patterns noticed recently» | Date-tagged one-liners | «[2026-04-24] user prefers plain prose in status updates» |
+| `.claude/rules/*.md` | «what must always / never happen» | Mechanical constraints | «never push upstream without preflight exit 0» |
+
+Same fact can surface at different layers in its lifecycle: observation → pattern in MEMORY → judgment in reference skill → canonical article in knowledge → enforceable rule. Promotion is agent-driven, always on `/close-day`, always with user verbal confirmation.

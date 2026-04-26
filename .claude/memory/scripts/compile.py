@@ -57,9 +57,11 @@ def save_state(state: dict) -> None:
 
 
 def list_daily_logs() -> list[Path]:
+    """Return YYYY-MM-DD.md logs, skipping scaffolding (README, TEMPLATE, INDEX)."""
     if not DAILY_DIR.exists():
         return []
-    return sorted(DAILY_DIR.glob("*.md"))
+    skip = {"README", "TEMPLATE", "INDEX"}
+    return sorted(p for p in DAILY_DIR.glob("*.md") if p.stem.upper() not in skip)
 
 
 def list_wiki_articles() -> list[Path]:

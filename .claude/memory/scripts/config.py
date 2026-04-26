@@ -18,7 +18,16 @@ LOG_FILE = KNOWLEDGE_DIR / "log.md"
 
 # Raw sources
 DAILY_DIR = ROOT_DIR / "daily"
-ARCHIVE_DIR = ROOT_DIR / "archive"
+
+# Skills (v4: role-based reference skills live under .claude/skills/*-guidance/)
+# Reference skills are user-invocable:false, auto-loaded by Claude on description match.
+SKILLS_DIR = ROOT_DIR / ".claude" / "skills"
+REFERENCE_SKILL_SUFFIX = "-guidance"  # directory naming convention
+PROJECTS_DIR = ROOT_DIR / "projects"
+
+# Thresholds
+OVERSIZED_SKILL_LINES = 500  # Reference skills above this are split candidates
+                             # (matches Anthropic's recommended SKILL.md ceiling)
 
 # State tracking (runtime state in .claude/state/, gitignored)
 SCRIPTS_DIR = Path(__file__).resolve().parent

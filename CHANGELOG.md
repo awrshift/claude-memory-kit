@@ -1,299 +1,189 @@
 # Changelog
 
-## [2026-04-24] — experiments/architecture-viz-water-machine v1.0
+All notable changes to Memory Kit are documented here. Breaking changes marked **BREAKING**.
+
+## [4.0.0] — 2026-04-26 — Promoted from alpha; replaces v3.2.2 in main repo
+
+After two weeks of dogfooding the v4.0.0-alpha branch on a real production project (`avoid-content-site`, 798 sessions), v4 is promoted to stable. v3.2.2 stays accessible via the `v3.2.2` git tag for anyone who still needs it; the `main` branch now reflects v4 architecture.
+
+### Verified working
+
+Sixteen-test verification suite passed cleanly on the migrated repo (settings.json valid + all hook paths exist; bash hooks pass syntax check; Python scripts compile + import; skills aggregator symlinks resolve; runtime tests on every hook with synthetic stdin; `lint.py` + `compile.py --dry-run` clean; cross-references resolve for all six slash commands; `config.py` paths exist for all 8 layer constants). Discovered + patched in process: `lint.py` and `compile.py` were treating `daily/README.md` as a daily log; both now skip `README` / `TEMPLATE` / `INDEX` stems.
 
 ### Added
 
-- **`experiments/architecture-viz-water-machine/`** — interactive HTML visualization of Memory Kit architecture for non-technical audiences (marketers, CMOs). Single self-contained HTML file, no build step, pure CSS/SVG animations + vanilla JS.
-
-  **Metaphor:** mechanical apparatus with glass vessels and water flow. Three fluid phases map to the promotion pipeline — liquid observation → amber structured lesson → crystal canonical rule. Pressure gauge explains why context window limits require layered memory.
-
-  **Four pedagogical scenes (SCQA arc per Gemini 3.1 Pro consultation):**
-  1. **Playable failure** — user clicks buttons to dump context into one vessel, watches the manometer climb to red, sees cracks + overflow drops at 100% fill. Recognizes the pain before seeing the solution.
-  2. **The machine** — full apparatus reveal with Hot Path / Rules / Playbooks / Deep Memory / Sediment layers. Interactive legend hover + trigger-resonance chips («помоги с типографикой» → specific vessels glow terracotta, others dim).
-  3. **Promotion journey** — 4-station phase transition (liquid → amber → playbook → crystal). Agency-grounded copy: разовая правка → фидбек арт-директора → закон бренда.
-  4. **Mitosis** — vessel splitting. Agent proposes split, user approves, biological split animation into 3 specialized children. Reframed as «агент сам наводит порядок» (Gemini critique: avoid selling admin chore).
-
-  **Collaboration:** 3 Gemini 3.1 Pro consultations (pre-build pattern harvest, mid-build landing check, final adversarial gate) — all critiques applied or documented. Key adopted: SCQA ordering (problem first, solution second), business-language manometer, mitosis as autopilot not approval-pyramid, agency-reality grounding for promotion phases.
-
-  **Verification:** Playwright-driven. 18 active CSS animations inventoried via `getAnimations()`. Transform-matrix deltas verified against declared periods. Click-flow tested for vessel fill, chip resonance, mitosis approve/reject/reset. Mobile layout at 480px verified.
-
-  **Palette (separate from Avoid Content):** paper `#F7F3EA`, ink `#16181C`, fresh water `#5B8FA8`, amber `#D4954A`, crystal `#BFD2D7`, alarm `#D65F3E`, sage `#7A9377`, sediment `#3D3630`, brass `#BD9B5D`.
-
-  **Typography:** Instrument Serif (display) · Inter (body) · JetBrains Mono (labels).
-
-  **Files:** `index.html` (single file, ~1850 lines) + `README.md` (prototype documentation).
-
-  **Open:** `open experiments/architecture-viz-water-machine/index.html` or serve via `python3 -m http.server` for full interaction. Russian-language copy targeting CMOs at 50-200 emp agencies.
-
----
-
-## [3.2.2] — 2026-04-23
-
-### Fixed
-
-- **CLAUDE.md terminology drift** — the template still actively documented 18:00 auto-compile and `flush.py` as available features, confusing agents and users onboarded on the kit. In reality, `/close-day` has been the default end-of-day flow since v3.2.0; `flush.py` is opt-in legacy. The "End-of-day Auto-Compile (v3)" section and all 18:00 references have been removed from CLAUDE.md. A single one-paragraph "Legacy note" replaces them, pointing readers at `/close-day` and the v3.2.0 deprecation rationale.
-- **`.claude/commands/memory-compile.md`** — removed the legacy auto-trigger paragraph that described `CMK_COMPILE_AFTER_HOUR=18` and `session-end.sh` uncomment instructions. The command doc now says only what the command does.
-- **Skills symlink regression** — `skills/close-day/SKILL.md` and `skills/tour/SKILL.md` had been converted from symlinks to regular files (macOS dereferenced them during a copy), and the original symlinks lingered as `SKILL 2.md`. Content was still identical, but the structure contradicted v3.2.1's "source is `.claude/skills/`, root is a mirror via symlinks" invariant. Restored symlinks, removed `SKILL 2.md` artefacts.
-
-### Not changed
-
-- `flush.py` and the commented-out auto-flush section in `session-end.sh` remain in place as opt-in legacy for users upgrading from v3.0/v3.1. No code removed.
-- CHANGELOG history (v3.2.0, v3.1.0, v3.0.0) retains original wording — it is the historical record of how the 18:00 auto-compile feature was introduced and then deprecated.
-
----
-
-## [3.2.1] — 2026-04-21
-
-### Fixed
-
-- **Skills duplication drift** — `/skills/close-day/SKILL.md` and `/skills/tour/SKILL.md` were identical copies of the files under `.claude/skills/`. After clone, editing one left the other stale. Now symlinks: `skills/{close-day,tour}/SKILL.md → ../../.claude/skills/{close-day,tour}/SKILL.md`. Runtime source is `.claude/skills/`; root `skills/` stays in sync for skill aggregators that scan repository roots.
-- **ARCHITECTURE.md "Five slash commands"** — three of the listed items (`/memory-compile`, `/memory-lint`, `/memory-query`) are commands; two (`/close-day`, `/tour`) are skills. They invoke similarly but use different Claude Code mechanisms. Reworded to "three slash commands and two skills" for accurate terminology.
-- **ARCHITECTURE.md "Four pipeline scripts"** — actually five (`compile.py`, `lint.py`, `query.py`, `flush.py`, `config.py`). Corrected.
-- **README.md command table** — added `/tour` (was missing). Split commands from skills to match the ARCHITECTURE terminology.
-- **README.md Project Structure** — unified with ARCHITECTURE. Added `memory/scripts/` and `skills/` under `.claude/`, annotated root `skills/` as symlinks-for-aggregators, noted the `_example.md.disabled` rule template.
-
-### Added
-
-- **`.claude/rules/_example.md.disabled`** — reference skeleton for writing a new rule. Previously the rules/ directory held only `.gitkeep`, so users had no shape to copy from. Rename (drop `.disabled`) to activate.
-
----
-
-## [3.2.0] — 2026-04-17
+- **`.claude/settings.json`** registering all 5 hooks (SessionStart / PreCompact / Stop / SessionEnd / PreToolUse-Edit|Write). With `$CLAUDE_PROJECT_DIR`-anchored paths and per-hook timeouts (15-30s). Without this file the hook scripts on disk were inert.
+- **`daily/.gitkeep` + `.claude/state/.gitkeep`** so the directories survive `git clone`. `.gitignore` updated to allow `daily/README.md` through.
 
 ### Changed
 
-- **Date tags: `[YYYY-MM]` → `[YYYY-MM-DD]`** — day-granularity enables `/close-day` synthesis. All MEMORY.md entries now require `[YYYY-MM-DD]` format.
-- **`session-end.sh` simplified** — default behavior is now timestamp-only logging. Auto-flush via `flush.py` is preserved as commented-out optional section for advanced users.
-- **Pipeline flow inverted** — recommended flow is now: in-session saves → `/close-day` manual → daily/ article → `/memory-compile` manual → knowledge/. Old flow (auto-flush → auto-compile) remains available but opt-in.
-- **CLAUDE.md template** — Context Save Protocol now includes optional step 4 (`/close-day`). "< 200 lines" softened to "target ~200 lines, SSOT discipline over hard count".
-
-### Added
-
-- **`/close-day` skill** (`.claude/skills/close-day/SKILL.md`) — end-of-day synthesis command. Scans all files modified today (mtime + `[YYYY-MM-DD]` date tags), synthesizes into `daily/YYYY-MM-DD.md`. Replaces auto-flush as the primary daily article creation method.
-
-### Why this change
-
-Auto-flush (`session-end.sh` → `flush.py` → `claude -p` background) was unreliable in production:
-- ~50% failure rate (no transcript, `claude -p` exit errors)
-- Lower quality output (background process lacks project context)
-- `compile.py` auto-trigger never actually fired in real usage
-
-Meanwhile, in-session saves (MEMORY.md, next-session-prompt.md, BACKLOG.md) already capture high-quality structured knowledge. `/close-day` synthesizes these structured changes into a daily article — higher quality, more reliable, user-controlled timing.
-
----
-
-## [3.1.0] — 2026-04-13
-
-### Breaking Change
-
-- **`knowledge/` moved from `.claude/memory/knowledge/` to project root `knowledge/`**
-  - Claude Code hardcodes everything under `.claude/` as sensitive file protection — `compile.py` (via `claude -p`) could not write to `.claude/memory/knowledge/*.md` even with `--permission-mode acceptEdits`
-  - Fix: `KNOWLEDGE_DIR` in `config.py` changed from `MEMORY_DIR / "knowledge"` to `ROOT_DIR / "knowledge"`
-  - Same change in `session-start.py`: `PROJECT_DIR / "knowledge"` (was `PROJECT_DIR / ".claude" / "memory" / "knowledge"`)
-  - `MEMORY.md` stays at `.claude/memory/MEMORY.md` (auto-loaded as rule, no write needed by compile)
-
-### Added
-
-- **`/knowledge-update` slash command** — manual wiki update trigger for mid-session use
-- **`compile.py` Rule 6** — "PRESERVE manually-written content. ADD sections at bottom rather than rewriting."
-
-### Migration from v3.0.x
-
-1. `mv .claude/memory/knowledge knowledge` (move to project root)
-2. Copy updated `config.py` and `session-start.py` from kit
-3. `git add knowledge/ && git commit`
-4. Verify: `python3 .claude/memory/scripts/lint.py` (0 errors)
-
----
-
-## [3.0.1] — 2026-04-09
-
-Patch release: critical fix for `compile.py` silent failure mode discovered during rnd-hub live test of v3.0.0.
+- **VERSION** `4.0.0-alpha.2` → `4.0.0`.
+- **Reference skills now ship populated.** v4-alpha shipped 7 empty role templates (design / dev / editorial / marketing / seo-geo / product / founder-profile). v4.0.0 adds `memory-audit` task skill alongside the existing `close-day` + `tour`, bringing the included slash-command set to six (`/close-day`, `/memory-audit`, `/memory-compile`, `/memory-lint`, `/memory-query`, `/tour`).
+- **`marketing-guidance` description** — removed legacy «playbooks» token; replaced with «patterns» throughout.
+- **`daily/README.md`** — pointer to `.claude/skills/<role>-guidance/SKILL.md` instead of the deleted `playbooks/*.md`.
+- **`.gitignore`** — replaced legacy «Memory Kit v2» comment header.
+- **`.claude/rules/_example.md` → `_example.md.disabled`** — Claude Code only auto-loads `.md` rules; the `.disabled` suffix prevents the scaffold-template rule from loading as if it were a real rule.
 
 ### Fixed
 
-- **`compile.py` silent failure** — v3.0.0 `compile.py` considered any `claude -p` exit 0 as a successful compile, updating the state hash for the daily log even when sub-Claude returned a text description instead of actually calling Write/Edit tools. Result: daily log was marked as "compiled" but zero wiki articles were created or modified, and the log was permanently skipped on subsequent runs (hash matched, so `compile.py --all` was the only recovery path). Detected during rnd-hub live test Test 10: `compile.py` reported "1/1 succeeded" but `concepts/`, `connections/`, `knowledge/index.md`, and `knowledge/log.md` were all unchanged.
+- **`lint.py:check_orphan_sources`** — was reporting `daily/README.md` as «uncompiled daily log». Now skips `README` / `TEMPLATE` / `INDEX` stems.
+- **`compile.py:list_daily_logs`** — same fix.
+- **`config.py`** — removed dangling `ARCHIVE_DIR` constant pointing at a non-existent `archive/` directory.
 
-  **Three-layer fix:**
-  1. **Mtime snapshot verification** — `compile_daily_log()` now captures wiki state via `snapshot_wiki_state()` before running `claude -p`, then compares against post-run state. If zero files were created and zero files were modified, `compile_daily_log()` returns `False`, dumps sub-Claude stdout to `.claude/state/compile-{daily-stem}-stdout.txt` for debugging, and does NOT update the state hash — so the daily log stays in the queue for the next compile run.
-  2. **Strengthened prompt** — `build_compile_prompt()` now opens with an explicit "CRITICAL — this is an automated pipeline, not a chat" preamble warning sub-Claude that the caller verifies success by checking wiki file mtimes. Rules 1-6 now explicitly say "use the Write tool to CREATE" / "use Edit to UPDATE" instead of just "CREATE" / "UPDATE". New Rule 11: "Every action MUST be a tool call (Write/Edit/Read/Glob/Grep). Text-only responses count as a compile failure." Added a "Final step" instructing sub-Claude to return a one-line summary only after all Write/Edit calls succeed.
-  3. **Added `--permission-mode acceptEdits`** to the `claude -p` invocation in both `compile.py` and `query.py`. Cole's original SDK code uses `permission_mode="acceptEdits"` explicitly; this was lost during the SDK → CLI subprocess port in v2. Not always strictly required (control tests show `claude -p` sometimes accepts Write by default in headless mode), but it's correct by convention and defensive against default-mode drift in future Claude Code versions.
+### Resolved (from v4.0.0-alpha.1 known issues)
 
-### Changed
+- **Skill aggregator symlinks** — now wired up. `skills/close-day`, `skills/memory-audit`, `skills/tour` each symlink into `.claude/skills/<name>/SKILL.md` so Claude Code aggregators that scan repo roots find them.
+- **GitHub remote** — v4 lives on `awrshift/claude-memory-kit` `main` from this release. v3.2.2 is preserved at the `v3.2.2` tag.
 
-- `compile.py` output now includes `Wiki touched: +{N} new files, {M} updated` line on success, so you can see the pipeline working instead of just "Done. Output: X chars".
+### Migration from v3.2.x
 
-### Why this matters
+If you have a v3.2 project and want to use v4:
 
-The v3.0.0 silent failure was invisible from `compile.py` output alone — it reported success, `lint.py` stayed green (because it only checks existing files, not whether compile produced output), and the state hash was updated. The only way to detect it was to manually `ls knowledge/` before and after. Without the mtime snapshot guard, users would have assumed their pipeline was working while knowledge accumulated only in `daily/` and never compiled.
+1. **Don't merge v4 into your v3 project.** The folder layout differs enough that an in-place merge produces inconsistent state.
+2. Clone v4 fresh as a sibling project: `git clone https://github.com/awrshift/claude-memory-kit.git my-project-v4`.
+3. In the new project's first session, say «мы мигрируем с v3.2, вот мой старый проект: ~/Desktop/my-old-kit».
+4. Agent walks the old project, proposes which content lives in which v4 layer, you approve verbally, agent writes patches.
 
-Credit to rnd-hub's Test 10 protocol for catching this end-to-end — a straight happy-path sanity check would have passed without revealing the bug.
-
-### Notes for upgraders from v3.0.0
-
-- If you already have daily logs that v3.0.0 marked as "compiled" but produced no wiki articles: delete their entries from `.claude/state/compile-state.json` → re-run `compile.py`. The new mtime guard will correctly fail (instead of silent-success) if sub-Claude still doesn't write, giving you an actionable debug dump at `.claude/state/compile-{stem}-stdout.txt`.
-- No breaking changes to file formats, hook protocol, or CLI interface. Pure bug fix.
+Specifically the agent will handle:
+- `experiences/*.md` — review each entry; promote to `.claude/skills/<role>-guidance/SKILL.md` or discard as one-off
+- Old `MEMORY.md` — re-tag with dates, fold into v4 `MEMORY.md`
+- `knowledge/concepts/*.md` — copy verbatim (same layer in v4)
+- `daily/*.md` — copy verbatim
+- `.claude/rules/*.md` — copy verbatim
+- `playbooks/*.md` (if you had them in your v3 project) — translate to `.claude/skills/<role>-guidance/SKILL.md` with proper frontmatter
 
 ---
 
-## [3.0.0] — 2026-04-09
+## [4.0.0-alpha.2] — 2026-04-24 pm — Anthropic-alignment refactor
 
-Major upgrade: ports 3 zero-cost features from Cole Medin's `claude-memory-compiler` (the Karpathy-inspired original that Memory Kit v2 was derived from) that were lost in the v1 → v2 stdlib port. Also renames `JOURNAL.md` → `BACKLOG.md` (cleaner semantic separation with `daily/`), collapses `knowledge/` from 6 → 3 subdirs, and promotes the `CLAUDE_INVOKED_BY` recursion guard from hidden quirk to documented feature.
-
-All changes remain on Python stdlib + `claude -p` subscription. No new dependencies. Zero incremental API cost.
-
-### Added
-
-- **`.claude/hooks/session-start.py`** — new Python hook replacing `session-start.sh`. Outputs JSON `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}` so Claude Code injects `knowledge/index.md` + recent `daily/YYYY-MM-DD.md` logs + top 3 recently-modified concepts into every session's initial context. Adapted from coleam00/claude-memory-compiler. Budget: 50K chars default (`CMK_INJECT_BUDGET` env var to tune).
-- **`flush.py` — `maybe_trigger_compilation()`** — after 18:00 local time (`CMK_COMPILE_AFTER_HOUR` env), checks if today's `daily/YYYY-MM-DD.md` has changed since last compile via SHA-256 hash comparison. If yes, spawns `compile.py` as a detached background process. End-of-day auto-compile without cron. Logs to `.claude/state/compile.log`.
-- **`.claude/commands/memory-compile.md`** — slash command wrapper around `compile.py`. Manual override alongside auto-trigger.
-- **`.claude/commands/memory-lint.md`** — slash command wrapper around `lint.py`. Pass `--fix` for auto-backlinks.
-- **`.claude/commands/memory-query.md`** — slash command wrapper around `query.py`. Natural-language queries with index-guided retrieval.
-- **CLAUDE.md sections:**
-  - `SessionStart Injection` — describes additionalContext pattern, budget, priority order
-  - `End-of-day Auto-Compile` — describes 18:00 trigger, hash skip logic, `/memory-compile` manual override
-  - `CLAUDE_INVOKED_BY — recursion guard (critical)` — documents the recursion path that prompted the guard (was hidden quirk in v2)
+After researching Anthropic's official Claude Code primitives (`code.claude.com/docs/en/skills`, `code.claude.com/docs/en/memory`, `code.claude.com/docs/en/best-practices`), we realised the v4.0.0-alpha draft had invented a custom `playbooks/` layer that maps 1:1 to Anthropic's **reference content skills** (skills with `user-invocable: false`). Reclassification in this release:
 
 ### Changed
 
-- **`JOURNAL.md` → `BACKLOG.md`** throughout the template. Renamed 3 example projects (`example-webapp`, `example-saas`, `my-first-project`). Updated all references in `CLAUDE.md`, `README.md`, `.claude/hooks/periodic-save.sh`, `.claude/hooks/pre-compact.sh`, `.claude/skills/tour/SKILL.md`, `experiments/README.md`, `experiments/001-*/EXPERIMENT.md`, `context/next-session-prompt.md`. Rationale: `BACKLOG` = task queue (future-forward), `daily/` = chronological log (past-forward). Two distinct files with clear semantics. `JOURNAL` was ambiguous — it conflated both.
-- **`.claude/memory/knowledge/` collapsed from 6 → 3 subdirectories.** Kept: `concepts/`, `connections/`, `meetings/`. Removed: `qa/` (empty in practice — compounding loop rarely fired manually), `projects/` (duplicated root-level `projects/X/BACKLOG.md`), `experiments/` (duplicated root-level `experiments/NNN/EXPERIMENT.md`). Updated `config.py`, `compile.py`, `lint.py`, `query.py`, `knowledge/index.md`, `CLAUDE.md`.
-- **`lint.py` checks: 7 → 6.** Removed `check_stale_experiments` because it required `knowledge/experiments/` which no longer exists. Remaining: broken links, orphan pages, orphan sources, missing backlinks, sparse articles, missing frontmatter.
-- **`query.py`: removed `--file-back` flag.** It filed answers to `knowledge/qa/` which no longer exists. Query remains read-only, index-guided. If you miss it, the answer is in git history.
-- **`.claude/settings.json`** — SessionStart hook command updated from `bash ".../session-start.sh"` to `python3 ".../session-start.py"`.
+- **BREAKING: `playbooks/*.md` → `.claude/skills/<role>-guidance/SKILL.md`.** Seven role files moved and rewritten with YAML frontmatter: `name`, `description` (keyword-rich for auto-invocation), `user-invocable: false`. Claude auto-loads them whenever the conversation matches the description — no custom trigger table.
+- **CLAUDE.md simplified.** Removed the four-layer layer map section's `playbooks/` line; removed the anti-pattern «don't edit playbooks». Added explicit «don't maintain custom trigger keyword tables» rule — Claude's native description-matching replaces that.
+- **ARCHITECTURE.md** — layer map, promotion pipeline, and «What's NOT in the architecture» updated. Promotion pipeline phase 3 now reads: `daily → MEMORY → reference skill (via /close-day) → rule (via stability + 6+ months)`.
+- **README.md** — terminology swapped throughout; directory tree updated to show reference skills under `.claude/skills/`.
+- **SKILL.md (root)** — mentions «role-based reference skills» instead of «role-based playbooks». Version bumped to 4.0.0-alpha.2.
+- **`/close-day` skill (`SKILL.md`)** — audit proposals now target `.claude/skills/<role>-guidance/SKILL.md`.
+- **`/memory-audit` skill (`SKILL.md`)** — scans `.claude/skills/*-guidance/SKILL.md` for the 500-line threshold. Split proposals create new reference-skill directories, not new playbook files.
+- **`scripts/lint.py` + `scripts/config.py`** — `check_oversized_playbooks` renamed to `check_oversized_reference_skills`. `PLAYBOOKS_DIR` constant removed; `SKILLS_DIR` added with glob filter `*-guidance/SKILL.md`.
+- **`/memory-lint` + `/memory-audit` slash commands** — docs updated to match.
 
 ### Removed
 
-- `.claude/hooks/session-start.sh` — replaced by `session-start.py`.
-- `.claude/memory/knowledge/qa/` directory (and `.gitkeep`).
-- `.claude/memory/knowledge/projects/` directory (and `.gitkeep`).
-- `.claude/memory/knowledge/experiments/` directory (and `.gitkeep`).
-- `check_stale_experiments()` function from `lint.py`.
-- `parse_frontmatter()` helper from `lint.py` (became unused after stale_experiments removal).
-- `QA_DIR`, `EXPERIMENTS_WIKI_DIR`, `PROJECTS_WIKI_DIR` constants from `config.py`.
-- `EXPERIMENTS_RAW_DIR` constant from `config.py` (was only used by check_stale_experiments).
+- **BREAKING: `playbooks/` directory.** All 7 seed files (design, dev, editorial, marketing, seo-geo, product, founder-profile) + `README.md` deleted. Content preserved in the new reference skills under `.claude/skills/<role>-guidance/SKILL.md`.
 
-### Migration notes for v2 → v3
+### Why this alignment matters
 
-**Existing users with a v2 clone must:**
+- Anthropic actively maintains the skills primitive. Using it means we inherit future improvements (subagent preloading, path-scoping via `paths:`, managed-settings deployment, plugin packaging) for free.
+- Auto-invoke via `description` matching replaces a custom trigger table we would have had to hand-maintain in every project's CLAUDE.md.
+- Progressive disclosure is automatic: description is always in context, body loads only when auto-triggered. No more custom «loading on trigger» logic.
+- Reference skills compose with task skills (`/close-day`, `/memory-audit`) through the same file format — one thing to learn.
 
-1. **Rename project files:** `find projects -name JOURNAL.md -exec sh -c 'mv "$0" "${0%JOURNAL.md}BACKLOG.md"' {} \;` (or do it manually per project).
-2. **Update internal references** in `context/next-session-prompt.md`, `CLAUDE.md`, and any custom rules that mention `JOURNAL.md`.
-3. **If you had content in `knowledge/qa/`, `knowledge/projects/`, or `knowledge/experiments/`:** move articles to `knowledge/concepts/` (they lose their subdir categorization but content is preserved). The v3 wiki has only 3 subdirs.
-4. **Update hook command** in `.claude/settings.json`: change SessionStart command from `bash .../session-start.sh` to `python3 .../session-start.py`. Or re-copy `settings.json` from the updated template.
-5. **Replace `session-start.sh` with `session-start.py`** from v3.
-6. **Pull updated `flush.py`** to get `maybe_trigger_compilation()`.
-7. **Optional but recommended:** enable end-of-day auto-compile by leaving default `CMK_COMPILE_AFTER_HOUR=18`, or disable with a high value like `99`.
-8. **`query.py --file-back` users:** the flag is gone. Answers are no longer filed automatically. If you want this back, copy the pre-v3 version from git history.
+### Migration (within v4 scaffold, for anyone who cloned 4.0.0-alpha.1)
 
-**Breaking changes summary:**
-- File rename: `JOURNAL.md` → `BACKLOG.md`
-- Wiki structure: 6 → 3 subdirs
-- Query flag: `--file-back` removed
-- Hook command: bash → python3
+```bash
+# If you have the old scaffold locally with content in playbooks/:
+# 1. Move each playbooks/<role>.md → .claude/skills/<role>-guidance/SKILL.md
+# 2. Rewrite frontmatter: add `name`, `description` (keyword-rich), `user-invocable: false`
+# 3. Body stays the same; remove role:/status:/load-triggers: from old frontmatter
+# 4. Delete playbooks/ folder
+# 5. Reload Claude Code to pick up the new skills
+```
 
-**Not breaking:**
-- MEMORY.md format unchanged
-- `next-session-prompt.md` format unchanged (`<!-- PROJECT:name -->` tags still work)
-- `daily/` format unchanged
-- `compile.py` CLI args unchanged
-- All of v2's other hooks (`session-end.sh`, `pre-compact.sh`, `periodic-save.sh`, `protect-tests.sh`) unchanged
-
-### Fixed
-
-- `compile.py` used to have an outdated prompt template that instructed the LLM to write to `knowledge/{qa,projects,experiments}/` subdirs. Now strictly references `concepts/` and `connections/` (and implicitly `meetings/` when applicable).
-- `pre-compact.sh` counted project files by looking for `JOURNAL.md`. Now looks for `BACKLOG.md`.
-- `periodic-save.sh` block message mentioned `projects/*/JOURNAL.md`. Now says `projects/*/BACKLOG.md`.
+For users coming from v3.2 directly, ignore this and read the 4.0.0-alpha.1 migration section below — the v3.2 → v4 cut already doesn't have `playbooks/`.
 
 ---
 
-## [2.0.1] — 2026-04-09
+## [4.0.0-alpha.1] — 2026-04-24 am — Agent-audit-ritual architecture
 
-Post-launch polish release. Fixes issues found after v2.0.0 shipped, adds brand asset, and corrects terminology leftovers.
+> **BREAKING.** v4 is not backward-compatible with v3.2. Do not merge in-place. Start a fresh project; if you want to bring v3.2 content over, tell the agent «мы мигрируем с v3.2» and it will walk you through manual import.
 
-### Fixed
+### Why this release exists
 
-- **README Mermaid diagram truncation** (`4a37c00`) — Long node labels in the architecture diagram were truncated on GitHub's rendered view. Fixed by wrapping labels with `<br/>` in quoted syntax so each visible line stays under ~25 chars. Verified via Chrome browser automation on live GitHub render.
-- **`/tour` skill obsolete content** (`6da1f19`) — The `/tour` skill still referenced v1 architecture (3 hooks, `topics/` layer). Updated all steps to reflect v2: 5 hooks (added `session-end.sh` + `protect-tests.sh`), `knowledge/` wiki layer with two-tier memory explanation, new Step 5 for Memory Kit v2 Scripts (compile/lint/query/flush) as power-user optional content.
-- **Terminology leftovers: `topics/` → `knowledge/`** (`ab1b0b5`) — Systematic audit caught v1 references still in the codebase:
-  - `.claude/memory/MEMORY.md` template had a "Topic Files" section pointing to `.claude/memory/topics/` (v1 path that no longer exists in v2). Rewrote to "Knowledge Wiki" section pointing to `knowledge/concepts/`.
-  - `CLAUDE.md` had two lines ("create topic file" in Context Save Protocol, "needs more? → topic file" in Memory Entry Quality) — updated to reference knowledge articles.
-- **Missing CONTRIBUTING.md** (`ab1b0b5`) — README linked to `CONTRIBUTING.md` which did not exist (broken link on first click). Created minimal CONTRIBUTING.md with zero-dependencies guidelines, PR rules, and Obsidian-optional ground rule.
+v3.2 introduced `experiences/` as a staging layer for patterns, and a background `promote-patterns.py` script to auto-detect 3× repetitions. After real use we killed both:
 
-### Added
+1. **Cross-session automatic detection is unreliable.** Without a persistent background process, matching semantics across session boundaries via signature heuristics misses more than it finds.
+2. **The scaffold stayed empty.** After deploying `experiences/` no entries accumulated; no case of «I wish I'd caught X earlier» arose.
+3. **Automation threatens the core invariant.** «User only talks, agent writes» breaks the moment a background script surfaces patterns the user feels obliged to review and edit.
 
-- **GitHub Social Preview banner** (`29afd04`, `b9cd78e`) — `.github/assets/og-banner.png` (1280×640). Dark editorial design with isometric 5-layer glass stack (BRAIN/MEMORY/RULES/JOURNAL/CONTEXT). Generated via Gemini Nano Banana Pro after evaluating 3 variants (Swiss editorial, terminal, isometric). Isometric chosen for strongest visual anchor at thumbnail size. Upload via repo Settings → Social preview.
-- **Hero banner in README** (`de0990b`) — Banner now renders as the first element of the README via pure Markdown image syntax. Stays compliant with H3 Hybrid structure (no HTML wrappers in top zone). Visitors see the visual brand before reading any text.
-
-### Notes for upgraders from v2.0.0
-
-- No breaking changes. Pure additive + fixes.
-- If you already cloned v2.0.0 and want to pull v2.0.1: `git pull origin main` — no action required.
-- The `/tour` skill will show the updated v2 walkthrough automatically on next invocation.
-- The Mermaid diagram fix only affects rendered view; no behavior change.
-
----
-
-## [2.0.0] — 2026-04-09
-
-Major upgrade: Memory Kit v2 pipeline ported from the private reference project.
-All additions use Python stdlib only. No `pip install`, no new services, no database.
+v4 replaces automation with a daily ritual. `/close-day` is an audit-in-session where the agent reads today's daily log + MEMORY.md, compares against existing playbooks, and surfaces promotion candidates verbally. User says «да»; agent writes the patch. Higher quality, lower infrastructure cost, invariant preserved.
 
 ### Added
 
-- **`.claude/memory/scripts/`** — 5 Python scripts:
-  - `config.py` — path constants (single source of truth)
-  - `compile.py` — `daily/*.md` → `knowledge/` wiki articles (incremental via SHA-256 hash, uses `claude -p` subscription)
-  - `lint.py` — 7 structural health checks (broken links, orphans, missing backlinks, sparse articles, missing frontmatter, stale experiments) + `--fix` for auto-repair
-  - `query.py` — index-guided retrieval engine with optional `--file-back` to save answers as Q&A articles (compounding loop)
-  - `flush.py` — session transcript extractor (Opus, 100 turns / 50KB window)
-- **`.claude/hooks/session-end.sh`** — auto-captures conversation transcripts to `daily/YYYY-MM-DD.md` at session end, spawns `flush.py` as detached background process
-- **`.claude/hooks/protect-tests.sh`** — `PreToolUse` hook that blocks edits to existing test files (Edit blocked, Write-new allowed). Forces fixing implementation instead of tests.
-- **`.claude/memory/knowledge/`** — structured wiki layer:
-  - `concepts/` — single-topic deep dives
-  - `connections/` — cross-concept relationships
-  - `meetings/` — meeting index articles
-  - `qa/` — filed query answers (compounding loop)
-  - `projects/` — per-project wiki articles
-  - `experiments/` — gravestone pattern (articles stay after raw files archived)
-  - `index.md` — master catalog (read first for any deep query)
-  - `log.md` — append-only build log
-- **`daily/`** — directory for auto-captured session logs (content gitignored by default, only `.gitkeep` committed)
-- **`.claude/state/`** — project-local runtime state (gitignored, replaces legacy `~/.claude-starter-kit/hook_state/`)
-- **README** — new "What's New in v2" section and "Do I need Obsidian?" FAQ entry (answer: no, any Markdown editor works)
-- **CLAUDE.md** — new "Memory Kit v2 Scripts" section, "Session-End Auto-Capture" description, Obsidian-optional note in Memory System
+- **`playbooks/`** — role-based tacit wisdom. One file per role: `dev.md`, `design.md`, `editorial.md`, `marketing.md`, `seo-geo.md`, `product.md`, `founder-profile.md`. Loaded on trigger-match. Different axis from `knowledge/concepts/` (facts + rationale) — no overlap.
+- **`/memory-audit`** operator + skill — two-phase structural check for oversized playbooks (free grep-size flag → agent-in-session semantic clustering → split execution on user «да»).
+- **`--audit-sizes`** flag on `/memory-lint` — fast pre-step that runs only the oversized-playbook check.
+- **Oversized-playbook detection** in `lint.py` — flags any `playbooks/*.md` over 500 lines as split candidate.
+- **`projects/<name>/`** structure for multi-project isolation. Shared layers (CLAUDE.md, MEMORY.md, rules, playbooks, concepts) load always; per-project BACKLOG + materials load when user says «работаем над <name>».
+- **`projects/_example_client/BACKLOG.md`** — template for new projects.
+- **Extended `/close-day` SKILL.md** — explicit audit ritual: synthesize → read MEMORY + playbooks → surface 0-4 candidates → write on verbal approval.
+- **`PLAYBOOKS_DIR` + `OVERSIZED_PLAYBOOK_LINES`** constants in `config.py`.
+- **Root `SKILL.md`** — aggregator-registry metadata for v4.
+- **`CHANGELOG.md`** — this file.
 
 ### Changed
 
-- Hook state path migrated from `~/.claude-starter-kit/hook_state/` to project-local `.claude/state/` — cleaner, no cross-project collisions, gitignored runtime files
-- All hook commands in `.claude/settings.json` now use `$CLAUDE_PROJECT_DIR` prefix — path-safe when agent runs `cd` away from project root
-- `.claude/settings.json` hook format updated to use nested `hooks` arrays (matches current Claude Code spec)
-- Periodic save default: every **15 → 50** exchanges (reduces noise, still catches long sessions). Configurable via `CLAUDE_SAVE_INTERVAL` env var.
-- Memory System terminology: `topics/` renamed to `knowledge/` throughout `CLAUDE.md` (reflects the structured wiki layer, not flat topic files)
-- `CLAUDE.md` Context Architecture table: added L5 `daily/YYYY-MM-DD.md` row (auto-captured raw source)
-- `session-start.sh` now counts knowledge articles instead of flat topic files
+- **`/close-day`** is now the single promotion mechanism. Previously ambiguous whether promotion happened automatically (via `promote-patterns.py`) or manually (user-edited files). Now: always audit ritual, always agent-written, always on user «да».
+- **`/memory-lint`** now runs 7 checks (was: 6). New: `check_oversized_playbooks()`.
+- **`session-end.sh` hook** simplified — no auto-flush, just SessionEnd timestamp logging. End-of-day synthesis is user-invoked via `/close-day`.
+- **`CLAUDE.md`** and **`ARCHITECTURE.md`** rewritten around the «user only talks» invariant.
+- **`README.md`** rewritten to lead with the agent-audit value prop, not the file-layout explanation.
 
 ### Removed
 
-- `.claude/memory/topics/.gitkeep` — superseded by `knowledge/` wiki. (No user content lost — the directory was empty in v1.)
+- **BREAKING: `experiences/`** layer — `README.md`, `TEMPLATE.md`, all staged entries. Over-engineered for a problem that didn't materialize.
+- **BREAKING: `scripts/flush.py`** — replaced by `/close-day` user-invoked ritual. Auto-flush via `flush.py` was unreliable (transcripts not always present, `claude -p` subprocess flakiness) and invariant-violating (spawned behind the user's back).
+- **`promote-patterns.py`** — scrapped before implementation; the entire class of auto-detection scripts is out of scope for v4.
+- **Optional auto-flush block in `session-end.sh`** — commented-out code removed entirely. If anyone wants background synthesis, it belongs in a separate tool, not the core kit.
 
-### Migration notes for v1 → v2
+### Deprecated
 
-- **Existing users:** Your `~/.claude-starter-kit/hook_state/session_count` will no longer be read. The session counter resets to 1. Non-critical (cosmetic). If you want to preserve it: `cp ~/.claude-starter-kit/hook_state/session_count .claude/state/session_count`.
-- **MEMORY.md format** is unchanged. Your existing patterns continue to work.
-- **JOURNAL.md format** is unchanged.
-- **next-session-prompt.md format** is unchanged (`<!-- PROJECT:name -->` tags still work).
-- If you had content in the old empty `topics/` directory (unlikely, since v1 shipped it empty), move `.md` files to `.claude/memory/knowledge/concepts/`.
-- After pulling v2: run `chmod +x .claude/hooks/session-end.sh .claude/hooks/protect-tests.sh` if the executable bit didn't survive the transfer.
+(none — v4 is a clean cut, not a gradual migration)
 
-### Dependencies
+### Security / safety
 
-- Python 3 (stdlib only — no `pip install`)
-- Claude Code CLI (existing requirement)
-- Claude Pro/Max subscription or API key (existing requirement)
-- **Obsidian is NOT required** — the wiki works in any Markdown editor. Obsidian is only for the optional visual graph view.
+- **«User only talks» invariant is load-bearing.** Any future contribution that proposes a background script writing to memory files without user «да» will be rejected.
+- All existing safety hooks (`pre-compact.sh`, `periodic-save.sh`, `protect-tests.sh`) preserved. They capture state before loss events; they do not promote patterns.
 
-## [1.0.0] — 2026-04-08
+### Migration from v3.2.2
 
-Initial release. See commit history before this point.
+Do NOT try to merge v4 into a v3.2 repo. The folder layout is different enough that a merge produces inconsistent state.
+
+Recommended path:
+
+1. Clone v4 as a fresh project
+2. In the new project's first session, say: «мы мигрируем с v3.2, вот мой старый проект: ~/Desktop/my-old-kit»
+3. Agent scans the old project, proposes which content to import and where it fits in the new 4-layer model
+4. You approve each import verbally; agent writes patches into the v4 layout
+5. Old project stays untouched as backup until you're confident v4 is working
+
+Agent will specifically handle:
+- `experiences/*.md` entries → propose promotion to `playbooks/<role>.md` or discard as one-off
+- Old `MEMORY.md` entries → re-tag with dates, fold into v4 `MEMORY.md`
+- Old `knowledge/concepts/*.md` → copy verbatim (same layer in v4)
+- Old `daily/*.md` → copy verbatim
+- Old `.claude/rules/*.md` → copy verbatim
+
+### Known issues
+
+- **`/memory-audit` semantic clustering has no regression test.** Agent judgment on «2-4 independent clusters» can be wrong on the edge. Always preview the proposal before saying «да»; you can say «покажи детали» and the agent will show which entries land in which split file.
+- **No GitHub remote yet.** v4 lives locally on the author's desktop; first public release will push to a fresh repo (not overwrite v3.2).
+- **Skill aggregator symlinks** — `skills/` root with symlinks into `.claude/skills/` (the v3.2.1 pattern) is not yet wired up. Decision deferred to post-alpha testing.
+
+---
+
+## [3.2.2] — 2026-04-XX (last v3.x)
+
+Final pre-v4 version. See the v3.2 repo for changes prior to this shift.
+
+---
+
+## Version numbering
+
+- **Major (v4.x)** — breaking architecture changes (layer additions/removals, invariant shifts)
+- **Minor (v4.N.x)** — new skills, new commands, new rule templates
+- **Patch (v4.N.P)** — bug fixes, doc improvements, no user-visible API change
+
+v4.0.0-alpha = first scaffold; v4.0.0 ships when all 11 scaffold TODOs are closed and the kit has been used for a full week without contradiction.

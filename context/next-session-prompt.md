@@ -1,50 +1,52 @@
 # Next Session Prompt
 
-**Updated:** 2026-03-15
-**Session:** 3
+> Agent writes this at the end of each working day via `/close-day`. You read it on session start — it tells you where we left off and what to pick up next.
+>
+> This is the template. First `/close-day` will overwrite it.
 
-> **Rule:** Each project section is wrapped in `<!-- PROJECT:name -->` / `<!-- /PROJECT:name -->` tags. When updating, ONLY edit within your project's tags. Never touch other projects' sections.
+**Last session:** YYYY-MM-DD.
+
+## ⚡ PICK UP HERE — immediate action
+
+<!-- Agent writes the 1-3 highest-leverage items here, ordered. Usually:
+     1. A concrete task in progress
+     2. An unanswered question for the user
+     3. Optional cleanup / follow-up -->
+
+1. (empty — first `/close-day` populates this)
+
+## Open decisions (waiting on you)
+
+<!-- Questions the agent needs your answer on before proceeding. Short, concrete. -->
+
+- (none)
+
+## Recent deliverables
+
+<!-- Brief list of what actually shipped in the last 1-3 sessions. Agent prunes older items to daily/YYYY-MM-DD.md. -->
+
+- (none)
+
+## Active project(s)
+
+<!-- Which `projects/<name>/` folder(s) are active right now. Agent switches on verbal command. -->
+
+- _example_client — template; replace with your first real project
+
+## Pointers to load
+
+<!-- Files agent should read first on session start. Hooks auto-load most of these, but explicit reminders help. -->
+
+- `CLAUDE.md` — agent identity (auto-loaded)
+- `.claude/memory/MEMORY.md` — hot cache (auto-loaded)
+- `projects/<active>/BACKLOG.md` — active project task queue
+- `.claude/skills/founder-profile/SKILL.md` — always consulted for non-trivial decisions (auto-loaded via description match)
 
 ---
 
-<!-- PROJECT:example-webapp -->
-<!-- EXAMPLE: This section is a demo. Delete it and create your own project section. -->
-## Example: Recipe Sharing App
+## Usage
 
-**Backlog:** `projects/example-webapp/BACKLOG.md`
-
-**Last session:** Built hero carousel (Exp 001), started ingredient search (T-003). Carousel A/B test running.
-
-### IMMEDIATE NEXT
-1. Finish ingredient search endpoint — PostgreSQL full-text search
-2. Check A/B test results for Exp 001 (due March 19)
-3. Mobile responsive fix for recipe cards (T-004)
-<!-- /PROJECT:example-webapp -->
-
----
-
-<!-- PROJECT:example-saas -->
-<!-- EXAMPLE: This section is a demo. Delete it and create your own project section. -->
-## Example: Invoice Automation API
-
-**Backlog:** `projects/example-saas/BACKLOG.md`
-
-**Last session:** Researched payment providers (Exp 002). Stripe vs Paddle vs Lemon Squeezy. Waiting on beta tester invoices for T-005.
-
-### IMMEDIATE NEXT
-1. Follow up with beta tester for multi-page invoice samples (T-005 blocker)
-2. Research EU VAT for B2B SaaS (Exp 002 next step)
-3. Start rate limiting implementation (T-006)
-<!-- /PROJECT:example-saas -->
-
----
-
-<!-- SHARED -->
-## Shared Context
-
-<!-- EXAMPLE: Put cross-project info here — shared infra, credentials, deployment notes. -->
-
-**Experiments in flight:**
-- Exp 001 (example-webapp): Landing redesign — EVALUATE phase, A/B test running
-- Exp 002 (example-saas): Payment provider — RESEARCH phase
-<!-- /SHARED -->
+- Read this file FIRST on every session start
+- Pick up from the topmost immediate-action item
+- If items are stale (>1 week old without being worked on), ask the user whether to drop them
+- Never edit this file by hand — tell the agent what's changed and let it revise
