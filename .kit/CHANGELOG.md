@@ -2,6 +2,23 @@
 
 All notable changes to Memory Kit are documented here. Breaking changes marked **BREAKING**.
 
+## [4.1.2] — 2026-04-27 — Tighten CLAUDE.md operational instructions
+
+Patch — close 3 operational gaps in the auto-loaded agent brain so Claude Code doesn't need to read `.kit/` docs or guess for common operations. CLAUDE.md grew by zero lines (replaced existing items with tighter versions).
+
+### Changed
+
+- **Experiment creation:** `experiments/<name>-YYYYMMDD/EXPERIMENT.md` autonomous-write now mandates copying `experiments/EXPERIMENT-TEMPLATE.md` as starting structure (no invented schemas)
+- **Rule creation:** `.claude/rules/*.md` write-with-confirmation now explicitly requires `created:` + `last-reviewed:` frontmatter (pointer to `_example.md.disabled` skeleton)
+- **Concept creation:** `knowledge/concepts/*.md` write-with-confirmation now explicitly references `knowledge/index.md` for frontmatter spec
+- **Experiment closing:** distill ritual essentials inlined in CLAUDE.md (lessons → concepts/, code → projects/, then `rm -rf` folder) so the agent doesn't need to read close-day SKILL body just to close an experiment
+
+### Why
+
+User feedback: "the user is not going to read files — Claude Code must understand everything from auto-loaded context." Audit showed `.kit/ARCHITECTURE.md`, `experiments/README.md`, `EXPERIMENT-TEMPLATE.md`, and skill bodies don't auto-load. The 3 most common operations (create experiment, create rule, close experiment) had operational details only in non-auto-loaded files. v4.1.2 inlines the essentials in CLAUDE.md.
+
+---
+
 ## [4.1.1] — 2026-04-27 — Restore experiments/ + canonicalize date-tagging
 
 Two corrections to v4.1.0 minimization:

@@ -121,14 +121,14 @@ Hooks are invisible to the user. They just make sure state survives.
 - `daily/YYYY-MM-DD.md` — agent's synthesis of session (via /close-day)
 - `.claude/memory/MEMORY.md` — hot cache updates (tell user briefly)
 - `context/next-session-prompt.md` — session handoff note (tell user briefly)
-- `experiments/<name>-YYYYMMDD/EXPERIMENT.md` — when user clearly says "let's experiment"; tell briefly
+- `experiments/<name>-YYYYMMDD/EXPERIMENT.md` — when user clearly says "let's experiment"; **always copy `experiments/EXPERIMENT-TEMPLATE.md` as starting structure, do not invent your own**; tell briefly
 
 **Ask verbal confirmation before writing:**
-- `.claude/rules/*.md` — canonical project rules
+- `.claude/rules/*.md` — canonical project rules. **Frontmatter MUST include `created: YYYY-MM-DD` + `last-reviewed: YYYY-MM-DD`** (copy `_example.md.disabled` skeleton)
 - `.claude/skills/<task>/SKILL.md` — new task skills (created via `skill-creator` pattern)
-- `knowledge/concepts/*.md` — deep reference articles
+- `knowledge/concepts/*.md` — deep reference articles. **Frontmatter must follow `knowledge/index.md` spec** (title/status/created/updated/compiled-from/tags)
 - `projects/*/BACKLOG.md` — task changes ask briefly
-- Closing an experiment (the distill ritual touches multiple files) — ask before deleting the folder
+- **Closing an experiment** — ask, then run distill ritual: lessons → `knowledge/concepts/<topic>.md`, reusable code → `projects/<name>/`, then `rm -rf experiments/<name>-YYYYMMDD/` (git history retains)
 
 Rule of thumb: if it will affect future sessions' behavior significantly, ask. If it's a session log or ephemeral note, write and mention.
 
