@@ -24,12 +24,10 @@ from pathlib import Path
 
 from config import (
     CONCEPTS_DIR,
-    CONNECTIONS_DIR,
     DAILY_DIR,
     INDEX_FILE,
     KNOWLEDGE_DIR,
     LOG_FILE,
-    MEETINGS_WIKI_DIR,
     ROOT_DIR,
     SCRIPTS_DIR,
     STATE_FILE,
@@ -65,11 +63,9 @@ def list_daily_logs() -> list[Path]:
 
 
 def list_wiki_articles() -> list[Path]:
-    articles = []
-    for subdir in [CONCEPTS_DIR, CONNECTIONS_DIR, MEETINGS_WIKI_DIR]:
-        if subdir.exists():
-            articles.extend(sorted(subdir.glob("*.md")))
-    return articles
+    if CONCEPTS_DIR.exists():
+        return sorted(CONCEPTS_DIR.glob("*.md"))
+    return []
 
 
 def read_wiki_index() -> str:
@@ -163,9 +159,8 @@ updated: {timestamp[:10]}
 1. Extract 2-5 distinct concepts worth their own article. Use the Write tool to create each one.
 2. If an existing concept article covers this topic: use Read to load it, then use Edit to add new info + append the daily log to sources frontmatter.
 3. If it's a new topic: use Write to CREATE a new concepts/ article with full YAML frontmatter.
-4. If the log reveals a connection between 2+ concepts: use Write to CREATE a connections/ article.
-5. Use Edit to UPDATE {INDEX_FILE.relative_to(ROOT_DIR)} — add new entries to the Concepts/Connections table.
-6. Use Edit (or Write if empty) to APPEND to {LOG_FILE.relative_to(ROOT_DIR)} a timestamped entry:
+4. Use Edit to UPDATE {INDEX_FILE.relative_to(ROOT_DIR)} — add new entries to the Concepts table.
+5. Use Edit (or Write if empty) to APPEND to {LOG_FILE.relative_to(ROOT_DIR)} a timestamped entry:
    ```
    ## [{timestamp}] compile | {log_path.name}
    - Source: daily/{log_path.name}
@@ -180,7 +175,6 @@ updated: {timestamp[:10]}
 
 ### File paths (absolute):
 - Concepts: {CONCEPTS_DIR}
-- Connections: {CONNECTIONS_DIR}
 - Index: {INDEX_FILE}
 - Log: {LOG_FILE}
 
@@ -193,13 +187,12 @@ After all Write/Edit calls succeed, return a single line summarizing what you di
 def snapshot_wiki_state() -> dict[str, float]:
     """Capture mtime of every wiki article + index.md + log.md for post-compile verification."""
     snap: dict[str, float] = {}
-    for subdir in [CONCEPTS_DIR, CONNECTIONS_DIR, MEETINGS_WIKI_DIR]:
-        if subdir.exists():
-            for p in subdir.glob("*.md"):
-                try:
-                    snap[str(p)] = p.stat().st_mtime
-                except OSError:
-                    pass
+    if CONCEPTS_DIR.exists():
+        for p in CONCEPTS_DIR.glob("*.md"):
+            try:
+                snap[str(p)] = p.stat().st_mtime
+            except OSError:
+                pass
     for extra in [INDEX_FILE, LOG_FILE]:
         if extra.exists():
             try:
@@ -307,7 +300,7 @@ def main():
     args = parser.parse_args()
 
     # Ensure directories exist
-    for d in [DAILY_DIR, CONCEPTS_DIR, CONNECTIONS_DIR, MEETINGS_WIKI_DIR]:
+    for d in [DAILY_DIR, CONCEPTS_DIR]:
         d.mkdir(parents=True, exist_ok=True)
 
     state = load_state()

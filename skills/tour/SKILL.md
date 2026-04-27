@@ -1,1 +1,0 @@
-../../.claude/skills/tour/SKILL.md

@@ -1,14 +1,13 @@
 """
 Lint the knowledge base for structural health.
 
-7 structural checks — all free, no LLM calls needed:
+6 structural checks — all free, no LLM calls needed:
 broken links, orphan pages, orphan sources, missing backlinks,
-sparse articles, missing frontmatter, oversized reference skills.
+sparse articles, missing frontmatter.
 
 Usage:
     python scripts/lint.py              # run all checks
     python scripts/lint.py --fix        # auto-fix what's possible (missing backlinks)
-    python scripts/lint.py --audit-sizes # only the oversized-reference-skill check
 """
 
 from __future__ import annotations
@@ -19,24 +18,17 @@ from pathlib import Path
 
 from config import (
     CONCEPTS_DIR,
-    CONNECTIONS_DIR,
     DAILY_DIR,
     KNOWLEDGE_DIR,
-    MEETINGS_WIKI_DIR,
-    OVERSIZED_SKILL_LINES,
-    REFERENCE_SKILL_SUFFIX,
-    SKILLS_DIR,
     STATE_FILE,
     today_iso,
 )
 
 
 def list_wiki_articles() -> list[Path]:
-    articles = []
-    for subdir in [CONCEPTS_DIR, CONNECTIONS_DIR, MEETINGS_WIKI_DIR]:
-        if subdir.exists():
-            articles.extend(sorted(subdir.glob("*.md")))
-    return articles
+    if CONCEPTS_DIR.exists():
+        return sorted(CONCEPTS_DIR.glob("*.md"))
+    return []
 
 
 def extract_wikilinks(content: str) -> list[str]:
@@ -70,8 +62,8 @@ def check_broken_links() -> list[dict]:
         content = article.read_text(encoding="utf-8")
         rel = article.relative_to(KNOWLEDGE_DIR)
         for link in extract_wikilinks(content):
-            # Skip daily/ and topics/ references (external to vault)
-            if link.startswith(("daily/", "topics/")):
+            # Skip daily/ references (external to vault)
+            if link.startswith("daily/"):
                 continue
             if not wiki_article_exists(link):
                 issues.append({
@@ -155,7 +147,7 @@ def check_missing_backlinks() -> list[dict]:
         source_link = str(rel).replace(".md", "").replace("\\", "/")
 
         for link in extract_wikilinks(content):
-            if link.startswith(("daily/", "topics/")):
+            if link.startswith("daily/"):
                 continue
             target_path = KNOWLEDGE_DIR / f"{link}.md"
             if target_path.exists():
@@ -199,46 +191,6 @@ def check_missing_frontmatter() -> list[dict]:
                 "check": "missing_frontmatter",
                 "file": str(rel),
                 "detail": "Missing YAML frontmatter (---)",
-            })
-    return issues
-
-
-def check_oversized_reference_skills() -> list[dict]:
-    """Reference skills above OVERSIZED_SKILL_LINES — candidates for split via /memory-audit.
-
-    Scans .claude/skills/*-guidance/SKILL.md (reference skills, user-invocable: false).
-    Flags structurally large ones. Whether a split actually makes sense requires semantic
-    analysis (which topics are independent?) — that's done in live session by the
-    /memory-audit agent skill. This script only surfaces the size signal.
-
-    Threshold 500 lines matches Anthropic's recommended SKILL.md ceiling.
-    """
-    issues = []
-    if not SKILLS_DIR.exists():
-        return issues
-
-    for skill_dir in sorted(SKILLS_DIR.iterdir()):
-        if not skill_dir.is_dir():
-            continue
-        if not skill_dir.name.endswith(REFERENCE_SKILL_SUFFIX):
-            continue  # Only check reference skills, not task skills
-
-        skill_file = skill_dir / "SKILL.md"
-        if not skill_file.exists():
-            continue
-
-        content = skill_file.read_text(encoding="utf-8")
-        # Skip index skills (result of prior split — have `split-into:` in frontmatter)
-        if "split-into:" in content[:500]:
-            continue
-
-        line_count = content.count("\n") + 1
-        if line_count > OVERSIZED_SKILL_LINES:
-            issues.append({
-                "severity": "warning",
-                "check": "oversized_reference_skill",
-                "file": f".claude/skills/{skill_dir.name}/SKILL.md",
-                "detail": f"{line_count} lines (threshold: {OVERSIZED_SKILL_LINES}). Candidate for split via /memory-audit.",
             })
     return issues
 
@@ -315,21 +267,9 @@ def generate_report(all_issues: list[dict]) -> str:
 def main():
     parser = argparse.ArgumentParser(description="Lint the knowledge base")
     parser.add_argument("--fix", action="store_true", help="Auto-fix missing backlinks")
-    parser.add_argument("--audit-sizes", action="store_true", help="Only run the oversized-reference-skills check (fast)")
     args = parser.parse_args()
 
     all_issues: list[dict] = []
-
-    if args.audit_sizes:
-        print("Running reference-skill size audit...\n")
-        issues = check_oversized_reference_skills()
-        all_issues.extend(issues)
-        status = f"{len(issues)} oversized" if issues else "all within threshold"
-        print(f"  Oversized reference skills: {status}")
-        report = generate_report(all_issues)
-        print(f"\n{'=' * 50}")
-        print(report)
-        return 0
 
     print("Running knowledge base lint checks...\n")
 
@@ -340,7 +280,6 @@ def main():
         ("Missing backlinks", check_missing_backlinks),
         ("Sparse articles", check_sparse_articles),
         ("Missing frontmatter", check_missing_frontmatter),
-        ("Oversized reference skills", check_oversized_reference_skills),
     ]
 
     for name, check_fn in checks:
