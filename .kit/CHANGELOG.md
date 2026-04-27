@@ -2,6 +2,45 @@
 
 All notable changes to Memory Kit are documented here. Breaking changes marked **BREAKING**.
 
+## [4.1.0] — 2026-04-27 — Kit minimization
+
+After two weeks of dogfooding v4.0.0 on real production work, several layers turned out to be noise that the kit shouldn't ship by default. v4.1.0 trims them out. The pattern can still be added per-project by users who want it (see `.kit/ARCHITECTURE.md` "Adding role-guidance yourself"); the kit just doesn't seed templates anymore.
+
+### Removed
+
+- **BREAKING: 7 role-guidance reference-skill seeds.** `design-guidance`, `dev-guidance`, `editorial-guidance`, `marketing-guidance`, `seo-geo-guidance`, `product-guidance`, `founder-profile` deleted from `.claude/skills/`. Generic role wisdom seeds were noise — what works for content marketing is wrong for SaaS dev is wrong for editorial. Pattern documented in ARCHITECTURE for opt-in.
+- **BREAKING: `/memory-audit` operator.** Was paired with role-guidance for oversized-skill split detection. With seeds gone, the operator lost its purpose. Removed: `.claude/commands/memory-audit.md`, `.claude/skills/memory-audit/`, `lint.py --audit-sizes` flag, `check_oversized_reference_skills` function, `OVERSIZED_SKILL_LINES` + `REFERENCE_SKILL_SUFFIX` + `SKILLS_DIR` constants.
+- **BREAKING: `knowledge/connections/` and `knowledge/meetings/` subdirs.** Nobody filled them; `compile.py` only ever wrote to `concepts/`. Collapsed `knowledge/` to a single subdir. `CONNECTIONS_DIR` + `MEETINGS_WIKI_DIR` removed from `config.py`. `compile.py` prompt no longer instructs the sub-Claude to create connections/ articles. `lint.py` only scans `concepts/`.
+
+### Changed
+
+- **Kit-meta moved to `.kit/`.** `CHANGELOG.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, `VERSION` no longer pollute the project root after clone. Users get a clean root for their own project's docs. README at root links into `.kit/` for kit history.
+- **Promotion pipeline simplified from 4 phases to 3.** Liquid (daily) → Amber (MEMORY) → Crystal (rules OR concepts). The role-skill intermediate phase is gone.
+- **`/close-day` audit Phase 2 retargeted.** Was: surface candidates for promotion to `<role>-guidance/SKILL.md`. Now: surface candidates for `knowledge/concepts/<topic>.md` articles or `.claude/rules/<name>.md` constraints.
+- **`/memory-lint`** now runs 6 checks (was 7). Dropped: oversized reference skills.
+- **README rewritten in English.** Was Russian (v4.0.0); v4.1.0 reverts to English for git compatibility with international contributors.
+- **All Russian dialogue examples in skills, CLAUDE.md, ARCHITECTURE.md replaced with English equivalents.** Agent's actual conversation with the user can be in any language; the documentation examples are in English.
+
+### Added
+
+- **`daily/TEMPLATE.md`** — explicit format for what `/close-day` produces. Tracked in git (was not present before).
+- **`.kit/` subfolder** to host kit-meta separated from user project root.
+
+### Migration from v4.0.0
+
+If you adopted v4.0.0 and want v4.1.0:
+
+1. **If you wrote content into role-guidance files** — move it. Open each `.claude/skills/<role>-guidance/SKILL.md` you populated and either: (a) translate stable judgment patterns to `.claude/rules/<topic>.md`, or (b) translate the rationale-rich entries to `knowledge/concepts/<topic>.md`. Then delete the `<role>-guidance/` directory.
+2. **If you used `/memory-audit`** — stop. The operator is gone. If a task skill genuinely grows past 500 lines, split it manually or wait until enough projects need this and we re-add the operator with a wider target.
+3. **If you wrote into `knowledge/connections/` or `knowledge/meetings/`** — move content to `knowledge/concepts/` (single subdir from now on). Update any `[[connections/X]]` or `[[meetings/Y]]` wikilinks to `[[concepts/X]]`/`[[concepts/Y]]`.
+4. **If your tooling expected CHANGELOG.md / ARCHITECTURE.md / VERSION at root** — they're under `.kit/` now. Update paths.
+
+### Why
+
+700+ session dogfooding showed: kit users either (a) ignored the role-guidance seeds entirely (most), or (b) deleted them and built their own (some). The seeds added cognitive load on first install and never paid off. Same for `connections/` + `meetings/` — sounded useful in theory, never filled in practice. Kit ships only what every user needs; everything else is opt-in pattern.
+
+---
+
 ## [4.0.0] — 2026-04-26 — Promoted from alpha; replaces v3.2.2 in main repo
 
 After two weeks of dogfooding the v4.0.0-alpha branch on real production work, v4 is promoted to stable. v3.2.2 stays accessible via the `v3.2.2` git tag for anyone who still needs it; the `main` branch now reflects v4 architecture.
@@ -41,7 +80,7 @@ If you have a v3.2 project and want to use v4:
 
 1. **Don't merge v4 into your v3 project.** The folder layout differs enough that an in-place merge produces inconsistent state.
 2. Clone v4 fresh as a sibling project: `git clone https://github.com/awrshift/claude-memory-kit.git my-project-v4`.
-3. In the new project's first session, say «мы мигрируем с v3.2, вот мой старый проект: ~/Desktop/my-old-kit».
+3. In the new project's first session, say "we're migrating from v3.2, here's my old project: ~/Desktop/my-old-kit".
 4. Agent walks the old project, proposes which content lives in which v4 layer, you approve verbally, agent writes patches.
 
 Specifically the agent will handle:
@@ -98,7 +137,7 @@ For users coming from v3.2 directly, ignore this and read the 4.0.0-alpha.1 migr
 
 ## [4.0.0-alpha.1] — 2026-04-24 am — Agent-audit-ritual architecture
 
-> **BREAKING.** v4 is not backward-compatible with v3.2. Do not merge in-place. Start a fresh project; if you want to bring v3.2 content over, tell the agent «мы мигрируем с v3.2» and it will walk you through manual import.
+> **BREAKING.** v4 is not backward-compatible with v3.2. Do not merge in-place. Start a fresh project; if you want to bring v3.2 content over, tell the agent "we're migrating from v3.2" and it will walk you through manual import.
 
 ### Why this release exists
 
@@ -108,15 +147,15 @@ v3.2 introduced `experiences/` as a staging layer for patterns, and a background
 2. **The scaffold stayed empty.** After deploying `experiences/` no entries accumulated; no case of «I wish I'd caught X earlier» arose.
 3. **Automation threatens the core invariant.** «User only talks, agent writes» breaks the moment a background script surfaces patterns the user feels obliged to review and edit.
 
-v4 replaces automation with a daily ritual. `/close-day` is an audit-in-session where the agent reads today's daily log + MEMORY.md, compares against existing playbooks, and surfaces promotion candidates verbally. User says «да»; agent writes the patch. Higher quality, lower infrastructure cost, invariant preserved.
+v4 replaces automation with a daily ritual. `/close-day` is an audit-in-session where the agent reads today's daily log + MEMORY.md, compares against existing playbooks, and surfaces promotion candidates verbally. User says "yes"; agent writes the patch. Higher quality, lower infrastructure cost, invariant preserved.
 
 ### Added
 
 - **`playbooks/`** — role-based tacit wisdom. One file per role: `dev.md`, `design.md`, `editorial.md`, `marketing.md`, `seo-geo.md`, `product.md`, `founder-profile.md`. Loaded on trigger-match. Different axis from `knowledge/concepts/` (facts + rationale) — no overlap.
-- **`/memory-audit`** operator + skill — two-phase structural check for oversized playbooks (free grep-size flag → agent-in-session semantic clustering → split execution on user «да»).
+- **`/memory-audit`** operator + skill — two-phase structural check for oversized playbooks (free grep-size flag → agent-in-session semantic clustering → split execution on user "yes").
 - **`--audit-sizes`** flag on `/memory-lint` — fast pre-step that runs only the oversized-playbook check.
 - **Oversized-playbook detection** in `lint.py` — flags any `playbooks/*.md` over 500 lines as split candidate.
-- **`projects/<name>/`** structure for multi-project isolation. Shared layers (CLAUDE.md, MEMORY.md, rules, playbooks, concepts) load always; per-project BACKLOG + materials load when user says «работаем над <name>».
+- **`projects/<name>/`** structure for multi-project isolation. Shared layers (CLAUDE.md, MEMORY.md, rules, playbooks, concepts) load always; per-project BACKLOG + materials load when user says "we're working on <name>".
 - **`projects/_example_client/BACKLOG.md`** — template for new projects.
 - **Extended `/close-day` SKILL.md** — explicit audit ritual: synthesize → read MEMORY + playbooks → surface 0-4 candidates → write on verbal approval.
 - **`PLAYBOOKS_DIR` + `OVERSIZED_PLAYBOOK_LINES`** constants in `config.py`.
@@ -125,7 +164,7 @@ v4 replaces automation with a daily ritual. `/close-day` is an audit-in-session 
 
 ### Changed
 
-- **`/close-day`** is now the single promotion mechanism. Previously ambiguous whether promotion happened automatically (via `promote-patterns.py`) or manually (user-edited files). Now: always audit ritual, always agent-written, always on user «да».
+- **`/close-day`** is now the single promotion mechanism. Previously ambiguous whether promotion happened automatically (via `promote-patterns.py`) or manually (user-edited files). Now: always audit ritual, always agent-written, always on user "yes".
 - **`/memory-lint`** now runs 7 checks (was: 6). New: `check_oversized_playbooks()`.
 - **`session-end.sh` hook** simplified — no auto-flush, just SessionEnd timestamp logging. End-of-day synthesis is user-invoked via `/close-day`.
 - **`CLAUDE.md`** and **`ARCHITECTURE.md`** rewritten around the «user only talks» invariant.
@@ -144,7 +183,7 @@ v4 replaces automation with a daily ritual. `/close-day` is an audit-in-session 
 
 ### Security / safety
 
-- **«User only talks» invariant is load-bearing.** Any future contribution that proposes a background script writing to memory files without user «да» will be rejected.
+- **"User only talks" invariant is load-bearing.** Any future contribution that proposes a background script writing to memory files without user "yes" will be rejected.
 - All existing safety hooks (`pre-compact.sh`, `periodic-save.sh`, `protect-tests.sh`) preserved. They capture state before loss events; they do not promote patterns.
 
 ### Migration from v3.2.2
@@ -154,7 +193,7 @@ Do NOT try to merge v4 into a v3.2 repo. The folder layout is different enough t
 Recommended path:
 
 1. Clone v4 as a fresh project
-2. In the new project's first session, say: «мы мигрируем с v3.2, вот мой старый проект: ~/Desktop/my-old-kit»
+2. In the new project's first session, say: "we're migrating from v3.2, here's my old project: ~/Desktop/my-old-kit"
 3. Agent scans the old project, proposes which content to import and where it fits in the new 4-layer model
 4. You approve each import verbally; agent writes patches into the v4 layout
 5. Old project stays untouched as backup until you're confident v4 is working
@@ -168,7 +207,7 @@ Agent will specifically handle:
 
 ### Known issues
 
-- **`/memory-audit` semantic clustering has no regression test.** Agent judgment on «2-4 independent clusters» can be wrong on the edge. Always preview the proposal before saying «да»; you can say «покажи детали» and the agent will show which entries land in which split file.
+- **`/memory-audit` semantic clustering has no regression test.** Agent judgment on "2-4 independent clusters" can be wrong on the edge. Always preview the proposal before saying "yes"; you can say "show details" and the agent will show which entries land in which split file.
 - **No GitHub remote yet.** v4 lives locally on the author's desktop; first public release will push to a fresh repo (not overwrite v3.2).
 - **Skill aggregator symlinks** — `skills/` root with symlinks into `.claude/skills/` (the v3.2.1 pattern) is not yet wired up. Decision deferred to post-alpha testing.
 
