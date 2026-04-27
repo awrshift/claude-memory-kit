@@ -29,7 +29,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full migration notes.
 ## Quick start
 
 ```bash
-git clone https://github.com/awrshift/claude-memory-kit-v4.git my-project
+git clone https://github.com/awrshift/claude-memory-kit.git my-project
 cd my-project
 claude
 ```
@@ -40,7 +40,7 @@ First session: agent greets you, asks 2-3 setup questions, loads you in. Type `/
 
 1. Open a session — hooks auto-load NSP + MEMORY + knowledge index
 2. Work normally — agent captures patterns in MEMORY.md as you speak
-3. `/close-day` when done — agent synthesizes today, audits for promotions, proposes verbally, writes on your «да»
+3. `/close-day` when done — agent synthesizes today, audits for promotions, proposes verbally, writes on your verbal "yes"
 
 Tomorrow starts where today left off.
 

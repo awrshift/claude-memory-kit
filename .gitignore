@@ -30,3 +30,4 @@ node_modules/
 daily/*.md
 !daily/.gitkeep
 !daily/README.md
+!daily/TEMPLATE.md

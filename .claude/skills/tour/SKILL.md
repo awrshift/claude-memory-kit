@@ -10,48 +10,43 @@ You are giving the user a guided tour of their Memory Kit. Use their actual file
 ## Tour structure (10-15 minutes)
 
 ### Stop 1 — CLAUDE.md (agent identity)
-Open and read aloud the first few lines. Say: «Это мой мозг. Я читаю это на каждой сессии. Здесь написано кто я для этого проекта, как с тобой общаться.»
+Open and read aloud the first few lines. Say: "This is my brain. I read it on every session start. It says who I am for this project, how to talk to you."
 
 ### Stop 2 — Session entry (NSP + backlog)
-Open `context/next-session-prompt.md` and, if multi-project mode, `projects/<active>/BACKLOG.md`. Say: «А это — записка от вчерашнего себя (NSP) и план на сегодня (backlog). Это первое что я читаю, чтобы знать где мы остановились.»
+Open `context/next-session-prompt.md` and, if multi-project mode, `projects/<active>/BACKLOG.md`. Say: "This is yesterday-me's note (NSP) and today's plan (backlog). It's the first thing I read so I know where we left off."
 
 ### Stop 3 — Hot path (MEMORY.md)
-Open `.claude/memory/MEMORY.md`. Say: «Это моя короткая память. Здесь date-tagged строки паттернов из последних сессий. Обновляется часто — иногда по ходу сессии, когда я замечаю что-то важное.»
+Open `.claude/memory/MEMORY.md`. Say: "This is my hot cache. Date-tagged one-liners of patterns from recent sessions. Updates often — sometimes mid-session when I notice something worth keeping."
 
 ### Stop 4 — Rules (.claude/rules/)
-List any `.claude/rules/*.md` files. If folder is mostly empty, say: «Здесь будут жёсткие правила твоего проекта. "Не пиши X", "Всегда проверяй Y". Они подгружаются автоматически по ключевым словам. Сейчас пусто — появятся когда ты начнёшь диктовать правила.»
+List any `.claude/rules/*.md` files. If folder is empty (only `_example.md.disabled`), say: "This is where hard project rules live. 'Don't use X', 'always check Y'. They auto-load by keyword. Empty for now — they'll appear when you start dictating rules and I propose them on `/close-day`."
 
-### Stop 5 — Reference skills (role wisdom)
-List `.claude/skills/*-guidance/` directories. Open 1-2 (e.g. `design-guidance/SKILL.md`, `editorial-guidance/SKILL.md`). Say: «Это гайды для разных ролей. Дизайнер думает по-своему, редактор по-своему, маркетолог по-своему. Когда разговор касается дизайна — я автоматически подгружаю `design-guidance` (Claude Code сам это делает по описанию в frontmatter — `user-invocable: false` означает "только я могу их вызвать, не ты"). Пока они пустые шаблоны. Будут расти через `/close-day` — я буду предлагать, ты подтверждать голосом.»
+### Stop 5 — Knowledge concepts
+List `knowledge/concepts/*.md`. Say: "Deep memory with facts. 'What's our typography scale', 'what we know about SEO for AI'. Reference articles. Empty now — they fill in via `/memory-compile` when enough daily observations stack up around a topic."
 
-### Stop 6 — Knowledge/concepts/
-List `knowledge/concepts/*.md`. Say: «Это глубокая память с фактами. "Какой у нас скейл типографики", "Что мы знаем про SEO для ИИ". Это reference-статьи. Тоже пусто сейчас — заполнятся когда ты начнёшь работать над конкретными темами и я буду предлагать компиляции из daily.»
+### Stop 6 — Daily logs
+Show `daily/`. Say: "Chronological session logs. The agent writes these via `/close-day` — you don't open them. Searchable via `/memory-query`."
 
-### Stop 7 — Daily/
-List recent `daily/*.md`. Say: «Архив. Каждый день после `/close-day` я пишу сюда всё что сегодня произошло. Ты не открываешь эти файлы — но я могу искать по ним, если ты спросишь "когда мы это решили?".»
+### Stop 7 — Projects
+List `projects/*/`. Say: "Each client or initiative gets a folder. BACKLOG.md for tasks, drop in any PDF or md as reference. Say 'we're working on <name>' and I switch context to that one."
 
-### Stop 8 — Projects/ (if multi-project)
-List `projects/*/`. Say: «Каждый клиент — своя папка. В ней backlog задач + твои материалы по этому клиенту (брифы, гайды, референсы). Когда ты говоришь "работаем над client-a", я подгружаю именно эту папку.»
+### Stop 8 — Hooks
+Mention `.claude/hooks/` exists but don't deep-dive. Say: "Five safety hooks run silently. They make sure state survives — block compaction until saved, log session lifecycle, periodic state-save prompts."
 
 ### Stop 9 — Operators
-List slash commands. Say:
-- «`/close-day` — в конце дня. Я соберу день в архив и предложу промоушен паттернов в reference skills (`design-guidance`, `editorial-guidance`, и т.д.).»
-- «`/memory-compile` — иногда. Превращает дневники в тематические статьи в knowledge.»
-- «`/memory-query` — когда хочешь найти что-то: "что мы решили про X". Ищу везде.»
-- «`/memory-lint` — структурная проверка: битые ссылки, orphans, oversized reference skills. Запускаешь когда кажется что база запуталась.»
-- «`/memory-audit` — проверяет не раздулся ли какой-то reference skill (> 500 строк). Если да — предлагает разделить по темам.»
+List slash operators: `/close-day`, `/memory-compile`, `/memory-query`, `/memory-lint`, `/tour`. Say: "Type any of these to invoke. `/close-day` is the most important — that's the daily audit ritual where I propose what should be remembered."
 
-### Stop 10 — The invariant
-Close by restating: «Главное правило Memory Kit — ты только говоришь, я всё пишу. Не открывай эти файлы вручную. Если хочешь что-то добавить, запретить, изменить — просто скажи мне, я оформлю и спрошу подтверждение. Всё.»
+## Closing
 
-## Adapting the tour
+Ask: "Anything you want to drill into deeper? Or should we start with a real task — name your first project?"
 
-- If user already knows Memory Kit, you can skip stops and ask «где показать подробнее?»
-- If project is fresh (all folders empty), say so explicitly: «Большинство файлов сейчас пустые. Это нормально. Будут заполняться через 2-3 недели активной работы.»
-- If user asks a specific question mid-tour, answer it and return to the next stop.
+## What you do NOT do
 
-## Do NOT
+- **Don't read every file in full.** Show the first 5-10 lines so user sees the format, not the content.
+- **Don't lecture.** This is a tour, not a manual. Each stop = 1-2 sentences.
+- **Don't propose changes during the tour.** This is informational only. If user asks "can we change X" during tour — note it for after.
+- **Don't skip stops based on emptiness.** Empty folders are part of the story — show them and explain when they fill.
 
-- Don't dump technical jargon. Translate all English file paths to Russian concepts.
-- Don't skip the invariant at the end. It's the most important takeaway.
-- Don't go file-by-file reading the full content. Hit the structure + purpose, not the details.
+## Length
+
+Target 10-15 minutes total. If user is engaged and asks questions, fine — go longer. If user seems impatient, compress to 5 minutes by collapsing stops 4-7 into one "and these are the on-trigger layers" sweep.

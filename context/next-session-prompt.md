@@ -40,7 +40,7 @@
 - `CLAUDE.md` — agent identity (auto-loaded)
 - `.claude/memory/MEMORY.md` — hot cache (auto-loaded)
 - `projects/<active>/BACKLOG.md` — active project task queue
-- `.claude/skills/founder-profile/SKILL.md` — always consulted for non-trivial decisions (auto-loaded via description match)
+- `knowledge/concepts/*.md` — deep reference articles (loaded on description match)
 
 ---
 

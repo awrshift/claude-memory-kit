@@ -2,21 +2,21 @@
 
 # Claude Memory Kit
 
-**Твой Claude помнит всё. Каждого клиента, каждый бриф, каждое решение. Между сессиями. Без настроек.**
+**Your Claude remembers everything. Every client, every brief, every decision. Across sessions. Zero setup.**
 
 [![Version](https://img.shields.io/github/v/release/awrshift/claude-memory-kit?label=version&color=brightgreen)](https://github.com/awrshift/claude-memory-kit/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-6366f1)](https://docs.anthropic.com/en/docs/claude-code/overview)
 
-## В чём проблема
+## The problem
 
-Каждый раз, когда ты открываешь Claude — он забывает всё. Вчера вы согласовали тон голоса для бренда. Сегодня нужно объяснять заново. На прошлой неделе он помог найти нужный угол для кампании — на этой ты не помнишь, как именно.
+Every time you open Claude, it forgets everything. Yesterday you locked the brand voice. Today you have to explain it again. Last week it helped you find the right campaign angle — this week you can't remember exactly how.
 
-В итоге первые 10 минут каждой сессии уходят на пересказ того, что Claude **уже знал**.
+The first 10 minutes of every session go to re-explaining what Claude **already knew**.
 
-**Memory Kit это чинит. Бесплатно. Работает поверх твоей подписки Claude Pro или Max.**
+**Memory Kit fixes this. Free. Runs on top of your Claude Pro or Max subscription.**
 
-## Как начать
+## Quick start
 
 ```bash
 git clone https://github.com/awrshift/claude-memory-kit.git my-projects
@@ -24,180 +24,180 @@ cd my-projects
 claude
 ```
 
-Всё. Claude сам всё настроит и спросит пару вопросов (как тебя зовут, над каким проектом работаешь).
+That's it. Claude sets itself up and asks a couple of questions (your name, what you're working on).
 
 > [!TIP]
-> Скажи `/tour` после установки — Claude покажет тебе систему на твоих собственных файлах.
+> Say `/tour` after install — Claude walks you through the system using your own files.
 
 ---
 
-## До и после
+## Before / after
 
 ![](.github/assets/01-before-after.png)
 
-| | Без Memory Kit | С Memory Kit |
+| | Without Memory Kit | With Memory Kit |
 |---|---|---|
-| **Новая сессия** | «Над чем мы работали?» | Знает проект, последние решения, текущие задачи |
-| **Через 10 сессий** | Ничего не накопилось | Поисковая база решений, тонов, паттернов |
-| **Несколько клиентов** | Хаос | У каждого клиента своя папка, всё по местам |
-| **Сжатие контекста** | Тихо теряет данные | Хук блокирует сжатие, пока не сохранит |
-| **Завтра утром** | «Напомни, что мы делали?» | Уже знает — подгружается на старте |
+| **New session** | "What were we working on?" | Knows the project, recent decisions, current tasks |
+| **After 10 sessions** | Nothing accumulates | Searchable base of decisions, tones, patterns |
+| **Multiple clients** | Chaos | Each client has its own folder, everything in place |
+| **Context compaction** | Silently loses data | Hook blocks compaction until state is saved |
+| **Tomorrow morning** | "Remind me what we did?" | Already knows — auto-loaded on session start |
 
 ---
 
-## Твой день
+## Your day
 
 ![](.github/assets/02-daily-workflow.png)
 
-Три шага. Это весь твой workflow:
+Three steps. That's the entire workflow:
 
-### 1. Открой сессию
-Claude сам подгружает контекст — состояние проекта, последние решения, базу знаний. Ты ничего не делаешь.
+### 1. Open a session
+Claude auto-loads context — project state, recent decisions, knowledge base. You do nothing.
 
-### 2. Работай как обычно
-Говори с Claude. Пиши тексты. Делай ресёрч. Согласовывай тон. Хуки безопасности работают незаметно — сохраняют прогресс каждые ~50 сообщений и до того, как контекст сожмётся.
+### 2. Work as usual
+Talk to Claude. Write copy. Do research. Lock the tone. Safety hooks run silently — they save progress every ~50 messages and before context compacts.
 
-### 3. Закрой день
-Когда закончил — скажи `/close-day`. Claude **не просто** сохраняет логи. Он **проверяет** что произошло сегодня, сравнивает с накопленной памятью и предлагает: «заметил, что ты три раза за неделю отверг тексты с тире — добавить это в правила тона голоса?». Ты говоришь «да». Он записывает.
+### 3. Close the day
+When you're done — say `/close-day`. Claude **doesn't just** dump logs. It **audits** what happened today, compares it against accumulated memory, and proposes: "noticed you rejected em-dashes in three short copies this week — make it a tone-of-voice rule?". You say "yes". It writes.
 
-**Завтра ты продолжишь ровно с того места, где остановился.**
+**Tomorrow you continue exactly where you left off.**
 
 ---
 
-## Память накапливается
+## Memory layers
 
-![](.github/assets/03-knowledge-growth.png)
+![](.github/assets/03-memory-layers.png)
 
-Каждый `/close-day` кормит четырёхуровневую систему памяти:
+Three places memory lives. Agent writes all of them. Each layer answers a different question:
 
-| Уровень | Что отвечает | Кто пишет |
+| Layer | Answers | Written by |
 |---|---|---|
-| `daily/2026-04-26.md` | «что было сегодня» | Сам Claude (через `/close-day`) |
-| `MEMORY.md` | «какие паттерны повторяются» | Claude — пока ты говоришь |
-| Reference skills | «как должен думать дизайнер / редактор / маркетолог в нашей работе» | Claude — после твоего «да» в аудите |
-| Rules | «что обязательно / нельзя никогда» | Через 6+ месяцев стабильного паттерна |
-
-- **Неделя 1:** Базовые паттерны, твои предпочтения, структура проектов
-- **Неделя 2–4:** Накапливаются решения. Claude начинает ссылаться на прошлые обсуждения
-- **Месяц 2+:** Полная база знаний с поиском, кросс-проектными связями, выученными уроками
+| `daily/YYYY-MM-DD.md` | "what happened today" | Agent (via `/close-day`) |
+| `.claude/memory/MEMORY.md` | "what patterns repeat" | Agent — while you talk |
+| `knowledge/concepts/*.md` | "facts and rationale by topic" | Agent — after your "yes" on `/close-day` |
+| `.claude/rules/*.md` | "what must always / never happen" | Agent — after 6+ months of stable pattern |
 
 ---
 
-## Несколько клиентов
+## Promotion pipeline
 
-Каждый клиент = своя папка:
+![](.github/assets/04-promotion-pipeline.png)
 
-```
-projects/
-  nestle/
-    BACKLOG.md            ← Текущие задачи
-    brand-guide.pdf       ← Их брендбук (просто кладёшь PDF)
-    tone-of-voice.md      ← Тон голоса, который вы согласовали
-  sber/
-    BACKLOG.md
-    ...
-```
+A pattern's journey from observation to law. Agent-driven at every step. User says "yes" — agent writes the patch.
 
-Скажи «работаем над Nestlé» — Claude подгрузит контекст этого клиента. Общие знания (твой стиль работы, накопленные паттерны) остаются для всех клиентов. У каждого клиента — свой контекст.
+- **Week 1:** Baseline patterns captured in `MEMORY.md`. Agent starts referencing.
+- **Week 2–4:** Repeated patterns surface as `/close-day` audit candidates. Wiki articles begin.
+- **Month 2+:** Stable patterns crystallise into `.claude/rules/`. Full knowledge base with search.
 
 ---
 
-## Что ты получаешь
+## Multiple clients
 
-| Что | Как помогает |
-|------|-------------|
-| **Память между сессиями** | Решения и паттерны не теряются |
-| **Несколько клиентов** | У каждого своя папка с брифами и материалами |
-| **Передача между сессиями** | «Продолжи ровно отсюда» — автоматически |
-| **База знаний** | Структурированные статьи с поиском |
-| **Защита от потерь** | Claude не теряет контекст при сжатии и долгих сессиях |
-| **Команды** | `/close-day`, `/memory-query`, `/tour` и другие |
+![](.github/assets/05-multi-project.png)
 
-Всё в обычных текстовых файлах. Никаких баз данных. Никаких внешних сервисов. `git checkout` восстанавливает что угодно.
+Each client = their own folder. Shared layers (rules, memory, wiki) load for every project. Per-project materials load when you name the project.
+
+Say "we're working on Nestlé" — Claude unloads other clients and loads that scope only.
+
+---
+
+## Hooks and operators
+
+![](.github/assets/06-hooks-and-operators.png)
+
+Five hooks run silently — they survive your context across compaction and crashes. Five slash operators give you direct control.
+
+Everything in plain text files. No databases. No external services. `git checkout` restores anything.
 
 ---
 
 ## FAQ
 
 <details>
-<summary><b>Я не программист. Получится?</b></summary>
+<summary><b>I'm not a programmer. Will this work?</b></summary>
 
-Да. Ты говоришь с Claude обычным языком. «Прочитай бриф клиента и предложи три темы для рассылки» — работает. Установка тоже одна команда.
-
-</details>
-
-<details>
-<summary><b>Сколько стоит?</b></summary>
-
-Сам кит — бесплатный, open source. Тебе нужна подписка Claude Pro или Max (которая, скорее всего, у тебя уже есть). Дополнительных расходов нет.
+Yes. You talk to Claude in plain language. "Read the client brief and propose three newsletter topics" — works. Install is one command.
 
 </details>
 
 <details>
-<summary><b>Мои данные приватны?</b></summary>
+<summary><b>How much does it cost?</b></summary>
 
-Да. Всё хранится у тебя на компьютере в обычных текстовых файлах. Ничего никуда не уходит.
-
-</details>
-
-<details>
-<summary><b>Можно использовать с уже начатым проектом?</b></summary>
-
-Да. На установке скажи Claude, что у тебя уже есть проект — он его проанализирует и встроится.
+The kit itself is free, open source. You need a Claude Pro or Max subscription (which you probably already have). No additional cost.
 
 </details>
 
 <details>
-<summary><b>А если забыл сделать /close-day?</b></summary>
+<summary><b>Is my data private?</b></summary>
 
-Ничего страшного. Хуки безопасности уже сохраняют прогресс автоматически. `/close-day` — это «вишенка» сверху, удобный аудит дня. Не критично.
-
-</details>
-
-<details>
-<summary><b>А если случайно сломаю файл памяти?</b></summary>
-
-Всё лежит в git. `git checkout .claude/memory/` откатит за секунду. Принцип кита — «ты только говоришь, Claude пишет», так что вручную ты эти файлы редактировать не должен в принципе.
+Yes. Everything is stored on your computer in plain text files. Nothing leaves.
 
 </details>
 
 <details>
-<summary><b>Что если перейду с v3?</b></summary>
+<summary><b>Can I use it with an in-progress project?</b></summary>
 
-Не пытайся обновить старый проект «поверх». Склонируй v4 в новую папку и скажи Claude: «у меня есть старый проект v3, помоги переехать». Он сам проведёт.
+Yes. On install, tell Claude you already have a project — it analyses it and integrates.
+
+</details>
+
+<details>
+<summary><b>What if I forget to run /close-day?</b></summary>
+
+Nothing breaks. Safety hooks save progress automatically. `/close-day` is the cherry on top — a deliberate end-of-day audit. Not critical.
+
+</details>
+
+<details>
+<summary><b>What if I accidentally break a memory file?</b></summary>
+
+Everything is in git. `git checkout .claude/memory/` reverts in a second. The kit's principle is "user only talks, Claude writes" — you shouldn't be editing these files manually anyway.
+
+</details>
+
+<details>
+<summary><b>What if I'm migrating from v3?</b></summary>
+
+Don't try to upgrade an old project in place. Clone v4 into a new folder and tell Claude: "I have an old v3 project, help me migrate". It walks you through.
 
 </details>
 
 ---
 
-## Что внутри
+## What's inside
 
 ```
-SKILL.md                ← Точка входа в кит
-CLAUDE.md               ← «Мозг» агента — кто он и как работает
-README.md               ← Ты здесь
-ARCHITECTURE.md         ← Подробная архитектура (для любопытных)
-projects/               ← Папки клиентов с задачами и материалами
-daily/                  ← Логи дней
-knowledge/              ← База знаний (растёт со временем)
-context/                ← Передача между сессиями
-.claude/                ← Сердце кита: память, хуки, скиллы
+README.md               ← You are here
+LICENSE                 ← MIT
+CLAUDE.md               ← Agent's brain — who it is, how it works
+SKILL.md                ← Metadata for skill aggregators
+projects/               ← Client folders with tasks and materials
+daily/                  ← Daily logs (private by default, gitignored)
+knowledge/              ← Knowledge base (grows over time)
+context/                ← Session-to-session handoff
+.claude/                ← Kit core: memory, hooks, skills, rules
+.kit/                   ← Documentation about the kit ITSELF (version
+                          history, architecture, contributor guide).
+                          Safe to delete after onboarding — it's about
+                          the kit, not your project.
 ```
 
-**Полная архитектура:** [ARCHITECTURE.md](ARCHITECTURE.md)
+**Full architecture:** [.kit/ARCHITECTURE.md](.kit/ARCHITECTURE.md)
+**Version history:** [.kit/CHANGELOG.md](.kit/CHANGELOG.md)
+**Contributing:** [.kit/CONTRIBUTING.md](.kit/CONTRIBUTING.md)
 
 ---
 
-## Откуда это
+## Origin
 
-Идеи от [Andrej Karpathy](https://karpathy.ai/) и [Cole Medin](https://github.com/coleam00). Перестроено под Anthropic-нативные примитивы Claude Code.
+Ideas from [Andrej Karpathy](https://karpathy.ai/) and [Cole Medin](https://github.com/coleam00). Rebuilt around Anthropic-native Claude Code primitives.
 
-700+ реальных сессий, 7+ проектов. Это то, что выжило после всех итераций.
+700+ real sessions across 7+ projects. This is what survived all the iterations.
 
-## Помощь
+## Help
 
-Issues и PR приветствуются. См. [CONTRIBUTING.md](CONTRIBUTING.md).
+Issues and PRs welcome. See [.kit/CONTRIBUTING.md](.kit/CONTRIBUTING.md).
 
-## Лицензия
+## License
 
-MIT — см. [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
