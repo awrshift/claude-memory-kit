@@ -171,7 +171,8 @@ README.md               ← You are here
 LICENSE                 ← MIT
 CLAUDE.md               ← Agent's brain — who it is, how it works
 SKILL.md                ← Metadata for skill aggregators
-projects/               ← Client folders with tasks and materials
+projects/               ← Real client / product folders (tasks + materials)
+experiments/            ← Sandbox for hypotheses + prototypes (date-named)
 daily/                  ← Daily logs (private by default, gitignored)
 knowledge/              ← Knowledge base (grows over time)
 context/                ← Session-to-session handoff
@@ -181,6 +182,8 @@ context/                ← Session-to-session handoff
                           Safe to delete after onboarding — it's about
                           the kit, not your project.
 ```
+
+**`projects/` vs `experiments/`** — `projects/<name>/` for real client work (polished, indefinite lifetime, patterns promote to rules); `experiments/<name>-YYYYMMDD/` for hypotheses and prototypes (rough OK, days-to-weeks lifetime, distill into projects/concepts on close, then delete). Full spec: [`experiments/README.md`](experiments/README.md).
 
 **Full architecture:** [.kit/ARCHITECTURE.md](.kit/ARCHITECTURE.md)
 **Version history:** [.kit/CHANGELOG.md](.kit/CHANGELOG.md)

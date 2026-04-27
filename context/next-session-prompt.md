@@ -8,22 +8,24 @@
 
 ## ⚡ PICK UP HERE — immediate action
 
-<!-- Agent writes the 1-3 highest-leverage items here, ordered. Usually:
+<!-- Agent writes the 1-3 highest-leverage items here, ordered. Each item date-prefixed. Usually:
      1. A concrete task in progress
      2. An unanswered question for the user
      3. Optional cleanup / follow-up -->
 
 1. (empty — first `/close-day` populates this)
 
+Format: `- [YYYY-MM-DD] item description (carried from N sessions ago if not new)`
+
 ## Open decisions (waiting on you)
 
-<!-- Questions the agent needs your answer on before proceeding. Short, concrete. -->
+<!-- Questions the agent needs your answer on before proceeding. Date-tag each — stale questions (>1 week) trigger an "is this still relevant?" prompt on session start. -->
 
 - (none)
 
 ## Recent deliverables
 
-<!-- Brief list of what actually shipped in the last 1-3 sessions. Agent prunes older items to daily/YYYY-MM-DD.md. -->
+<!-- Brief list of what actually shipped in the last 1-3 sessions. Date-tag each. Agent prunes items older than 14 days into daily/YYYY-MM-DD.md. -->
 
 - (none)
 
@@ -32,6 +34,12 @@
 <!-- Which `projects/<name>/` folder(s) are active right now. Agent switches on verbal command. -->
 
 - _example_client — template; replace with your first real project
+
+## Active experiments
+
+<!-- Open `experiments/<name>-YYYYMMDD/` folders. Agent flags any older than 30 days for closure on /close-day. -->
+
+- (none)
 
 ## Pointers to load
 
@@ -48,5 +56,7 @@
 
 - Read this file FIRST on every session start
 - Pick up from the topmost immediate-action item
-- If items are stale (>1 week old without being worked on), ask the user whether to drop them
+- Items >1 week old without progress: ask user whether to drop them
+- Items >30 days old in experiments: ask user whether to close
 - Never edit this file by hand — tell the agent what's changed and let it revise
+- Every entry must be date-prefixed `[YYYY-MM-DD]` — this enables stale-detection and `/close-day` audit

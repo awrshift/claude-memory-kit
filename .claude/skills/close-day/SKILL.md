@@ -29,18 +29,24 @@ Also update `context/next-session-prompt.md` (NSP) with the immediate-action han
 Now the ritual. Read:
 
 1. **Today's daily log** (just written)
-2. **`MEMORY.md`** — date-tagged patterns from prior sessions
-3. **Existing knowledge articles** — `knowledge/concepts/*.md`
-4. **Existing rules** — `.claude/rules/*.md`
+2. **`MEMORY.md`** — date-tagged patterns from prior sessions (lean on the `[YYYY-MM-DD]` prefixes — they are how you detect repetition)
+3. **Existing knowledge articles** — `knowledge/concepts/*.md` (check `updated:` frontmatter to see freshness)
+4. **Existing rules** — `.claude/rules/*.md` (check `last-reviewed:` frontmatter to spot stale rules)
+5. **Active experiments** — list `experiments/*/` folder names; parse the `-YYYYMMDD` suffix to find any older than 30 days
 
-Compare. Look for three kinds of signals:
+**Date-arithmetic queries you should run mentally (or with grep):**
+- "Did this pattern appear in MEMORY on 3+ distinct dates within the last 14 days?" → strong promotion candidate
+- "Has this rule's `last-reviewed` been more than 90 days ago?" → ask user if it still applies
+- "Are any experiment folders older than 30 days?" → ask user to close or revive
+
+Compare. Look for four kinds of signals:
 
 #### Signal A: Cross-session repetition
-A pattern you noticed today matches a date-tagged entry in `MEMORY.md` from earlier days. Example: today user rejected "em-dash in short copy" — and MEMORY.md shows they rejected the same thing Tuesday and last Friday.
+A pattern you noticed today matches MEMORY entries on multiple distinct prior dates. Quote the dates back to the user — that's the evidence.
 
 **What to do:** Propose codifying it.
 
-> "Noticed: you've rejected em-dashes in short copy three times this week. Looks like a stable preference. Codify as a rule in `.claude/rules/copy-style.md`: 'em-dash forbidden in UI copy ≤20 words'? Or as a section in `knowledge/concepts/copy-style.md` if you want the rationale alongside? I can write it — confirm."
+> "Noticed: you rejected em-dashes in short copy on [2026-04-21], [2026-04-23], [2026-04-27]. Three distinct days, no contradiction. Codify as a rule in `.claude/rules/copy-style.md` (frontmatter `created: 2026-04-27`): 'em-dash forbidden in UI copy ≤20 words'? Or as a section in `knowledge/concepts/copy-style.md` if you want the rationale alongside? I can write it — confirm."
 
 #### Signal B: New strong preference
 User expressed a clear preference today, even once, but it was emphatic. Example: "I hate blurry previews — never do that".
@@ -61,7 +67,22 @@ Today's work surfaced a topic that's been touched several times across `daily/*.
 
 **What to do:** Propose compiling a `knowledge/concepts/<topic>.md` article via `/memory-compile`.
 
-> "Topic 'Stripe webhook patterns' came up again today — fifth time across 3 weeks. Want me to compile a `knowledge/concepts/stripe-webhooks.md` article that pulls together the rationale from all those daily logs?"
+> "Topic 'Stripe webhook patterns' came up on [2026-04-08], [2026-04-15], [2026-04-22], [2026-04-25], [2026-04-27] — 5 distinct days across 3 weeks. Want me to compile a `knowledge/concepts/stripe-webhooks.md` article that pulls together the rationale from those daily logs?"
+
+#### Signal E: Experiment hygiene
+Folders in `experiments/<name>-YYYYMMDD/` older than 30 days that haven't been closed are stale.
+
+**What to do:** Surface them. Don't auto-close — ask.
+
+> "`experiments/payment-provider-selection-20260322` has been open 36 days. Still active, or ready to distill and close?"
+
+If user says close → run the **distill ritual**:
+1. Lessons → `knowledge/concepts/<topic>.md`
+2. Reusable code → `projects/<name>/`
+3. Update EXPERIMENT.md `Status:` field to `closed-success | closed-failed | inconclusive`
+4. After distillation confirmed, propose `rm -rf experiments/<name>-YYYYMMDD/` (git history retains)
+
+If experiment patterns repeated across days but the experiment is still open — note them in MEMORY but **do NOT propose promotion to rules yet**. Experiments are sandbox; promotion happens after distillation, not from raw experiment notes.
 
 ### Phase 3: EXECUTE APPROVED PATCHES
 

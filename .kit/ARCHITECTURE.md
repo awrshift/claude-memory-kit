@@ -78,11 +78,55 @@ v4 aligns tightly with Anthropic-canonical Claude Code primitives. Every layer m
 
 ### projects/<name>/ — per-project scope
 **Is:** everything specific to one client or project. `BACKLOG.md` (tasks), any `*.md` or `*.pdf` user has uploaded as reference.
-**Is not:** shared knowledge. Don't put brand-system stuff here if it applies across projects.
+**Is not:** shared knowledge. Don't put brand-system stuff here if it applies across projects. Not a sandbox for prototypes (that's `experiments/`).
+
+### experiments/<name>-YYYYMMDD/ — sandbox
+**Is:** R&D folder for hypotheses, prototypes, throwaway research. `EXPERIMENT.md` (hypothesis + result), optional code, notes, screenshots. Date in folder name.
+**Is not:** real client work (that's `projects/`). Not a long-term home — closed experiments are distilled into `knowledge/concepts/` (lessons) and `projects/` (code), then deleted (git history remembers).
+
+Why a separate layer? Different lifecycle (days, not indefinite), different quality bar (rough OK), different relationship to `/close-day` audit (no direct promotion to rules — distill first, then close). Full spec: `experiments/README.md`.
 
 ### daily/YYYY-MM-DD.md — session archive
 **Is:** agent-written synthesis of sessions (via `/close-day`). Chronological.
 **Is not:** manually curated. Not a wiki.
+
+## Date-tagging convention (load-bearing)
+
+Every memory entry across the kit carries an ISO date tag (`[YYYY-MM-DD]`). This is not stylistic — it's the foundation that lets `/close-day` detect cross-session patterns and propose promotions.
+
+### Where dates live
+
+| Layer | Date placement |
+|---|---|
+| `daily/YYYY-MM-DD.md` | filename |
+| `.claude/memory/MEMORY.md` | `[YYYY-MM-DD]` prefix on every entry |
+| `.claude/rules/*.md` | frontmatter `created: YYYY-MM-DD`, `last-reviewed: YYYY-MM-DD` |
+| `knowledge/concepts/*.md` | frontmatter `updated: YYYY-MM-DD`, plus `[YYYY-MM-DD]` inline when appending sections |
+| `context/next-session-prompt.md` | `[YYYY-MM-DD]` prefix on each Pick-up / Open decisions / Recent deliverables item |
+| `experiments/<name>-YYYYMMDD/` | folder name; entries inside dated too |
+
+### Why this matters
+
+Without dates, every memory entry is timestamp-less noise. With dates, the agent can answer:
+
+- "Has this pattern come up on multiple distinct days?" → MEMORY grep for date diversity
+- "When did this rule get codified — is it still fresh?" → frontmatter `last-reviewed`
+- "What experiments have been open >30 days?" → folder name parse
+- "What was decided last Tuesday?" → daily/YYYY-MM-DD lookup
+- "Has this rule been contradicted recently?" → cross-reference rule `last-reviewed` against recent MEMORY entries
+
+`/close-day` Phase 2 audit is built on these queries. Without date-tagging, the ritual collapses to "synthesize today" — the cross-session intelligence dies.
+
+### Format rules
+
+- ISO 8601 daily granularity is the base unit: `[2026-04-27]`
+- Inline `[HH:MM]` allowed within a single day's daily log if useful, never required
+- Time zones — local. Don't mix UTC and local in the same project
+- Don't use relative dates ("yesterday", "last week") in stored memory — they decay. Always absolute
+
+### When the agent writes without a date — it's a bug
+
+If you find a MEMORY entry, NSP item, or rule frontmatter without a date, fix it before continuing. This is the single rule that makes the rest of the system work.
 
 ## The promotion pipeline (pattern → law)
 

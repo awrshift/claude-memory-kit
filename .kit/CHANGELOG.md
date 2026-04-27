@@ -2,6 +2,50 @@
 
 All notable changes to Memory Kit are documented here. Breaking changes marked **BREAKING**.
 
+## [4.1.1] — 2026-04-27 — Restore experiments/ + canonicalize date-tagging
+
+Two corrections to v4.1.0 minimization:
+
+1. **`experiments/` was wrongly removed.** v4.1.0 deleted the layer as "undocumented opt-in pattern", but it's a real working pattern (24+ active experiments in production use). Restored with proper documentation as the sandbox layer next to `projects/`.
+2. **Date-tagging was implicit, not explicit.** The mechanism worked (`/close-day` reads date-tagged MEMORY entries) but was nowhere stated as a load-bearing convention. New users couldn't see WHY the date format matters. Promoted to a documented system invariant alongside "user only talks".
+
+### Added
+
+- **`experiments/`** layer fully restored as documented sandbox.
+  - `experiments/README.md` — convention, lifecycle, agent triggers
+  - `experiments/EXPERIMENT-TEMPLATE.md` — hypothesis / method / result / lessons skeleton
+  - Naming: `<descriptive-name>-YYYYMMDD` (date-tagged, aligned with kit-wide convention)
+  - Lifecycle: open → work → distill on close (lessons → `knowledge/concepts/`, code → `projects/`, then delete folder; git history retains)
+  - `/close-day` flags experiments older than 30 days for closure
+- **Date-tagging convention as load-bearing system invariant.**
+  - New section in `.kit/ARCHITECTURE.md` — "Date-tagging convention (load-bearing)" — explains where dates live and why they matter
+  - `CLAUDE.md` rewritten — two core invariants: "user only talks" + "every memory entry carries a date tag"
+  - `.claude/rules/_example.md.disabled` — frontmatter now includes `created` + `last-reviewed` date fields, plus a "Review history" section
+  - `knowledge/index.md` — frontmatter spec adds `created:` field; section-append convention `## [YYYY-MM-DD] section title` for in-article evolution tracking
+  - `context/next-session-prompt.md` — every Pick-up / Open-decisions / Recent-deliverables item must be `[YYYY-MM-DD]`-prefixed; Active experiments section added
+  - `daily/TEMPLATE.md` — clarifies date-is-in-filename, optional `[HH:MM]` for in-day cross-reference, audit candidates cite triggering dates
+  - `.claude/memory/MEMORY.md` — adds "Why dates matter" section; entries without date tag declared a bug
+  - `.claude/skills/close-day/SKILL.md` — Phase 2 audit explicit date-arithmetic queries; Signal E (experiment hygiene) added; example proposals quote specific dates as evidence
+
+### Changed
+
+- **CLAUDE.md projects-vs-experiments table** added; `experiments/` in Architecture-at-a-glance map; agent triggers documented ("let's experiment with..." → creates experiment, not project)
+- **`.kit/ARCHITECTURE.md` `experiments/<name>-YYYYMMDD/` layer** described next to `projects/<name>/` with explicit "different lifecycle, different quality bar, no direct promotion" semantics
+- **README.md** "What's inside" tree adds `experiments/` line; one-paragraph projects-vs-experiments summary added below tree
+
+### Migration from v4.1.0
+
+If you adopted v4.1.0:
+
+1. Existing rules — add `created` + `last-reviewed` to frontmatter (use `git log --reverse --pretty=format:%aI -- .claude/rules/<name>.md | head -1` to find created date)
+2. Existing concepts — add `created` field to frontmatter
+3. NSP entries — date-prefix existing items (use git blame or just timestamp them today as "carry-over from earlier")
+4. If you want experiments — create `experiments/` folder, copy `EXPERIMENT-TEMPLATE.md` from this release
+
+No code changes required — the date-tagging machinery in `lint.py`/`compile.py` already worked; this release makes the convention explicit so new contributors and future-you understand why.
+
+---
+
 ## [4.1.0] — 2026-04-27 — Kit minimization
 
 After two weeks of dogfooding v4.0.0 on real production work, several layers turned out to be noise that the kit shouldn't ship by default. v4.1.0 trims them out. The pattern can still be added per-project by users who want it (see `.kit/ARCHITECTURE.md` "Adding role-guidance yourself"); the kit just doesn't seed templates anymore.

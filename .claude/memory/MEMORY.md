@@ -4,11 +4,13 @@ Date-tagged patterns that have been noticed 2+ times. Loaded on every session st
 
 **Agent writes this.** If you want to add a note, say it in conversation — the agent captures and writes. Manual edits will be overwritten by `/close-day` dedup pass.
 
----
+## Why dates matter (load-bearing)
+
+Every entry is `[YYYY-MM-DD]`-prefixed. This is what lets `/close-day` audit work — agent greps for "this pattern across 3+ distinct dates" and proposes promotion to a rule or concept. Without dates, every entry is timestamp-less noise and the audit ritual collapses. **An entry without a date tag is a bug, not a stylistic choice.**
 
 ## Format
 
-Every entry is a single line prefixed with `[YYYY-MM-DD]` date tag. Short. Scannable. No headings inside entries.
+Every entry is a single line prefixed with `[YYYY-MM-DD]`. Short. Scannable. No headings inside entries.
 
 ```
 - [2026-04-24] user prefers plain prose for status updates, not dense tables
@@ -22,7 +24,7 @@ Group loosely by theme with empty lines if the file grows, but don't build a hea
 
 ## Entries
 
-<!-- Agent appends date-tagged patterns here. When the same pattern gets reinforced 3+ times across different sessions, agent surfaces it at `/close-day` as a promotion candidate to a `knowledge/concepts/<topic>.md` article or a `.claude/rules/<name>.md` constraint. -->
+<!-- Agent appends date-tagged patterns here. When the same pattern gets reinforced 3+ times across different dates, agent surfaces it at `/close-day` as a promotion candidate to a `knowledge/concepts/<topic>.md` article or a `.claude/rules/<name>.md` constraint. -->
 
 (empty — start talking; agent will begin capturing)
 
@@ -34,6 +36,7 @@ Group loosely by theme with empty lines if the file grows, but don't build a hea
 - Rationale essays longer than one line (those belong in `knowledge/concepts/*.md`)
 - Mechanical always/never constraints (those promote to `.claude/rules/*.md`)
 - Project-specific tasks (those live in `projects/<name>/BACKLOG.md`)
+- Experiment progress notes (those live in `experiments/<name>-YYYYMMDD/EXPERIMENT.md`)
 
 ## Size target
 

@@ -27,11 +27,14 @@ Every article in `concepts/` starts with:
 ---
 title: <topic>
 status: canonical | draft | archived
-compiled-from: [daily/2026-04-20.md, daily/2026-04-22.md, ...]
+created: YYYY-MM-DD
 updated: YYYY-MM-DD
+compiled-from: [daily/2026-04-20.md, daily/2026-04-22.md, ...]
 tags: [tag1, tag2]
 ---
 ```
+
+When you append a new section to an existing article, prefix the section heading with the date — `## [YYYY-MM-DD] New finding from today's research`. This keeps the article's evolution traceable and lets `/close-day` audit see which articles got refreshed recently.
 
 ---
 
